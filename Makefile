@@ -8,6 +8,7 @@ override .SHELLFLAGS := -eu -o pipefail -c
 override export CHEFNMR2_REPOSITORY_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 include $(CHEFNMR2_REPOSITORY_ROOT)/make/docker.mk
+include $(CHEFNMR2_REPOSITORY_ROOT)/make/proxy.mk
 include $(CHEFNMR2_REPOSITORY_ROOT)/make/weights.mk
 
 shell_quote = '$(subst ','"'"',$(1))'

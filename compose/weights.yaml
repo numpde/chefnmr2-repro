@@ -70,6 +70,9 @@ services:
   download:
     <<: *contained
     user: "curl_user:curl_group"
+    environment:
+      # This endpoint must be reachable from the container, not just host loopback
+      PROXY_URL: ${PROXY_URL:-}
     networks:
       - fetch-egress
     pids_limit: 64
@@ -123,7 +126,9 @@ services:
           umask 077
           # Curl durations are seconds and the slow-transfer limit is bytes/second
           # --disable must be first to ignore curlrc. --continue-at - uses the local file size
+          # Empty --proxy selects direct routing; empty --noproxy prevents inherited bypasses
           curl --disable --fail --location --show-error --no-progress-meter \
+            --proxy "$$PROXY_URL" --noproxy '' \
             --proto '=https' --proto-redir '=https' \
             --retry 5 --retry-all-errors --retry-delay 2 --retry-max-time 7200 \
             --connect-timeout 15 --max-time 3600 \
