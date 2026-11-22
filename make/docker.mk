@@ -41,7 +41,7 @@ endef
 
 # Set selected_docker_endpoint once, before callers issue any engine commands
 define docker_setup
-source "$$CHEFNMR2_REPOSITORY_ROOT/scripts/operator-input.sh"
+source "$$CHEFNMR2_REPOSITORY_ROOT/scripts/host/operator-input.sh"
 selected_docker_context=$$CHEFNMR2_DOCKER_CONTEXT_INPUT
 if [[ -z "$$selected_docker_context" ]]; then
     $(docker_context_menu)

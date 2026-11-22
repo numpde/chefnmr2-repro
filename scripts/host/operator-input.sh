@@ -1,4 +1,4 @@
-# Shared controlling-terminal input; callers own prompts and value validation.
+# Shared host-side terminal input; callers own prompts and value validation.
 # Like the related NMR repositories, do not consume redirected recipe stdin.
 read_operator_input() {
     local operator_output=$1 operator_name=$2 operator_prompt=$3 operator_terminal operator_answer
