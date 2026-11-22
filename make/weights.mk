@@ -19,7 +19,7 @@ cleanup_weights() {
     operation_status=$$?
     trap - EXIT HUP INT TERM
     cleanup_status=0
-    "$${weights_compose[@]}" down || cleanup_status=$$?
+    "$${weights_compose[@]}" down --remove-orphans || cleanup_status=$$?
     if (( operation_status != 0 )); then
         exit "$$operation_status"
     fi
@@ -37,7 +37,9 @@ weights/download: ## Download and verify checkpoints, then clean up
 	@$(weights_setup)
 	$(proxy_setup)
 	$(weights_cleanup_on_exit)
-	"$${weights_compose[@]}" up --abort-on-container-failure verify
+	"$${weights_compose[@]}" run --rm --no-deps volume-init
+	"$${weights_compose[@]}" run --rm --no-deps download
+	"$${weights_compose[@]}" run --rm --no-deps verify
 
 weights/check: ## Verify checkpoint hashes without downloading weights, then clean up
 	@$(weights_setup)
@@ -50,4 +52,4 @@ weights/config: ## Show the Compose configuration without starting containers
 
 weights/down: ## Remove leftover containers and network
 	@$(weights_setup)
-	"$${weights_compose[@]}" down
+	"$${weights_compose[@]}" down --remove-orphans

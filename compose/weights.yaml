@@ -2,7 +2,7 @@
 # volume-init grants downloader ownership, download installs verified files,
 # and verify independently checks the sealed volume without network or writes
 # Run with an explicit local Docker context and Compose project
-# Use `up --abort-on-container-failure verify` to download and verify checkpoints
+# `make weights/download` runs initialization, download and verification in order
 # Recheck without downloading weights: `run --rm --no-deps verify`.
 #
 # Output lives in Docker's <project>_checkpoints volume, not in this checkout
@@ -13,8 +13,8 @@
 # Failure or interruption retains completed files and any .part for inspection/resume
 # Existing unrelated regular files are neither verified nor removed
 #
-# `up` leaves stopped containers, their logs, the network and the checkpoint volume
-# `down` removes the containers/network but keeps the volume and cached image
+# Make removes each one-shot container when it exits
+# `down --remove-orphans` removes leftovers/network but keeps the volume and cached image
 # `down --volumes` also deletes the checkpoints
 #
 # The checkpoint volume has no filesystem quota. Curl bounds each transfer
