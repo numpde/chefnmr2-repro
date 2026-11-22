@@ -20,3 +20,15 @@ for the next run.
 In another terminal, run `make weights/watch DOCKER_CONTEXT=<same-context>` to
 watch checkpoint file sizes every two seconds. Files ending in `.part` are
 unfinished downloads. Ctrl+C stops only the watcher.
+
+Run `make compatibility/check DOCKER_CONTEXT=science` to build the Python 3.12
+CPU-only PyTorch image, verify the epoch949 checkpoint/config pair, and run the
+single-model inference check. Select another declared pair with
+`CHECKPOINT=chefnmr2-epoch999`. Only the selected pair needs to be downloaded;
+the checkpoint operation lock prevents testing while a download is running.
+
+`make compatibility/image DOCKER_CONTEXT=science` builds the image without
+running inference. Its pinned Python base must already be available on that
+engine. Build steps need network access; inference runs offline with read-only
+source and checkpoints. Containers and temporary files are removed after each
+run; the reusable image, build cache and checkpoint volume are retained.

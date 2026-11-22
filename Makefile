@@ -10,6 +10,7 @@ override export CHEFNMR2_REPOSITORY_ROOT := $(abspath $(dir $(lastword $(MAKEFIL
 include $(CHEFNMR2_REPOSITORY_ROOT)/make/docker.mk
 include $(CHEFNMR2_REPOSITORY_ROOT)/make/proxy.mk
 include $(CHEFNMR2_REPOSITORY_ROOT)/make/weights.mk
+include $(CHEFNMR2_REPOSITORY_ROOT)/make/compatibility.mk
 
 shell_quote = '$(subst ','"'"',$(1))'
 
