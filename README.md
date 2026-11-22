@@ -12,8 +12,8 @@ runtime dependencies are pinned separately. The model runs in its own Python
 environment. Shared provider tools handle API communication and result delivery.
 
 Run `make weights/download` to acquire and verify the checkpoints. It asks for a
-local Docker context and a proxy URL, or `none` for direct downloads. Transfers
-are quiet; filenames and verification results are printed. Ctrl+C stops the
+local Docker context and a proxy URL; Enter selects `none` for direct downloads.
+Transfers are quiet; filenames and verification results are printed. Ctrl+C stops the
 operation and cleans up containers while preserving completed and partial files
 for the next run.
 
