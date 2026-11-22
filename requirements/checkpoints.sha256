@@ -1,0 +1,29 @@
+# ChefNMR2's ten released checkpoint/config pairs, epochs 949 through 1399
+# Source: https://huggingface.co/ziyux123/chefnmr2/tree/38a741cce3e6f7e0d5a827a66f8d3dea0728daf5
+# Each hash is copied from files.<filename>.sha256 in that epoch's manifest.json
+# Example: https://huggingface.co/ziyux123/chefnmr2/blob/38a741cce3e6f7e0d5a827a66f8d3dea0728daf5/chefnmr2-epoch949/manifest.json
+# Paths are relative to the checkpoint volume root, mounted at /checkpoints
+# compose/weights.yaml verifies downloaded bytes against these upstream hashes
+# Columns: SHA-256, maximum downloaded bytes, relative file path
+# Config caps match the upstream 1280-byte files. Model caps are 2 GB
+# The size column is omitted when passing hashes and paths to sha256sum
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch949/config.yaml
+79286a6d5421165b18e3adf9fdb506c9ddaaeb79551386a9f2d6f1648490f2fc  2000000000  chefnmr2-epoch949/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch999/config.yaml
+418fe009e78dd310a75a2a8dabd263ca172549c834ee9277b5dce1be3c6b636d  2000000000  chefnmr2-epoch999/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch1049/config.yaml
+92dfb4be5b3ab6a3f1fca2a605d98f61874048af9c69767f4697b56d5ef336ab  2000000000  chefnmr2-epoch1049/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch1099/config.yaml
+6a47a79bfdd45a6812ade9f7430a893765fa8bc00c316126dac8c5091aefdd8b  2000000000  chefnmr2-epoch1099/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch1149/config.yaml
+a73878270c9cb33ddf064955f8b67f3ab596202ec6f3bb7cd1b822fe6f8864b9  2000000000  chefnmr2-epoch1149/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch1199/config.yaml
+3b0fd70591198877179034cd294504e53dd9b2f9c31d2b784b87c5f76791c5fb  2000000000  chefnmr2-epoch1199/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch1249/config.yaml
+cba30fcbca2cbca6b6cba7a30c48a97a51ac7792ce4932c4db71d2b87bb4ccd3  2000000000  chefnmr2-epoch1249/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch1299/config.yaml
+087d731cd3e0ebf0c0bd7204e9de694f0e6395626a19b215f549b23026c3a222  2000000000  chefnmr2-epoch1299/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch1349/config.yaml
+382da87a987827a295318eede56523e0f0eb4aefcda8d19ac2bf9537f8bd3169  2000000000  chefnmr2-epoch1349/model.pt
+09c63eb62924637fd68467376d0797a252bb846de007a04ab56cc9af0f533e2b  1280  chefnmr2-epoch1399/config.yaml
+bc0f9ee356088d8b76ca13919bc945dcb5b2c35dd0eb3ffa03842e8d1c7e86e3  2000000000  chefnmr2-epoch1399/model.pt
