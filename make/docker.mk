@@ -8,12 +8,6 @@ unexport COMPOSE_FILE COMPOSE_PROJECT_NAME COMPOSE_PROFILES COMPOSE_ENV_FILES
 
 # Set selected_docker_context from an explicit menu choice, without a default
 define docker_context_menu
-# Make may redirect stdin, so use the controlling terminal for both prompt and answer
-if ! { exec {menu_terminal}<>/dev/tty; } 2>/dev/null; then
-    printf '%s\n' 'Set DOCKER_CONTEXT=<local-context> on the Make command line when no terminal is available.' >&2
-    exit 2
-fi
-
 configured_contexts=$$(docker context ls --format '{{.Name}} {{.DockerEndpoint}}')
 local_context_names=()
 while read -r context_name context_endpoint; do
@@ -26,13 +20,11 @@ if (( $${#local_context_names[@]} == 0 )); then
     exit 2
 fi
 
-printf '%s\n' 'Select a local Docker context (no default):' >&"$$menu_terminal"
+printf -v context_prompt '%s\n' 'Select a local Docker context (no default):'
 for menu_index in "$${!local_context_names[@]}"; do
-    printf '  %d) %s\n' "$$((menu_index + 1))" "$${local_context_names[menu_index]}" >&"$$menu_terminal"
+    printf -v context_prompt '%s  %d) %s\n' "$$context_prompt" "$$((menu_index + 1))" "$${local_context_names[menu_index]}"
 done
-printf 'Choice: ' >&"$$menu_terminal"
-IFS= read -r menu_choice <&"$$menu_terminal"
-exec {menu_terminal}>&-
+read_operator_input menu_choice DOCKER_CONTEXT "$${context_prompt}Choice: "
 
 # Match displayed numbers as text instead of evaluating user input as shell arithmetic
 for menu_index in "$${!local_context_names[@]}"; do
@@ -49,6 +41,7 @@ endef
 
 # Set selected_docker_endpoint once, before callers issue any engine commands
 define docker_setup
+source "$$CHEFNMR2_REPOSITORY_ROOT/scripts/operator-input.sh"
 selected_docker_context=$$CHEFNMR2_DOCKER_CONTEXT_INPUT
 if [[ -z "$$selected_docker_context" ]]; then
     $(docker_context_menu)
