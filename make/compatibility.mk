@@ -66,7 +66,6 @@ compatibility/check: ## Build, verify one checkpoint pair, and run CPU inference
 	    exit 2
 	fi
 	$(compatibility_build)
-	$(weights_lock)
 	"$${compatibility_docker[@]}" volume inspect chefnmr2-weights_checkpoints >/dev/null
 	"$${compatibility_docker[@]}" run --rm --init --pull never --network none --read-only \
 	    --user 65532:65532 --cap-drop ALL --security-opt no-new-privileges \

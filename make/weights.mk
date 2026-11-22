@@ -1,18 +1,8 @@
 # One canonical checkout per engine owns the chefnmr2-weights Compose project
 # Keep the project name stable so these commands reuse manually downloaded weights
 # help: Weight commands retain the checkpoint volume and cached curl image.
-# Keep checkpoint readers and writers from racing in the canonical checkout.
-define weights_lock
-exec 9<"$$CHEFNMR2_REPOSITORY_ROOT"
-if ! flock --nonblock 9; then
-    printf 'Cannot acquire the weights operation lock for %s.\n' "$$CHEFNMR2_REPOSITORY_ROOT" >&2
-    exit 2
-fi
-endef
-
 define weights_setup
 $(docker_setup)
-$(weights_lock)
 weights_compose=(docker --host "$$selected_docker_endpoint" compose --env-file /dev/null \
     --project-name chefnmr2-weights --file "$$CHEFNMR2_REPOSITORY_ROOT/compose/weights.yaml")
 endef
@@ -58,7 +48,6 @@ weights/down: ## Remove leftover containers and network
 	@$(weights_setup)
 	"$${weights_compose[@]}" down --remove-orphans
 
-# Observe the selected engine without acquiring the active operation's lock.
 weights/watch: ## Watch checkpoint file sizes during a download; Ctrl+C stops watching
 	@$(docker_setup)
 	download_id=$$(docker --host "$$selected_docker_endpoint" ps \
