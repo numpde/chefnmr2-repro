@@ -34,7 +34,11 @@ endef
 .PHONY: weights/download weights/check weights/config weights/down
 
 weights/download: ## Download and verify checkpoints, then clean up
-	@$(weights_setup)
+	@if [[ -z "$$PROXY_URL" ]]; then
+	    printf '%s\n' 'Cannot download checkpoints: set PROXY_URL=<url> or PROXY_URL=none on the Make command line.' >&2
+	    exit 2
+	fi
+	$(weights_setup)
 	$(weights_cleanup_on_exit)
 	"$${weights_compose[@]}" up --abort-on-container-failure verify
 

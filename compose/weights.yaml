@@ -94,6 +94,14 @@ services:
     command:
       - |
         # Compose turns $$ into $ before the container shell expands variables
+        case "$$PROXY_URL" in
+          '')
+            printf '%s\n' 'Cannot download checkpoints: set PROXY_URL=<url> or PROXY_URL=none.' >&2
+            exit 2
+            ;;
+          none) download_proxy= ;;
+          *) download_proxy=$$PROXY_URL ;;
+        esac
         checkpoint_release_url=https://huggingface.co/ziyux123/chefnmr2/resolve/38a741cce3e6f7e0d5a827a66f8d3dea0728daf5
         checksum_file=/checks/checkpoints.sha256
 
@@ -128,7 +136,7 @@ services:
           # --disable must be first to ignore curlrc. --continue-at - uses the local file size
           # Empty --proxy selects direct routing; empty --noproxy prevents inherited bypasses
           curl --disable --fail --location --show-error --no-progress-meter \
-            --proxy "$$PROXY_URL" --noproxy '' \
+            --proxy "$$download_proxy" --noproxy '' \
             --proto '=https' --proto-redir '=https' \
             --retry 5 --retry-all-errors --retry-delay 2 --retry-max-time 7200 \
             --connect-timeout 15 --max-time 3600 \
