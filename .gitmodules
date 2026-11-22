@@ -1,0 +1,3 @@
+[submodule "chefnmr2-upstream"]
+	path = chefnmr2-upstream
+	url = https://github.com/ml-struct-bio/chefnmr2.git
