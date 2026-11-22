@@ -31,7 +31,7 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 endef
 
-.PHONY: weights/download weights/check weights/config weights/down
+.PHONY: weights/download weights/check weights/config weights/down weights/watch
 
 weights/download: ## Download and verify checkpoints, then clean up
 	@$(weights_setup)
@@ -53,3 +53,16 @@ weights/config: ## Show the Compose configuration without starting containers
 weights/down: ## Remove leftover containers and network
 	@$(weights_setup)
 	"$${weights_compose[@]}" down --remove-orphans
+
+# Observe the selected engine without acquiring the active operation's lock.
+weights/watch: ## Watch checkpoint file sizes during a download; Ctrl+C stops watching
+	@$(docker_setup)
+	download_id=$$(docker --host "$$selected_docker_endpoint" ps \
+	    --filter label=com.docker.compose.project=chefnmr2-weights \
+	    --filter label=com.docker.compose.service=download --format '{{.ID}}')
+	if [[ -z "$$download_id" || "$$download_id" == *$$'\n'* ]]; then
+	    printf '%s\n' 'Cannot watch checkpoints: the selected Docker engine must have exactly one running download.' >&2
+	    exit 2
+	fi
+	watch --interval 2 --exec docker --host "$$selected_docker_endpoint" exec "$$download_id" \
+	    find /checkpoints -type f -exec ls -lh '{}' +
