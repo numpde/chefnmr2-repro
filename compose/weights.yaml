@@ -135,7 +135,8 @@ services:
           # Curl durations are seconds and the slow-transfer limit is bytes/second
           # --disable must be first to ignore curlrc. --continue-at - uses the local file size
           # Empty --proxy selects direct routing; empty --noproxy prevents inherited bypasses
-          curl --disable --fail --location --show-error --no-progress-meter \
+          printf 'Downloading %s (resuming any partial file)\n' "$$checkpoint_file"
+          curl --disable --fail --location --show-error \
             --proxy "$$download_proxy" --noproxy '' \
             --proto '=https' --proto-redir '=https' \
             --retry 5 --retry-all-errors --retry-delay 2 --retry-max-time 7200 \
