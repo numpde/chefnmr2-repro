@@ -1,12 +1,26 @@
-# Build and test the mounted upstream on Python 3.12 with CPU-only PyTorch.
-# Capture an explicit checkpoint choice as data, following the other Make inputs.
+# Build and test mounted upstream code with the selected Python and CPU PyTorch.
+# Capture explicit Make choices as data, following the other operator inputs.
+# help: Compatibility PY_VERSION selects a pinned interpreter: 3.12 (default) or 3.13.
 # help: Compatibility checks use CHECKPOINT=chefnmr2-epoch949 unless selected explicitly.
 # help: Compatibility commands retain the image/build cache and checkpoint volume.
 override export CHEFNMR2_COMPATIBILITY_CHECKPOINT := $(if $(filter command line,$(origin CHECKPOINT)),$(value CHECKPOINT),chefnmr2-epoch949)
+override export CHEFNMR2_COMPATIBILITY_PY_VERSION_ORIGIN := $(origin PY_VERSION)
+override export CHEFNMR2_COMPATIBILITY_PY_VERSION := $(if $(filter command line,$(origin PY_VERSION)),$(value PY_VERSION))
 unexport BUILDX_BUILDER BUILDKIT_HOST
 
 # Only the small operation directory is disposable; Docker owns --rm containers.
 define compatibility_setup
+compatibility_dockerfile=$$CHEFNMR2_REPOSITORY_ROOT/containers/compatibility/Dockerfile
+compatibility_version=$$CHEFNMR2_COMPATIBILITY_PY_VERSION
+if [[ "$$CHEFNMR2_COMPATIBILITY_PY_VERSION_ORIGIN" != 'command line' ]]; then
+    compatibility_version=$$(awk '$$1 == "ARG" && $$2 ~ /^PY_VERSION=/ {sub(/^PY_VERSION=/, "", $$2); print $$2; exit}' "$$compatibility_dockerfile")
+fi
+compatibility_base=$$(CHEFNMR2_SELECTED_PY_VERSION="$$compatibility_version" awk \
+    '$$1 == "FROM" && $$3 == "AS" && $$4 == ("python" ENVIRON["CHEFNMR2_SELECTED_PY_VERSION"]) {print $$2; exit}' "$$compatibility_dockerfile")
+if [[ -z "$$compatibility_base" ]]; then
+    printf '%s\n' 'Cannot build the compatibility image: PY_VERSION must select a pinned Python version listed in containers/compatibility/Dockerfile.' >&2
+    exit 2
+fi
 $(docker_setup)
 compatibility_directory=$$(mktemp -d /tmp/chefnmr2-compatibility.XXXXXXXX)
 cleanup_compatibility() {
@@ -29,14 +43,14 @@ endef
 # Resolve the base from the Dockerfile and use the selected engine's builder.
 # Run the resulting image by ID so another build cannot replace it under the test.
 define compatibility_build
-compatibility_base=$$(awk '$$1 == "FROM" {print $$2; exit}' "$$CHEFNMR2_REPOSITORY_ROOT/containers/compatibility/Dockerfile")
 if ! "$${compatibility_docker[@]}" image inspect "$$compatibility_base" >/dev/null; then
     printf '%s\n' 'Cannot build the compatibility image: its pinned Python base must already be available on the selected Docker engine.' >&2
     exit 2
 fi
 DOCKER_BUILDKIT=1 "$${compatibility_docker[@]}" build --builder default --pull=false --load \
-    --iidfile "$$compatibility_directory/image.id" --tag chefnmr2-python312:check \
-    --file "$$CHEFNMR2_REPOSITORY_ROOT/containers/compatibility/Dockerfile" \
+    --build-arg "PY_VERSION=$$compatibility_version" --target check \
+    --iidfile "$$compatibility_directory/image.id" --tag "chefnmr2-python$${compatibility_version//./}:check" \
+    --file "$$compatibility_dockerfile" \
     "$$CHEFNMR2_REPOSITORY_ROOT/chefnmr2-upstream"
 compatibility_image=$$(cat "$$compatibility_directory/image.id")
 if [[ ! "$$compatibility_image" =~ ^sha256:[a-f0-9]{64}$$ ]]; then
@@ -47,11 +61,11 @@ endef
 
 .PHONY: compatibility/image compatibility/check
 
-compatibility/image: ## Build the Python 3.12 CPU-only PyTorch compatibility image
+compatibility/image: ## Build CPU-only PyTorch for the selected PY_VERSION
 	@$(compatibility_setup)
 	$(compatibility_build)
 
-compatibility/check: ## Build, verify one checkpoint pair, and run CPU inference on Python 3.12
+compatibility/check: ## Build, verify one checkpoint pair, and qualify CPU inference for PY_VERSION
 	@$(compatibility_setup)
 	checkpoint=$$CHEFNMR2_COMPATIBILITY_CHECKPOINT
 	selected_files=0

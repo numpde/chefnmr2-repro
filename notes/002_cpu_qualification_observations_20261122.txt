@@ -2,8 +2,8 @@ ChefNMR2 CPU qualification observations
 ======================================
 
 Date: 2026-11-22
-Status: real single-checkpoint inference passed on Python 3.12 and 3.13 before
-       the image refactor; qualification of the new staged images is running.
+Status: maintained staged images passed real single-checkpoint CPU inference
+       on Python 3.12 and 3.13. Full ensemble and provider qualification remain open.
 
 Scope and correction to the initial plan
 ---------------------------------------
@@ -93,12 +93,45 @@ Completed refactor checks so far:
 - Temporary operation directories were removed on normal completion, build
   failure, inference failure and a handled interrupt in those inert tests.
 
-Pending at this note's creation: complete both new images, rerun actual inference
-through Make, and demonstrate dependency-layer cache reuse. The initial rebuilds
-are downloading approximately 175 MB CPU wheels. Transfer rates vary sharply;
-pip resumed one interrupted 3.13 download automatically. Build logs can therefore
-remain quiet while wheel bytes continue growing. No passing result for these
-new images is claimed yet.
+At this note's creation, inference on the new images and cache reuse were still
+pending. Subsequent observations from the maintained Make lane:
+
+- Both final staged images passed real epoch949 inference with torch 2.5.1+cpu:
+  Python 3.12.16 reported 74.70 seconds; Python 3.13.18 reported 76.14 seconds.
+  Each produced ten valid samples, morphine eight votes and an alternative two.
+  Times exclude model loading. Both runs printed /usr/local/bin/python and
+  passed the requested minor/full pinned-version checks.
+- A temporary context changed only einops from 0.8.1 to 0.8.0. Building through
+  torch_cpu kept the Torch install CACHED. No changed science package was
+  installed, and upstream was left unchanged.
+- A temporary Dockerfile changed only the check's docstring. Both dependency
+  installs stayed CACHED, and only the check stage rebuilt. These probes used
+  cache-only output and created no additional tagged images.
+- Changing the pip timeout forced installation steps to rerun; the completed
+  3.13 Torch, NumPy and RDKit wheels were reused from pip's download cache.
+  This separately demonstrates download-cache reuse when a layer cannot match.
+- The first 3.12 build failed after about 2,218 seconds with a socket read timeout
+  during its 174.6 MB Torch download. Its bundled pip 25.0.1 discarded the
+  incomplete transfer. Both install steps now use a 120-second idle socket
+  timeout instead of pip's 15-second default. The 3.12 retry completed and passed.
+
+The base images bundle different installers: 3.12 has pip 25.0.1; 3.13 has pip
+26.2.2. The latter automatically resumed interrupted Torch and RDKit transfers.
+No installer upgrade or scientific dependency change was introduced. Completed
+package downloads persist in BuildKit's pip cache; incomplete transfers are not
+promised to survive a failed build step. Build logs can remain quiet while
+wheel bytes continue growing.
+
+Tested local image IDs on science (not published):
+
+    Python 3.12:
+    sha256:5d81ce3ce7883328d09dd7b8c140e6efae69138044eb8a4ea41bfe3ededb7dcf
+    Python 3.13:
+    sha256:d3d64b6609eee7b932beb628ce438680b8f0ba8be1358bc24c15c9c1d58bc1eb
+
+After both runs, neither qualification containers nor operation directories
+remained. Both versioned image tags were present on science. No global image
+or builder-cache pruning was performed.
 
 Direct upstream dependencies stay pinned, but their transitive dependencies are
 resolved during installation. These images are not a fully locked environment.
@@ -154,3 +187,7 @@ https://docs.docker.com/reference/dockerfile/
 Torch checkpoint advisory and the pinned loader source:
 https://github.com/pytorch/pytorch/security/advisories/GHSA-53q9-r3pm-6pq6
 https://github.com/pytorch/pytorch/blob/v2.5.1/torch/serialization.py
+
+Pip socket timeout and download-resumption behavior:
+https://pip.pypa.io/en/stable/cli/pip/
+https://pip.pypa.io/en/stable/news/
