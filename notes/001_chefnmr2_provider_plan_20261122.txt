@@ -1,0 +1,344 @@
+ChefNMR2 NMR API provider plan
+=============================
+
+Date: 2026-11-22
+Status: source submodule fetched and pinned; provider implementation and runtime qualification pending
+
+Outcome and completion contract
+-------------------------------
+
+Build one outbound NMR API provider here, serving
+`mol_from_1h_13c_formula` through ChefNMR2's released ten-checkpoint ensemble.
+The API already has this analysis kind. Its catalog meaning is structure
+inference from unassigned proton/carbon peak annotations and a molecular formula.
+ChefNMR2's generative model is the scientific engine; ChefNMR2-Agent and the
+hosted Hugging Face MCP service are outside this implementation.
+
+The finished provider must satisfy these statements:
+
+- A clean checkout plus declared immutable assets suffices to build and run;
+  no sibling checkout, host Python model environment, or floating branch is needed.
+- The upstream gitlink owns source identity. A separate reviewed ensemble
+  declaration owns checkpoint/config bytes. Locks own dependency identities.
+- ChefNMR2 owns input tensor construction, sampling, bond reconstruction,
+  canonicalization, vote ordering, charge filtering and adaptive sampling.
+  This repository owns product admission, deployment limits and public reports.
+- provider-core owns its existing signed API operations, scientific hosting,
+  interpretation machinery and shared delivery. This repository owns workflow
+  ordering and provider-specific durable Attempt obligations.
+- Only the API adapter receives API credentials and shared delivery access.
+  Science receives verified checkpoints, bounded input and its explicit devices.
+- Evidence separately establishes software correctness, real-model behavior,
+  deployment isolation and live API acceptance. Passing fixture tests proves
+  neither scientific accuracy nor a working production installation.
+
+Inspected sources
+-----------------
+
+All sibling checkouts were clean when inspected. Revisions below identify the
+design evidence, not dependencies to import from sibling filesystem paths.
+
+- nmrpeak-repro: 3288d5cbe4eac02e45645c321a52e4e68c90a370
+  Closest product: CHF offering, structured/prose inputs, SDK scientific
+  Contribution and ProcessExecutionHost integration, frozen deployments,
+  checkpoint admission, provider journal and immutable image reuse.
+  Read README.md, .gitmodules, pyproject.toml, nmrpeak_provider/product.py,
+  product_input.py, chf_binding.py, chf_science.py, nmrpeak_science.py,
+  product_result.py, compose/provider.yml and Makefile.
+- nmr-provider-tools: d5176a68a2098fa7482199323edc1f31686815db
+  Read README.md, packages/provider-core/{README.md,pyproject.toml}, and the
+  nmrpeak-mock-provider example's README and scientific binding. Current source
+  declares provider-core 0.6.21 and Python >=3.12. Source version alone is not
+  proof that a matching published wheel and issued locks are available.
+- nmrnet-repro: 16f3cbb312e48f2eeffef8101027d2bf32b97e21
+  Read README.md, .gitmodules and release metadata for source pinning,
+  scientific documentation and operational conventions.
+- magnet-deploy: e0f2cf9447ad59628f9f0903215c95d7a7efc687
+  Read README.md for named deployments, shared API proxy/outbox ownership,
+  interpreter separation and explicit Docker/network selection.
+- secs-repro: 7dcedfee86303d8aeead27d2227f1f4b7b524ee8
+  Read README.md for common wheelhouse, offline builds and shutdown semantics.
+- nmr-api-v1: ceaffd8145757ee33bb3acf90ed0a23e250b2f78
+  Read the analysis-kind seed migration and authority policy. Actual deployment
+  still requires a compatible published provider contract and API authorization.
+
+Upstream source was cloned into /tmp for read-only inspection. No model code
+was imported or executed. No weights, images or services were installed.
+
+Source submodule and checkpoint pins
+-----------------------------------
+
+Registered submodule:
+
+    [submodule "chefnmr2-upstream"]
+        path = chefnmr2-upstream
+        url = https://github.com/ml-struct-bio/chefnmr2.git
+
+Selected gitlink: 29374e57952684533d266832288413ba87c5d809
+Observed commit: 2026-11-04, README plugin instructions update.
+Source: https://github.com/ml-struct-bio/chefnmr2/tree/29374e57952684533d266832288413ba87c5d809
+
+Use the upstream repository directly. Keep local adapters outside the submodule;
+do not copy its inference implementation or introduce a fork without a concrete
+required source change. The gitlink is the source pin; do not repeat its value
+in a separately maintained runtime constant. Build provenance derives it from
+the committed tree. Production builds reject missing, dirty or mismatched
+submodules and export the exact admitted source closure without VCS metadata.
+Do not configure a tracking branch or use `submodule update --remote` in builds.
+
+Checkpoint repository: ziyux123/chefnmr2
+Proposed revision: 38a741cce3e6f7e0d5a827a66f8d3dea0728daf5
+Source: https://huggingface.co/ziyux123/chefnmr2/tree/38a741cce3e6f7e0d5a827a66f8d3dea0728daf5
+
+The pinned directory listing contains ten members, epochs 949 through 1399 at
+intervals of 50. The upstream README estimates 11.5 GB of weights. One inspected
+member, epoch1049, declares a 1,151,992,718-byte model.pt and a 1,280-byte
+config.yaml in public manifest version 5. Only this member's small config and
+manifest were read; all ten payloads and their hashes remain unverified.
+
+Acquisition must capture all ten manifests from that revision, bind their own
+hashes, and derive one reviewed ensemble declaration containing each tag,
+epoch, file size and SHA-256. Verify all model/config payloads before importing
+an immutable read-only checkpoint volume. Do not admit an arbitrary directory
+because it contains ten files. Keep downloaded payloads out of Git and image
+contexts; acquisition must not deserialize checkpoints. Verification must bind
+the bytes later opened by the worker, with no writable replacement opportunity.
+
+Preserve numeric ascending epoch order. Lexicographic folder order puts epoch949
+after epoch1399; upstream sorts by exported epoch, and ties in candidate voting
+depend on that order. Validate the reviewed member identities before service
+readiness; do not silently substitute a partial ensemble.
+
+Separate Python environments and existing runner precedent
+----------------------------------------------------------
+
+ChefNMR2 pyproject.toml requires Python ==3.11.* and pins torch 2.5.1,
+numpy 2.2.2, rdkit 2025.9.4, omegaconf 2.3.0, einops 0.8.1 and PyYAML 6.0.2.
+The current SDK requires >=3.12. These packages do not need to share an
+environment. Retain ChefNMR2 on Python 3.11 and the API/SDK on Python 3.12.
+The initial plan incorrectly made a model port a prerequisite by choosing
+ProcessExecutionHost before examining the lower-level runner precedent.
+
+SECS already separates SDK lifecycle ownership from scientific framing:
+
+- secs-repro/compose/provider.yml:121-125 launches provider_core.runner with
+  a fixed scientific executable after `--`.
+- src/secs_inference/provider/worker.py:101-125 uses AsyncRunnerSession and
+  RunnerSession for lifecycle, then adopts session.science for scientific I/O.
+- src/secs_inference/provider/worker_protocol.py:1-15 and 42-106 implements
+  bounded length-prefixed JSON, model readiness and resident request handling.
+  That protocol module has no SDK/process-supervisor dependency.
+- src/secs_inference/provider/worker_model.py:213-253 accepts the inherited
+  session/lease descriptors, retains the lease and serves the loaded model.
+
+Magnet E02 uses the same supervisor/worker split:
+models/e_02_ch_nmrexp/runner/serve.sh:12-14 selects the worker command;
+magnet_provider/owner_session_supervisor.py:39-50 invokes the SDK supervisor;
+the model's provider-side unix_runner_backend.py owns scientific requests.
+
+The shared mechanism is explicit in nmr-provider-tools:
+packages/provider-core/src/provider_core/runner.py:217-232 creates a socketpair
+and launches the supplied argv with subprocess.Popen, passing only science and
+lease descriptors plus operation identity. It does not require the executable
+to be the supervisor's interpreter or to import the SDK. Reuse this lifecycle
+owner rather than write another supervisor or require ProcessExecutionHost.
+The SDK's tests/fakes/runner.py:30-69 supplies a real child script using only
+standard-library imports, exercising this boundary without importing the SDK
+in the child. This is direct precedent for an SDK-independent executable.
+
+Use a Python 3.12 SDK supervisor environment and a separate Python 3.11 model
+environment in the networkless scientific container. Launch the model with its
+absolute interpreter path. The Python 3.12 API container connects through the
+existing RunnerSession control endpoint and exchanges versioned bounded JSON
+on the scientific channel. Only the 3.12 environments install provider-core;
+the 3.11 worker installs ChefNMR2 and the small provider-owned protocol adapter.
+
+Evidence limit: current SECS and Magnet images also install SDK helpers in
+their scientific environments; Magnet E02 currently uses Python 3.12 for both
+supervisor and worker. They prove the existing interface/lifecycle pattern,
+not a qualified 3.12-to-3.11 deployment. Prove the two-interpreter packaging,
+startup, framing, lease retention and retirement with a lightweight worker
+before model qualification. Do not copy their worker-side SDK imports into
+ChefNMR2's 3.11 adapter or patch ChefNMR2's Python requirement.
+
+Scientific input and result contracts
+-------------------------------------
+
+Start with one fixed CHF implementation and an explicit structured request.
+Use provider-owned schema identities; NMRPeak's schema IDs and tokenizer limits
+do not describe ChefNMR2. Add prose interpretation using the shared Interpreter
+once structured preparation/generation is proved. Both routes must converge on
+the same authoritative scientific preparation operation.
+
+Input carries a full molecular formula including hydrogens, carbon shifts in
+ppm, and proton (shift_ppm, integration_nH, multiplicity) observations. Preserve
+peak order and duplicates; upstream does not merge nearby carbon observations.
+Reject non-finite values and malformed shapes before allocation. Do not infer
+missing formula atoms, peaks or integrations. Reject condensed formulas, charge
+notation and unsupported elements with evidence from the actual model config.
+
+The inspected epoch1049 decoder contains C, H, O, N, S, P, F, Cl, Br, I, B, Si,
+As and Se. Derive admitted elements from verified ensemble configs, not this
+copied descriptive list. Upstream multiplet parsing collapses many patterns
+and can map unrecognized text to the general multiplet class. Define accepted
+notations explicitly and expose relevant normalization to the caller; do not
+copy NMRPeak's different multiplicity vocabulary blindly.
+
+Upstream sizes tensors to the request; it has no fixed atom/peak cap. Establish
+provider limits from measured memory/time at the admitted sampling policy.
+Include hydrogens in atom counts. Config embedding ranges are model conventions,
+not automatically justified hard validity bounds. Preparation must enforce
+limits before generation without inventing chemical equivalences or repairs.
+
+Production policy should use `n_samples="adaptive"`, seed 0, the complete
+ensemble and upstream sampling settings. First qualification can use 100 samples
+to bound experiment cost. Adaptive production readiness requires all branches
+(100, 1,000, 3,000 total draws) to fit measured resource and Job budgets. Read the
+branch rule from upstream; do not implement a second sampler or threshold table.
+Device is explicit (CPU or a selected CUDA target), never an automatic fallback.
+
+Return upstream candidate order, SMILES, votes and vote_fraction, together with
+n_samples, n_valid, validity, n_unique_candidates, reconstruction status counts,
+implausible candidates, sampling/adaptive evidence and ensemble provenance.
+The ranking compares planar structures; it does not establish stereochemistry.
+vote_fraction divides by retained ranked votes, not all draws or n_valid.
+Keep these distinctions and the upstream validity_definition in the report.
+Do not add reranking or describe empirical frequency as a guaranteed probability.
+An empty candidate list must be represented honestly with its counts/statuses;
+it must not become fabricated success or an infrastructure error.
+
+Attach derived source, interpreter, dependency/image, ensemble, policy and
+device identities plus the admitted scientific input. Define bounded report
+detail without changing sampling or ranking. Define and prove explicit byte
+limits for this scientific protocol and the public API report. The 1 MiB limit
+of ProcessExecutionHost is not an inherited restriction of RunnerSession's
+scientific socket. Never silently drop
+candidates or exceed the carrier after doing expensive science.
+
+Runtime ownership and lane authority
+------------------------------------
+
+Follow SECS's RunnerSession lifecycle and bounded scientific-channel pattern.
+Use NMRPeak for the matching CHF product/API workflow and deployment conventions.
+Keep preparation and generation explicit, with worker-owned prepared handles
+bound to their original request and boot. Reuse selected lifecycle/build helpers
+after tracing their requirements; do not clone a whole provider tree, duplicate
+the SDK supervisor or add multi-family registries.
+
+Proposed layout, created only as implemented responsibilities require:
+
+    chefnmr2-upstream/      pinned upstream Git submodule
+    chefnmr2_provider/      product, API workflow and versioned scientific channel
+    chefnmr2_worker/        Python 3.11 model adapter without an SDK dependency
+    requirements/          issued SDK pins/locks, model locks, ensemble declaration
+    containers/            separate adapter, science and test build inputs
+    host/                  operator entrypoints and narrowly scoped build helpers
+    config/                nonsecret examples and named deployment configuration
+    tests/                 contract, behavior, integration and opt-in model proof
+    docs/                  scientific and operator HTML, following NMRNet precedent
+    notes/                 decisions and dated qualification evidence
+
+API adapter: Python 3.12, lightweight dependencies, private API credential,
+shared proxy/outbox sockets, bounded journal and worker session. Prefer no direct
+IP network where proxy sockets suffice. Prose/upload egress, if needed, is a
+separate explicit grant. No weights, GPU or model imports in this container.
+
+Science container: separate 3.12 supervisor and 3.11 model environments;
+networkless, non-root, read-only root/checkpoints, private bounded
+scratch and session sockets, no credentials, outbox or engine socket. Explicit
+CPU/memory/PID limits include all reconstruction subprocesses. CUDA grants one
+selected GPU only in its distinct target. Containers provide the OS/resource
+boundary; SDK process hosting alone does not sandbox workers or descendants.
+
+Acquisition: network to reviewed sources, writes only the explicit common cache
+and private staging, no source-root write mount or runtime credential. Build:
+verified locked cache and committed source inputs, offline package installation,
+digest-pinned bases, explicit output images. Tests: no weights/GPU/credentials or
+external network by default; internal peers only for isolated API integration.
+
+Host entrypoints own the selected local Docker socket; it is never mounted into
+workers. Follow sibling DOCKER_CONTEXT, WHEELHOUSE and NETWORK_INTERFACE selection
+conventions with no unattended defaults. Keep status/down available from recorded
+deployment identity. Render and execute the same captured configuration.
+
+Bind a new independent API provider identity and credential at deployment time.
+Use shared Hello/Job/Attempt operations and durable outbox handoff; retain only
+provider-specific control obligations, not a second payload outbox. No automatic
+scientific replay after an uncertain reply or lost process. Shutdown stops
+admission and settles admitted work/handoff before retiring science. Restart
+reconciliation and cancellation follow actual API permission and journal facts.
+
+ChefNMR2 initializes a reconstruction process pool before CUDA. It also has an
+inline fallback that can use a separate cached pool; recon_workers=0 does not
+establish absence of descendants. Its shutdown uses wait=False and the constructor
+can fail after pool acquisition. Qualification must prove startup-failure cleanup,
+pool-failure behavior, cancellation and container-wide exit. Retain partial
+resources where accessible; otherwise retire the entire owning worker container.
+Do not claim model close alone proves all reconstruction workers have stopped.
+
+Ordinary down preserves checkpoints, frozen generations, journal and shared
+services. Cache/image cleanup must retain deployed identities. Destructive
+retirement remains an explicit operation against verified stopped owned state.
+No service publishes a host inference port. Native containers reduce grants;
+they are not a hostile-code sandbox.
+
+Implementation order and proof
+------------------------------
+
+1. The exact submodule is now fetched and pinned. Add root ignore/context rules,
+   source inventory and dependency acquisition inputs. Select an actually issued SDK wheel with its
+   matching API/native install locks and acquisition release. Verify its runner
+   contract rather than assuming current source is already published. Prove the
+   two-interpreter supervisor/model boundary with an inert scientific worker.
+2. Capture the complete pinned ensemble declaration, verify all payloads and
+   build a standalone CPU reproduction lane. Reproduce the upstream morphine
+   example and a small licensed test cohort with recorded input bytes, seeds,
+   hardware, runtime identities, candidates and timings. This proves model use,
+   not a fresh validation of published accuracy claims.
+3. Implement structured admission, one resident model adapter and a bounded report.
+   Keep prepared state in worker custody; generation consumes the exact admitted
+   state once. Fixture tests prove formula/peak preservation, rejection before
+   allocation, ranking/tie preservation, vote denominators, empty results and
+   report bounds. Call upstream functions for science rather than mirror them.
+4. Wire API lifecycle, journal/recovery, shared delivery and optional prose
+   interpretation. Test against a disposable fake TLS API/outbox: Hello, START,
+   report handoff, cancellation, API outage, restart with retained obligations,
+   lost science reply and worker crash. Prove no unintended second generation.
+5. Add named deployment preview/build/up/update/status/down with frozen inputs
+   and explicit device/resource settings. Check rendered and effective mounts,
+   credentials, network, GPU, image identities and cleanup. Verify the real build
+   context excludes credentials, caches, weights and .git. Prove allowed worker
+   reads and denied writes/network access through maintained entrypoints.
+6. Qualify CPU/adaptive operation, then CUDA separately if selected. Measure
+   initialization RAM, peak RAM/VRAM, all adaptive branches, atom/peak extremes,
+   worker count, retirement and two successive Jobs on one loaded ensemble.
+   Establish admission limits and readiness budgets from those measurements.
+7. With issued deployment inputs, perform isolated live API qualification using
+   this provider's identity. Confirm actual report acceptance, inspected image
+   and asset identities, restart reconciliation and cleanup. Publish scientific
+   limitations, input examples, operator instructions and observed evidence.
+
+For a routine upstream update, change the gitlink, review the source diff,
+rebuild derived provenance and repeat affected scientific/compatibility proof.
+For new weights, update the ensemble declaration and qualify the whole ensemble;
+mixed old/new member sets cannot become ready. Scientifically material source,
+weights, runtime or policy changes require an explicit new execution generation
+using the established sibling convention, without deleting old obligations.
+
+Release facts and unresolved evidence
+------------------------------------
+
+Upstream records MIT for its code, third-party notices in THIRD_PARTY.md, and
+CDLA-Sharing-1.0 for checkpoints. It also records training sources under
+CC BY-NC 4.0. Carry those facts and attribution into documentation/image planning;
+code licensing alone does not establish terms for the intended hosted service.
+Dataset fixtures have separate per-file terms in upstream data/README.md.
+Reference: https://github.com/ml-struct-bio/chefnmr2/blob/29374e57952684533d266832288413ba87c5d809/README.md
+
+Still unproved: two-interpreter packaging/lifecycle, full ensemble byte integrity,
+published SDK artifact selection, resource limits, CPU/CUDA inference, descendant
+cleanup, full-size report carriage, intended deployment terms and live API
+compatibility/authorization. These are concrete implementation/qualification
+gates. The source submodule is now fetched and its gitlink selects the recorded
+commit. No runtime, external registration, checkpoint payload or deployment has
+been created.
