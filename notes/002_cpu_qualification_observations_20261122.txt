@@ -1,0 +1,156 @@
+ChefNMR2 CPU qualification observations
+======================================
+
+Date: 2026-11-22
+Status: real single-checkpoint inference passed on Python 3.12 and 3.13 before
+       the image refactor; qualification of the new staged images is running.
+
+Scope and correction to the initial plan
+---------------------------------------
+
+This note follows 001_chefnmr2_provider_plan_20261122.txt. Its recommendation to
+keep the scientific model on Python 3.11 was conservative. Actual inference
+has now succeeded on newer interpreters without changing upstream source.
+This is evidence for a simpler scientific runtime; the SDK supervisor, provider
+protocol, API integration and production lifecycle remain unimplemented here.
+
+The pinned upstream pyproject declares Python ==3.11.*. Qualification imports
+its mounted source through PYTHONPATH instead of installing the ChefNMR2 package.
+Passing inference therefore does not establish normal package-install support.
+The source identity remains the repository's upstream gitlink; upstream was not
+patched to remove its Python restriction.
+
+Completed real-model observations before the image refactor
+-----------------------------------------------------------
+
+Both runs used CPU-only torch 2.5.1+cpu, the verified epoch949 model/config pair,
+the upstream morphine example (formula C17H19NO3 and its proton/carbon peaks),
+seed 0, ten samples, and two reconstruction workers. The container limit was
+two CPUs and 8 GiB RAM. These limits are test settings, not measured production
+admission limits.
+
+- Python 3.12.16: ten valid samples; morphine received eight votes and one
+  alternative structure received two. Reported inference time was 77.33 seconds.
+- Python 3.13.18: ten valid samples; the same candidate vote counts were observed.
+  Reported inference time was 77.29 seconds.
+
+Those times exclude model loading. The 3.12 run used a verified temporary
+checkpoint snapshot because the then-existing checkout lock blocked the Make
+lane. The first 3.13 run used a temporary version-specific build override.
+The maintained version-selection lane must pass on its own staged images;
+those earlier results do not substitute for that check.
+
+The check requires a live reconstruction pool, ten completed samples, nonempty
+candidates, readable SMILES and the requested molecular formula for every
+candidate. It reports whether morphine appears, but does not require that
+specific candidate: ten draws from one member are a compatibility check.
+Upstream's complete ensemble and adaptive policy need all ten members.
+These runs establish neither ensemble accuracy, generalization, GPU behavior,
+production memory bounds nor live API acceptance. A single member needs only
+its own model.pt and config.yaml; the other checkpoints are unnecessary for
+this fixed-sample test.
+
+Upstream's CUDA autocast warning appeared on CPU; autocast was disabled and
+actual inference completed. The observed environment and torch.version.cuda
+check establish CPU use. A speculative Python 3.13 typing.io incompatibility
+was investigated and was not observed in the installed dependency imports.
+
+Maintained image and version selection
+--------------------------------------
+
+containers/compatibility/Dockerfile remains self-contained. Its pinned Python
+stages own the available versions and default. make/compatibility.mk reads that
+selection and accepts PY_VERSION as an explicit command-line input:
+
+    make compatibility/check DOCKER_CONTEXT=science PY_VERSION=3.13
+    make compatibility/check DOCKER_CONTEXT=science PY_VERSION=3.12
+
+The build reads only upstream pyproject.toml to derive separate Torch and science
+requirement lists inside an intermediate stage. CPU Torch installs first from
+the official CPU index; remaining upstream dependencies install separately.
+The final stage adds the inline inference check. This keeps source/check edits
+away from expensive dependency installation and lets a science-only dependency
+change reuse Torch. BuildKit's pip cache retains downloads outside image layers.
+The cache survives an install-step failure; successful layer caching avoids
+reinstalling unchanged dependencies entirely. These are different mechanisms.
+
+The Dockerfile pins Python 3.12.16 and 3.13.18 by digest. The running interpreter
+is checked before dependency installation and before model loading against both
+the selected minor version and the full version declared by the pinned base.
+Both locations print the executable path. Image tags distinguish versions; the
+Make lane runs the immutable ID returned by its own build.
+
+Completed refactor checks so far:
+
+- Both real builds reported /usr/local/bin/python with the expected full version.
+- A deliberately wrong base (3.12 selected as 3.13) failed before installation.
+- The current check script, run in the existing 3.13 image with empty checkpoint
+  fixtures, rejected both a requested 3.12 minor version and an incorrect pinned
+  patch version before constructing the model.
+- Inert Docker tests through actual Make verified default/explicit selections,
+  rejection of empty, unsupported and shell-like input before engine access,
+  and ignoring ambient PY_VERSION in favor of the Dockerfile default.
+- Temporary operation directories were removed on normal completion, build
+  failure, inference failure and a handled interrupt in those inert tests.
+
+Pending at this note's creation: complete both new images, rerun actual inference
+through Make, and demonstrate dependency-layer cache reuse. The initial rebuilds
+are downloading approximately 175 MB CPU wheels. Transfer rates vary sharply;
+pip resumed one interrupted 3.13 download automatically. Build logs can therefore
+remain quiet while wheel bytes continue growing. No passing result for these
+new images is claimed yet.
+
+Direct upstream dependencies stay pinned, but their transitive dependencies are
+resolved during installation. These images are not a fully locked environment.
+The pinned Torch release has advisory GHSA-53q9-r3pm-6pq6 concerning its legacy
+TAR checkpoint loader. The selected, checksum-verified epoch949 artifact was
+checked to be ZIP, which uses a different loader branch. This is a narrow
+artifact/loader observation, not a claim that Torch 2.5.1 is generally secure.
+
+Downloads, engine selection and retained state
+----------------------------------------------
+
+Checkpoint acquisition retrieves the full declared ensemble and now runs
+initialization, download and verification as sequential one-shot Compose commands. Transfers are quiet; weights/watch shows
+file sizes separately. Ctrl+C stops the operation and preserves completed files
+and .part files for resumption. A proxy prompt accepts Enter as none. Docker
+image pulls follow the engine's proxy settings, separately from download proxy
+selection. Each curl attempt has a one-hour limit, with up to five retries
+and a two-hour budget for starting retries. An exhausted retry budget leaves
+the partial file available for the next invocation.
+
+The accidentally selected agentic checkpoint volume was moved to science after
+both downloads stopped. Inventories and hashes matched before retiring the
+source volume; the previous science partial file was verified against the
+incoming completed file before replacement. At migration completion, science
+held complete pairs for epochs 949, 999 and 1049, plus a partial epoch1099 model.
+No claim is made that the complete ensemble has finished downloading.
+
+The checkout-wide operation lock was removed as requested. Operations on
+separate engines no longer block each other through a repository lock.
+The Make lane captures one local Unix-socket endpoint for each operation,
+clears ambient routing overrides, verifies the selected pair, and runs inference
+without a network, with read-only source/checkpoints and an unprivileged user.
+
+Containers and uniquely named operation directories are disposable. Current
+versioned images, shared BuildKit cache, pinned bases and checkpoint state are
+reusable and retained. Probe scripts, temporary Dockerfiles and diagnostic logs
+are retired after their evidence has been checked. Generated requirement lists
+are image build inputs, not additional maintained repository manifests.
+
+Precedent and primary references
+--------------------------------
+
+The staged design was compared with the package/provider Dockerfiles in
+secs-repro and the inference Dockerfile in nmrnet-repro before implementation.
+Those provide useful dependency/source separation; this narrow check keeps
+its single-Dockerfile interface rather than copying their deployment machinery.
+
+Docker cache optimization and pip cache mounts:
+https://docs.docker.com/build/cache/optimize/
+Docker multistage builds and Dockerfile instruction semantics:
+https://docs.docker.com/build/building/multi-stage/
+https://docs.docker.com/reference/dockerfile/
+Torch checkpoint advisory and the pinned loader source:
+https://github.com/pytorch/pytorch/security/advisories/GHSA-53q9-r3pm-6pq6
+https://github.com/pytorch/pytorch/blob/v2.5.1/torch/serialization.py
