@@ -2,7 +2,7 @@ Provider SDK simplification and batch execution plan
 ===================================================
 
 Date: 2026-11-23
-Status: step 1 complete; step 2 in progress; steps 3-6 planned
+Status: steps 1-2 complete; steps 3-6 planned
 
 Purpose
 -------
@@ -230,7 +230,7 @@ separate gates from local implementation completion.
    every historical path. Changed intentional behavior must be documented, not
    concealed by removing a test. Implement selected changes in later batches.
 
-   [ ] Evaluate NMRPeak's validate/predict boundary using captured input bytes
+   [x] Evaluate NMRPeak's validate/predict boundary using captured input bytes
        and the same pinned model, tokenizer, dictionary and encoding settings.
        Compare token count and encoded source tensor values/shape/dtype, including
        special tokens and padding, between validation and prediction. Exercise
@@ -239,26 +239,26 @@ separate gates from local implementation completion.
        alone do not prove determinism. If identity cannot be established, retain
        prepared data. Separately record preparation time and peak memory against
        prediction cost before choosing repetition versus retention.
-   [ ] Record the selected NMRPeak boundary and its necessary SDK capabilities;
+   [x] Record the selected NMRPeak boundary and its necessary SDK capabilities;
        implement it in real NMRPeak and the mock under step 3. Do not require
        bitwise equality of stochastic candidates to prove prepared-input identity.
-   [ ] Specify NMRNet's prepared geometry collection as the input to prediction.
+   [x] Specify NMRNet's prepared geometry collection as the input to prediction.
        Record exact prediction request bytes, order, atom/source correspondence
        and admitted runtime identity. Replacement retries reuse those bytes;
        require a check that conformer generation is not invoked again. Custom
        invocation migration waits for step 3's complete recovery contract.
-   [ ] Determine SECS prepared-data size, preparation cost and source ownership.
+   [x] Determine SECS prepared-data size, preparation cost and source ownership.
        Choose an ordinary immutable input or justified worker-local retention.
        Compare spectrum values/shape/dtype, canonical formula, representation
        metadata and source snapshot identities. Exercise source replacement or
        deletion after capture: execution must use admitted data or reject before
        science, never read replacement bytes. Verify source release follows
        confirmed reader shutdown, including preparation failure/cancellation.
-   [ ] Specify Magnet's typed validation/generation contract for the later
+   [x] Specify Magnet's typed validation/generation contract for the later
        shared transport/lifecycle migration under step 3. Compare model inputs,
        result schema/context and public outcome mapping at that boundary; test
        eligible model failure, ineligible failure and lost outcome separately.
-   [ ] If live state remains necessary, identify the missing SDK analysis/
+   [x] If live state remains necessary, identify the missing SDK analysis/
        submission guarantees for that concrete consumer. Do not propose a general
        workflow engine merely to reproduce today's application state machines.
 
@@ -802,6 +802,231 @@ Migration and verification
 [ ] Commit coherent verified slices with rationale and validation. Release a
     qualified SDK version, update immutable consumer pins/locks, rebuild, then
     qualify deployments. Local sibling checkouts must not become runtime inputs.
+
+Batch 2 preparation decisions — 2026-11-23
+-----------------------------------------
+
+Scope: decisions and offline evidence, not provider migrations. Batch 3 owns
+implementation and the new interfaces' recovery/cancellation acceptance tests.
+Seven completed probes and their immutable image identities are recorded in
+notes/evidence/batch2/; README.txt gives commands, inputs and measurement limits.
+Existing provider test evidence is listed below separately from those probes.
+
+Source revisions inspected:
+  nmrpeak-repro 3288d5cbe4eac02e45645c321a52e4e68c90a370
+  nmrnet-repro 16f3cbb312e48f2eeffef8101027d2bf32b97e21
+  secs-repro 7dcedfee86303d8aeead27d2227f1f4b7b524ee8
+  magnet-deploy e0f2cf9447ad59628f9f0903215c95d7a7efc687
+Magnet has unrelated working-tree changes; none were edited. Its measured
+images label older revision 9dd8406d, while both installed serving_worker.py
+files match the inspected checkout. NMRNet's five measured source modules and
+SECS's input adapter/source access/worker model also match. images.json records
+these comparisons; they do not assert that every installed file equals HEAD.
+An initial SECS image had older formula-evidence validation. Its measurements
+were replaced by a run on the current image; this is not a compatibility path.
+
+Decision: NMRPeak
+
+  Keep immutable HF/CHF scientific input, interpreter rejection feedback, the
+  admitted model/dictionary/tokenizer identity, decode policy and seed. Select
+  validate(input) -> report and generate(the same input) -> candidates. Generate
+  rebuilds its tensor under the same loaded runtime. The Attempt owns accepted
+  input; the host owns the loaded model; each invocation owns temporary tensors.
+  Remove the cross-call PreparedNmrpeakInput handle and its disposal protocol
+  when the mock and real contribution migrate together in batch 3.
+
+  Source audit: families/nmrpeak/runner_runtime.py calls TokenizedNmrDataset's
+  tokenize_item, not the augmenting NMRTokenizeDataset in the same upstream file.
+  That path sorts peaks, transforms numbers/formula deterministically and reads
+  fixed family flags; it does not sample random augmentation. Materialization
+  creates fresh values from frozen typed records. Encoding uses the loaded
+  dictionary's IDs, int64, BOS/EOS and right padding to a multiple of eight.
+  The dictionary gains MASK at model setup, not per proposal. Keep those inputs
+  fixed across validation/generation; a model replacement must re-establish
+  them. Matching repeated samples alone was not the determinism argument.
+
+  Evidence: nmrpeak-hf.json and nmrpeak-chf.json compare full tensor values,
+  shape/dtype, token counts and special tokens from captured bytes. Twenty
+  preparations per case; ordinary small/medium/long preparation medians are
+  0.13-0.43 ms, versus 0.45-11.29 s generation medians. Captured ordinary JSON is
+  213-2208 bytes. Largest model-valid encoded tensor is 2048 bytes. Valid-case
+  preparation process peaks are about 1.04-1.06 GB including the resident model;
+  the raw records also include generation peaks and later allocator retention.
+  Retaining that tiny tensor across calls does not justify a stateful SDK API.
+
+  Defect found: both actual models have 256 encoder positions. Current admission
+  accepts 511 raw tokens, which pad to 520 and fail in generation. Even 255 pad
+  to 264 and fail; 254 pad to 256 and run. The existing 512-token rejection and
+  a corrected 254-token proposal were exercised. Do not preserve the erroneous
+  511 limit. Migration must derive encoded-length admission from model capacity,
+  retaining useful corrective feedback and rejecting before generation.
+
+  Reject alternatives: transferring tensor values adds a new representation for
+  negligible work; retaining an opaque handle adds ownership without meaningful
+  savings. Required SDK behavior is ordinary typed calls, permission checks and
+  settled cleanup. No new prepared-state abstraction is needed. Acceptance:
+  HF/CHF and mock use the same accepted input after interpretation correction;
+  encoded-length boundaries reject correctly; cancellation and replacement do
+  not change the model/input identity or leak an analysis.
+
+Decision: NMRNet
+
+  Keep the ordered captured geometry collection as prediction input: exact
+  request bytes, coordinates in angstrom, source/atom correspondence, hydrogen
+  parent maps, conformer IDs/settings and provenance. Generation is a distinct
+  scientific operation, potentially in a different environment. Never regenerate
+  conformers as a prediction retry. The Attempt/preparation owner retains this
+  immutable collection until prediction and any permitted recovery settle.
+
+  Select predict(geometry collection) -> ordered predictions. Compose model
+  tensors inside that call under the admitted runtime, and retain them locally
+  only for its execution. Remove the external prepare-handle/private transport
+  handoff when SDK recovery is ready; do not transmit ABI-specific torch arrays.
+  A replacement rebuilds tensors from the same ordered bytes only after old
+  worker retirement and matching the entire admitted runtime/model identity,
+  including dictionary/scalers. The host owns worker/model resources.
+
+  Evidence: nmrnet-smiles.json captures two generated collections once, including
+  provenance and exact encoded requests; nmrnet-prediction.json consumes the
+  first without calling the generator. Re-preparation matches every tensor hash,
+  dtype, shape and selected atom index. Warm sixteen-atom preparation takes
+  0.79 ms versus 3.14 s prediction; two conformers take 3.54 ms versus 5.80 s.
+  Cold first preparation is 1.65 s, including lazy imports/dictionary loading.
+  At 128 geometries of 128 atoms, the frame is 334767 bytes, preparation 0.34 s,
+  and logical tensor bytes total 57794560 (shared storage may be counted twice).
+  Preparation process peak is about 790 MB; measured ordinary prediction peaks
+  reach 1.93 GB including head loading. This is maximum count/atoms, not maximum
+  frame bytes, and the maximum collection's prediction was not timed.
+
+  Reject alternatives: regenerate-from-SMILES loses exact scientific identity;
+  transporting derived tensors expands the input and couples runtimes; retaining
+  an external handle cannot survive replacement and duplicates lifecycle work.
+  Batch 3 must supply complete replacement recovery: the original total budget
+  covers retirement, acquisition, admission, preparation and redispatch; only
+  exact confirmed ModelCallFailed eligibility may retry; uncertainty does not.
+  Acceptance must combine a once-generated collection, eligible failure and
+  replacement, assert identical ordered bytes and zero additional generator
+  calls, reject changed runtime, and retain source ownership through cleanup.
+  Existing tests cover these obligations compositionally, not as that one case.
+
+Decision: SECS
+
+  Keep discovery/selection and actual spectrum preparation. Select prepare ->
+  immutable PreparedSpectrum value, then search(value) -> scientific result.
+  The value carries canonical formula, 10000 float32-equivalent intensities,
+  grid/dtype/shape, representation and processing facts, source references and
+  captured snapshot digests. A representation ID remains evidence of the chosen
+  source, not a capability to reopen a mutable path in a different worker.
+
+  Prefer ordinary typed tuple-of-float values: actual JSON bodies are 202415 and
+  213437 bytes, about one tenth of the existing 2 MiB transport bound. Converting
+  back to float32 preserves every bit for both fixtures; metadata also matches.
+  Raw array size is 40000 bytes. JSON encode/decode/restore takes about 8 ms;
+  preparation takes 35 ms for JCAMP and 8 ms for processed Bruker. Real-checkpoint
+  embedding takes 126/140 ms. Preparation process peaks are recorded separately
+  from roughly 1.18 GB bounded-search peak. A small one-generation static search
+  takes 0.93 s. The full production retrieval index is absent; these results do
+  not estimate full search throughput. JSON timings exclude SDK/IPC overhead.
+
+  The Attempt owns captured uploads while readers can access them. Successful
+  preparation returns captured values after its readers settle; later search
+  uses those values, never a source path. Pending/failed/cancelled preparation
+  retains uploads until the original reader is joined or its worker is confirmed
+  stopped. The host continues to own the warm model/index. Preserve no-starting-
+  candidates as a scientific outcome, not an operational failure.
+
+  Remove the opaque single-use prepared handle and its stateful SDK handoff.
+  Keep Attempt/input correlation and no replay after uncertain execution in the
+  existing execution owner; do not add a second consume-token registry merely
+  to imitate the old handle. Reject reopening input because it may change; reject
+  a custom binary transport solely to save roughly 150 KB. Larger future spectra
+  can reopen the transfer decision based on actual costs.
+
+  Evidence: secs.json verifies source substitution rejects the old selection,
+  captured values/metadata and portable float32 identity. Current worker code
+  takes verified byte snapshots; source access scopes close readers. Existing
+  selected-spectrum test deletes the receipt source after preparation, mutates
+  the caller's formula, and still observes admitted values/formula. Separate
+  native-reader/session tests cover cancellation custody and source retirement.
+  The synchronous measurement probe itself does not test cancellation. Batch 3
+  must test the new DTO handoff with a real blocked preparation reader, cancelled
+  caller, failed stop, source deletion/replacement, and search after source release.
+
+Decision: Magnet
+
+  Keep E01/E02's typed validate(input) -> acceptance/rejection and
+  generate(same input, policy, seed) -> typed outcome. They already rebuild
+  codec inputs during generation; no retained preparation handle is needed.
+  Retain E01 atom counts/1H inputs and E02 atom inventory/1H+13C inputs, exact
+  decimal semantics, offering-specific checkpoint/config/vocabulary, decode
+  policy and attempt-derived seed. The Attempt owns typed input/result context;
+  the host owns model and each invocation owns temporary tensors.
+
+  Evidence: magnet-e01.json and magnet-e02.json compare every prepared tensor's
+  shape/dtype/value hash with the actual generation conversion. Twenty warm
+  preparations take medians 1.20/0.21 ms versus 0.35/0.17 s for 100 candidates;
+  input JSON is small (exact counts in records). Preparation process peaks are
+  about 455/510 MB, generation peaks 518/546 MB including witness overhead.
+  Keep model-dependent codec validation; remove repeated transport/schema checks
+  when the SDK codec already owns the same fact. Do not preserve wire dictionaries,
+  numeric worker handles or parallel lifecycle wrappers as public contracts.
+
+  G01 keeps its existing direct typed ForwardInput -> prediction call. There is
+  no separate prepared result to retain or recompute. Its input/output projection
+  tests pass; no cached G01 model image was used and no G01 timing is claimed.
+  Adding a validate phase solely for uniformity would create work without value.
+
+  Preserve public result schemas/context and scientific outcome mapping:
+  E01 magnet.e01.generation_observation.v4;
+  E02 magnet.e02.generation_observation.v3;
+  G01 magnet.g01.prediction_observation.v2.
+  Attempt identity, interpretation evidence, admitted model input, verbosity and
+  model-specific availability remain meaningful. Their private wrapping does not.
+  SDK migration needs the same complete-budget retirement/replacement guarantees
+  as NMRNet, with provider-supplied retry eligibility. Known eligible model failure,
+  ineligible failure and unknown outcome remain distinct; only the first can retry
+  under configured policy. Acceptance: preserve typed input/policy/seed on retry,
+  never repeat uncertain science, preserve each public result context, and avoid
+  withdrawing healthy sibling offerings. No unified scientific model API is needed.
+
+Validation and migration gates
+
+  Offline measurements: all seven probes completed with their recorded assertions.
+  Python syntax, JSON/probe digests, image IDs and NMRNet's captured-file digest
+  were checked. No runtime source was changed and no service was redeployed.
+
+  SECS maintained test/provider: 144 passed. Focused selected-spectrum (11) and
+  native-worker (25) tests also passed against the initially measured c63 image;
+  its worker_model/source_access files equal current source. The final cost probe
+  uses current 783470 image, including the updated formula-evidence validation.
+  Magnet maintained test/unit selections: generation_recovery 16, E02 analysis
+  binding 28, E01/E02 live sessions 46, G01 processor 28 passed. These are existing
+  contract tests, not evidence that the future SDK migrations already work.
+
+  NMRNet maintained provider-core/output could not start its tests: the selected
+  offline pool lacks provider_core-0.6.19.tar.gz. No substitute SDK was installed.
+  Its recovery/session tests were inspected, not claimed as rerun. The RDKit
+  runtime lane passed 3 tests; that lane checks environment identity, not retry.
+  The maintained smiles-generator lane passed 11 tests, including the test that
+  forbids re-embedding after the generated collection crosses its wire boundary.
+  Source references for the pending migration proof:
+    nmrnet-repro/tests/integration/provider_core/normative/
+      test_nmrnet_prediction_recovery.py
+    nmrnet-repro/tests/integration/provider_core/test_nmrnet_session.py
+    nmrnet-repro/tests/integration/rdkit_runtime/test_smiles.py
+    secs-repro/tests/integration/{test_selected_spectrum,test_native_worker}.py
+    secs-repro/tests/provider/{test_sdk_session,test_sdk_runtime_drain}.py
+    magnet-deploy/tests/unit/{test_generation_recovery,
+      test_e01_e02_live_sessions,test_e02_analysis_binding,
+      test_g01_provider_processor}.py
+
+  Q2.1-Q2.4 support these boundary decisions at the recorded input sizes and
+  runtimes. They do not qualify GPU/full-index performance or new SDK execution.
+  No general live-state/workflow API is justified by these consumers. Loaded
+  models/indexes and invocation-local arrays remain worker-owned where useful.
+  Batch 3 begins with NMRNet's recovery ownership contract; do not migrate its
+  provider until the pinned test lane and combined recovery acceptance pass.
+
 
 Source map for implementation
 ----------------------------
