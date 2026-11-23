@@ -1,0 +1,410 @@
+Provider SDK simplification and batch execution plan
+===================================================
+
+Date: 2026-11-23
+Status: planned; source comparison and iterative Luna-medium review completed
+
+Purpose
+-------
+
+Reduce the code each provider must write to run science through the NMR API.
+Simplify scientific interfaces before adding SDK abstractions around existing
+protocols. Provider code should describe its science and product behavior;
+provider-core should own the common execution and service lifecycle.
+
+This note records the agreed roadmap across chefnmr2-repro,
+nmr-provider-tools (including its four examples), nmrpeak-repro, nmrnet-repro,
+secs-repro and magnet-deploy. Sibling paths below are inspection references,
+not runtime dependencies. Recheck source and repository instructions when
+starting each implementation slice.
+
+Starting point
+--------------
+
+- ChefNMR2 pins provider-core 0.7.2. Its working tree already contains an
+  uncommitted batch-wire change: ElucidationBatch.requests is processed
+  sequentially and ElucidationBatchResult.replies preserves entry order.
+  Ordinary model exceptions become per-entry diagnostics. A lost worker or
+  transport can still prevent the whole reply from arriving.
+- Chef's API adapter currently submits singleton batches. Batch-shaped wire
+  input does not itself enable concurrent job acquisition or batch assembly.
+- ScientificCall already owns analysis/result cleanup and bounded retry for
+  independent typed calls. It rejects bindings that exchange live state handles.
+  Do not build a second implementation of those existing responsibilities.
+- ExecutionSettings already owns host startup/retirement through
+  open_contribution() and open_process_call().
+- JobService currently runs one API job at a time. NMRPeak and Magnet retain
+  their own service composition for multiple offerings.
+- This review changes only the planning note; it does not implement or release
+  SDK/provider behavior or deploy services.
+
+End-state contract
+------------------
+
+[ ] Provider code declares scientific input/output types, loaded model setup,
+    scientific operations, interpretation prompts and product result mapping.
+[ ] SDK code owns admission, invocation, retry/backoff, task cancellation,
+    resource settlement, API coordination and delivery lifetime.
+[ ] Independent operations accept ordinary typed inputs and return ordinary
+    typed outputs. No worker-state handle is required merely to connect stages.
+[ ] Preparation can retain immutable data when needed. Moving large data or
+    repeating expensive preparation is evaluated before removing worker-local
+    state; retained state remains an explicit option where justified.
+[ ] Every acquired worker, interpreter, upload and intermediate result has one
+    cleanup owner. A caller timing out does not imply the resource has stopped.
+[ ] A delivery or report-assembly failure does not rerun completed science.
+    Transport uncertainty does not authorize replay of a possibly executed call.
+[ ] Deployment configuration owns operational limits and error policies.
+    Scientific code owns whether a completed result is scientifically usable.
+[ ] Examples demonstrate the same supported interfaces used by real providers.
+    Low-level examples remain only where they deliberately teach those APIs.
+
+Provider-specific requirements
+------------------------------
+
+ChefNMR2
+  Preserve ordered batch replies, sample budgets, seeds and per-entry failures.
+  Keep model loading outside the request loop. Initially execute batch entries
+  sequentially; tensor batching across molecules is outside this plan.
+
+NMRPeak
+  The present prepare/generate split retains encoded input in the worker so
+  generation consumes exactly the accepted preparation. The interpreter can
+  receive token-limit feedback before generation. Proposed simpler interface:
+  validate(input), then predict(input), with preparation and generation inside
+  predict. Measure preparation time/memory and check reproducibility under the
+  same model/configuration before choosing repeated preparation. This choice
+  must preserve validation feedback and the exact accepted input.
+
+NMRNet
+  Inputs may be supplied geometries or generated conformers. Preserve geometry
+  order, atom correspondence, source evidence and the exact coordinates used.
+  A prediction retry reuses the prepared geometry batch; it must not silently
+  rerun conformer generation. Geometry parsing/generation and prediction may
+  require separate worker environments and lifetimes.
+
+SECS
+  Interpretation can inspect uploaded spectra and select a representation.
+  Search must consume the exact prepared spectrum and formula. Keep upload
+  snapshots available until their readers stop. Compare transferring prepared
+  data with retaining it in the worker; do not replace it with a path that causes
+  execution to reopen changed input. Preserve the scientific distinction between
+  no starting candidates and an operational failure.
+
+Magnet
+  Preserve independently configured model offerings, their input/result types,
+  availability and error policies. E01 already validates and then generates from
+  full typed input, without requiring a preparation handle for that handoff.
+  Shared service code must support multiple offerings without making one failed
+  offering unnecessarily withdraw healthy siblings.
+
+SDK examples
+  Reference-match is the existing compact independent-call example. Spectrum
+  summary passes portable bytes from baseline correction to peak detection;
+  its scientific dependency does not require live state handles. The NMRPeak
+  mock currently demonstrates prepare/generate state custody. Dummy-provider
+  demonstrates basic contribution startup and execution. Decide which examples
+  teach normal usage and which intentionally teach lower-level ownership.
+
+Implementation checklist, in priority order
+-------------------------------------------
+
+Step 1's direct-call cleanup can ship independently of its spectrum experiment.
+Step 2 is investigation only; implement its selected provider boundaries after
+the applicable step 3 call/recovery contract is available. Steps 4 and 5 have
+their own first consumers and qualification. Step 6 is a separate capability,
+not a prerequisite for releasing earlier boilerplate reductions. Completing
+every provider migration is not a prerequisite for a first Chef/SDK release.
+
+1. Establish the baseline and simplify independent calls
+
+   [ ] Review and finish the existing Chef batch change separately from SDK
+       simplification, preserving unrelated working-tree changes.
+   [ ] Use reference-match and Chef as the first consumers. Trace Chef's
+       create_task/shield/cancel/join/host-retirement sequence against existing
+       ScientificCall and Attempt-controller guarantees. Delete duplicate
+       ownership; add SDK behavior only for a demonstrated missing obligation.
+   [ ] Read Chef deployment configuration once and pass the parsed document to
+       scientific setup. Keep the manual batch client using the same setup.
+   [ ] Separately evaluate spectrum as the concrete consumer of an SDK-owned
+       invocation that runs a provider-authored sequence of ordinary stage calls.
+       First check whether existing controller/task ownership suffices. If a
+       new public owner is necessary, prototype its explicit invocation handle
+       before migration: an enclosing service/request scope retains the original
+       task; cancelling a local observer only stops that wait; closing the owner
+       stops and settles the task/submissions. It survives loss of an observer
+       only within that live scope/process, not process restart. A fresh call is
+       new work. Existing Submission retains one operation, not this multi-stage
+       coroutine. Do not describe the proposed owner as an existing SDK feature,
+       or make it a prerequisite for Chef cleanup if Chef does not need it.
+   [ ] Migrate spectrum-summary only when an interrupted observer can rejoin
+       that original invocation without cancelling or repeating either stage.
+       Keep any necessary existing handles until this contract is demonstrated.
+
+   Acceptance: independent callers have no submission/admission/result-release
+   plumbing. Cancellation still settles work, and resuming observation cannot
+   submit an extra calculation. A focused test interrupts a wait after each
+   stage's dispatch, rejoins it and verifies one submission per stage. Closing
+   the owner instead of an observer must stop and settle the original work.
+
+2. Investigate preparation boundaries before changing their implementation
+
+   [ ] Evaluate NMRPeak's validate/predict boundary using captured input bytes
+       and the same pinned model, tokenizer, dictionary and encoding settings.
+       Compare token count and encoded source tensor values/shape/dtype, including
+       special tokens and padding, between validation and prediction. Exercise
+       corrected proposals and token-limit rejection as well as valid inputs.
+       Inspect preparation for mutable/random inputs; repeated matching samples
+       alone do not prove determinism. If identity cannot be established, retain
+       prepared data. Separately record preparation time and peak memory against
+       prediction cost before choosing repetition versus retention.
+   [ ] Record the selected NMRPeak boundary and its necessary SDK capabilities;
+       implement it in real NMRPeak and the mock under step 3. Do not require
+       bitwise equality of stochastic candidates to prove prepared-input identity.
+   [ ] Specify NMRNet's prepared geometry collection as the input to prediction.
+       Record exact prediction request bytes, order, atom/source correspondence
+       and admitted runtime identity. Replacement retries reuse those bytes;
+       require a check that conformer generation is not invoked again. Custom
+       invocation migration waits for step 3's complete recovery contract.
+   [ ] Determine SECS prepared-data size, preparation cost and source ownership.
+       Choose an ordinary immutable input or justified worker-local retention.
+       Compare spectrum values/shape/dtype, canonical formula, representation
+       metadata and source snapshot identities. Exercise source replacement or
+       deletion after capture: execution must use admitted data or reject before
+       science, never read replacement bytes. Verify source release follows
+       confirmed reader shutdown, including preparation failure/cancellation.
+   [ ] Specify Magnet's typed validation/generation contract for the later
+       shared transport/lifecycle migration under step 3. Compare model inputs,
+       result schema/context and public outcome mapping at that boundary; test
+       eligible model failure, ineligible failure and lost outcome separately.
+   [ ] If live state remains necessary, identify the missing SDK analysis/
+       submission guarantees for that concrete consumer. Do not propose a general
+       workflow engine merely to reproduce today's application state machines.
+
+   Investigation deliverable: characterize existing input identities/resource
+   lifetimes, measure costs, select a boundary and specify its migration tests.
+   Each retained state object needs a scientific or resource reason, not just a
+   legacy protocol requirement. The later implementation slice must pass those
+   tests. For stochastic generation, use controlled fixtures for mapping
+   equivalence and real-model checks for input preservation and declared behavior.
+
+3. Complete common call ownership and configurable error handling
+
+   [ ] Extend existing ErrorPolicy/ScientificCall where consumers expose gaps:
+       immediate raise, bounded attempts, backoff and explicit retry eligibility.
+   [ ] Distinguish confirmed non-admission, confirmed calculation failure,
+       unknown outcome and cleanup failure using existing SDK facts.
+   [ ] Recheck job permission before each attempt and preserve original input.
+       Worker replacement, when allowed, follows confirmed old-worker retirement.
+   [ ] Use NMRNet's _retry_prediction as the first replacement-retry contract.
+       Define the integration against its real allocator/worker before exposing
+       a generic API: provider supplies the captured input, scientific prepare/
+       execute methods, eligible model-failure category and runtime requirements;
+       SDK owns configured acquisition, acquired-worker custody, retirement and
+       the overall recovery budget. Whether the existing host factory suffices
+       or needs an adapter is a prototype decision, not a promised capability.
+       Do not move an allocator/retry callback chain wholesale into a new wrapper.
+   [ ] Before migrating NMRNet/Magnet retry code, support the complete original
+       recovery budget across stop, replacement, preparation and redispatch.
+       SDK owns this ordering and preservation of the first failure alongside
+       later independent failures. Provider supplies scientific retry eligibility
+       and the admitted runtime/model identity; SDK enforces that replacement
+       meets it before redispatch. Do not broaden NMRNet's exact ModelCallFailed
+       eligibility into retrying any exception or worker crash.
+   [ ] Keep product-specific scientific rejection/result mapping in the provider;
+       providers must not reconstruct generic SDK failure classifications.
+   [ ] For a partially executed batch, never replay successful entries as an
+       incidental consequence of retrying another entry or losing the reply.
+   [ ] Migrate each step 2 consumer only once its input-identity, ownership and
+       recovery requirements are demonstrated by the SDK/consumer slice. Apply
+       that same interface to its example and remove superseded plumbing.
+
+   Acceptance: providers select policy without implementing retry loops or task
+   retirement. Failed delivery, uncertain execution and failed cleanup cannot
+   accidentally trigger another scientific calculation.
+
+4. Consolidate interpreter construction and lifecycle
+
+   [ ] Move endpoint/key/CA construction and shared retry-service setup into the
+       SDK, consuming captured configuration material where callers already own
+       immutable snapshots. Avoid reopening files behind those callers' backs.
+   [ ] Let the SDK own each conversation and its cancellation/cleanup.
+   [ ] Preserve provider-owned prompts, source selection, scientific validation
+       feedback and decisions about public versus protected diagnostics.
+   [ ] Support both typed proposal decoding (Chef) and scientific preparation
+       feedback (NMRPeak/SECS); reuse existing Interpreter/PreparationTool APIs.
+
+   Acceptance: providers supply scientific tools and rules, not endpoint or
+   conversation-lifetime boilerplate. Malformed structured input does not gain
+   an unintended prose fallback.
+
+5. Consolidate service composition and multiple offerings
+
+   [ ] Move repeated API/delivery factories, proxy configuration, signal setup
+       and process-lifetime ownership behind supported SDK setup APIs.
+   [ ] Extend service composition to independently configured offerings, with
+       per-offering readiness, worker exit observation and capacity.
+       Separate invalid deployment configuration (reject before startup effects)
+       from a valid offering whose worker fails to load. Partial activation is
+       a target capability, not a claim about current Magnet behavior: Magnet
+       validates its configured lane inventory and builds a complete Hello
+       snapshot. Before migration, qualify how the API represents an admitted
+       subset and subsequent withdrawal/recovery without changing offering
+       identity. Select all-or-nothing versus partial startup explicitly for a
+       deployment; preserve its existing behavior until that choice is made.
+   [ ] Preserve retained Attempt and delivery obligations during shutdown.
+       Removing phase flags requires identifying the SDK owner replacing them.
+   [ ] Migrate NMRPeak/Magnet service composition only after those behaviors are
+       represented; a single-host JobService wrapper is not sufficient.
+
+   Acceptance cases:
+   - Under qualified partial-startup policy, one independently hosted offering
+     fails worker construction: do not advertise it as usable; an admitted
+     sibling remains usable. Test the effective Hello/availability snapshot.
+   - One worker exits: withdraw every offering on that worker, preserve affected
+     Attempts' evidence, and keep independently hosted healthy offerings usable.
+   - Shared API/identity failure: pause admission according to common recovery
+     policy, without inventing scientific failures or discarding retained work.
+   - Shutdown: stop admission everywhere; settle every original worker and
+     Attempt/delivery obligation before claiming shutdown complete.
+   Under partial-startup policy, readiness requires at least one admitted healthy
+   offering and usable shared prerequisites. Under all-or-nothing policy, all
+   required offerings must start. API representation and publication recovery
+   are explicit gates for this migration; worker health alone is insufficient.
+
+6. Add bounded concurrent acquisition and batch assembly
+
+   [ ] Separate fetching/claiming and preparation from worker execution, using
+       explicit bounds for active Attempts, concurrent preparations, queued input
+       bytes and retained result/delivery bytes. Stop acquisition at capacity;
+       slow delivery may eventually apply backpressure, but need not immediately
+       serialize otherwise available work. Reuse SDK Attempt claims and limits.
+   [ ] Configure maximum batch size and collection delay. Group only requests
+       compatible with the selected worker/model and execution settings.
+   [ ] Retain an explicit association between each batch entry and its API job.
+       The SDK owns scheduling/routing; Chef owns its scientific batch schema.
+       An SDK dispatcher owns the one batch invocation, its original task, and
+       the ordered entry-to-Attempt mapping through result extraction/cleanup.
+       An Attempt owns its input evidence, permitted outcome and delivery, not
+       the shared worker. Its waiter cannot cancel or retire a sibling's work.
+       Use existing Attempt records for per-job evidence; do not add a second
+       durable batch ledger. Retain the mapping until each entry is transferred
+       to its Attempt owner or settled without publication.
+   [ ] Supply provider packing/unpacking at the typed batch boundary. Reject a
+       reply with wrong cardinality or invalid entries before routing any result.
+       Correlation follows the dispatch snapshot, not equality of input values.
+   [ ] Check each job's permission before admission and immediately before batch
+       dispatch; remove cancelled queued entries. After dispatch, cancellation
+       revokes that job's publication authority but cannot independently stop a
+       sequential worker entry with today's whole-batch protocol. Proposed first
+       behavior: finish the already-dispatched batch, retain cancelled entries
+       until their work settles, and suppress their success publication. An
+       entry revoked before its turn may still execute; today's protocol cannot
+       remove it from that dispatched batch.
+       Verify this against the SDK/API cancellation contract before enabling
+       cross-job batching. If it requires per-entry stopping, implement that
+       protocol first; do not silently weaken cancellation or enable batching.
+   [ ] Only the dispatcher requests whole-batch retirement, for shared failure,
+       global stop, or cancellation of all participants. A cancelled Attempt's
+       retirement joins settlement of its participation instead of declaring its
+       work stopped or retiring a host still used by siblings.
+   [ ] Apply the initial retry/outcome table below. The existing wire returns one
+       complete reply; it has no streaming progress or trustworthy partial-prefix
+       completion record. Partial-result recovery and per-entry model retries
+       are not required for the first batching version.
+   [ ] Keep worker execution sequential initially. Parallel preparation and
+       acquisition do not imply simultaneous model calls or tensor batching.
+
+   Acceptance: with free configured capacity, slow preparation/delivery does not
+   serialize all acquisition; at capacity, admission stops. Distinguish local
+   observer cancellation, server-confirmed job revocation and provider shutdown.
+   Revoke one job after dispatch but before outcome selection: its Attempt must
+   follow existing revocation settlement without publication, retain batch
+   participation until settled, and allow a non-revoked sibling its own result.
+   Also test identical inputs from different jobs, sibling delivery failure,
+   worker exit after the first entry, and shutdown. Preserve SDK reconciliation
+   of already selected/accepted deliveries; do not invent retroactive retraction.
+   No entry is misrouted or replayed after uncertain execution. Test caps too.
+
+Initial batch retry and outcome rules
+------------------------------------
+
+Event                              Action
+SDK-confirmed non-admission         Retry only under configured bounded admission
+before any worker dispatch          policy, checking each job's permission again.
+
+Complete valid reply, entry         Deliver that entry's confirmed outcome through
+success or ModelFailure             its own Attempt. No automatic model retry of
+                                   entries in the first batching version.
+
+Wrong reply cardinality or          Reject before routing any entry; all affected
+invalid entry in whole reply       Attempts remain unresolved. No automatic retry.
+
+Truncated/missing reply or          Every unconfirmed entry remains unresolved;
+lost worker/transport               retain original evidence. Do not guess which
+                                   prefix ran or replay a presumed unrun suffix.
+                                   Preserve separately proven worker-crash facts.
+
+Delivery failure after a result    Retry/reconcile original delivery through the
+has been selected                  SDK; never recalculate to recover delivery.
+
+Cancellation after dispatch        No new dispatch/retry for that job. Preserve
+                                   shared work and follow the gated cancellation
+                                   policy above; do not fabricate model failure.
+
+Migration and verification
+--------------------------
+
+[ ] Implement small coherent slices across the SDK and their first consumers:
+    reference-match/Chef first; spectrum after its invocation-owner proof;
+    NMRPeak after its step 2 input-identity decision and applicable step 3
+    ownership/recovery guarantees; NMRNet/SECS/Magnet after their applicable
+    step 3 recovery/resource guarantees. Service migrations
+    also require step 5 publication qualification. This is a dependency order,
+    not a requirement to finish an entire earlier provider before starting the
+    next provider's investigation or independently useful SDK work.
+[ ] Update example callers in each SDK slice. Delete obsolete wrappers and
+    protocols once their replacements work; avoid two permanent ownership paths.
+[ ] Test behavior at the surviving boundaries: cancellation during startup,
+    interpretation and execution; non-admission; eligible/exhausted retry;
+    unchanged intermediate inputs; cleanup failure; ordered mixed batch replies;
+    independent offering failure; and delivery recovery without recalculation.
+[ ] Preserve existing evidence and distinct scientific failure semantics. Do not
+    replace cleanup/rejection tests with happy-path or source-spelling checks.
+[ ] Run affected SDK/provider lanes and repository checks in their maintained
+    container workflows. Update the SDK checks report as part of SDK qualification.
+[ ] Run representative real-model checks for changed scientific boundaries.
+    Distinguish fixture tests, model execution and live API qualification.
+[ ] Commit coherent verified slices with rationale and validation. Release a
+    qualified SDK version, update immutable consumer pins/locks, rebuild, then
+    qualify deployments. Local sibling checkouts must not become runtime inputs.
+
+Source map for implementation
+----------------------------
+
+Paths are relative to /home/ra/repos/.
+
+- nmr-provider-tools/packages/provider-core/src/provider_core/
+  scientific_call.py: independent typed calls, error policy and analysis cleanup
+  execution_setup.py: contribution/host construction and process-call setup
+  job_service.py: current single-job API service and delivery settlement
+  preparation_tool.py: interpreter tool backed by scientific preparation
+- nmr-provider-tools/examples/{dummy-provider,reference-match-provider,
+  spectrum-summary-provider,nmrpeak-mock-provider}/src/: maintained callers
+- chefnmr2-repro/docker/containers/provider/{main,provider,application,job_input}.py:
+  current service setup, call binding, Attempt adapter and interpreter setup
+- chefnmr2-repro/docker/containers/_shared/{binding,wire}.py: batch operation/types
+- nmrpeak-repro/nmrpeak_provider/{nmrpeak_science,analysis_session,
+  scientific_execution,provider_main,openai_chat_interpreter,input_interpreter}.py:
+  stateful science, cleanup, multiple offerings and interpreter composition
+- nmrnet-repro/nmrnet_provider/{input_preparation,prepared_input,session,
+  worker_client}.py: source/conformer ownership, batch prediction and retry
+- secs-repro/src/secs_inference/provider/{session,worker_model,worker}.py:
+  uploaded sources, exact prepared spectrum, resident search and native lifecycle
+- magnet-deploy/magnet_provider/{provider_process,provider_product}.py:
+  multi-offering composition and service lifetime
+- magnet-deploy/models/e_01_jvae_nmrexp/provider/magnet_provider_bindings/
+  e_01_jvae_nmrexp/{generation_backend,unix_runner_backend,processor}.py:
+  typed validation/generation, retry and per-Attempt adaptation
+- magnet-deploy/models/{e_02_ch_nmrexp,g_01_nmr_forward}/provider/
+  magnet_provider_bindings/: additional model-specific contracts and callers
