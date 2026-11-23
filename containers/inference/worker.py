@@ -30,7 +30,8 @@ def load_model(
         yield model
     finally:
         if model.recon_pool is None:
-            # In two cases, recon_pool is None:
+            # This can happen in two cases:
+            #
             # 1. With recon_workers=0, ChefNMR2 reconstructs structures in the
             #    calling process and never creates a pool.
             #    https://github.com/numpde/fork-of-chefnmr2/blob/29374e57952684533d266832288413ba87c5d809/chefnmr2/infer/api.py#L444-L446
