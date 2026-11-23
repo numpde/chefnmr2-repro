@@ -353,13 +353,13 @@ separate gates from local implementation completion.
 
 4. Consolidate interpreter construction and lifecycle
 
-   [ ] Move endpoint/key/CA construction and shared retry-service setup into the
+   [x] Move endpoint/key/CA construction and shared retry-service setup into the
        SDK, consuming captured configuration material where callers already own
        immutable snapshots. Avoid reopening files behind those callers' backs.
-   [ ] Let the SDK own each conversation and its cancellation/cleanup.
-   [ ] Preserve provider-owned prompts, source selection, scientific validation
+   [x] Let the SDK own each conversation and its cancellation/cleanup.
+   [x] Preserve provider-owned prompts, source selection, scientific validation
        feedback and decisions about public versus protected diagnostics.
-   [ ] Support both typed proposal decoding (Chef) and scientific preparation
+   [x] Support both typed proposal decoding (Chef) and scientific preparation
        feedback (NMRPeak/SECS); reuse existing Interpreter/PreparationTool APIs.
 
    Quality criteria for batch 4 — interpreter setup and lifetime
@@ -372,7 +372,7 @@ separate gates from local implementation completion.
    Q4.2 Configuration: consume the caller's captured configuration/material
         consistently; do not reopen mutable files behind a snapshot owner. Honor
         explicit endpoint, proxy, TLS and budget settings without a silent fallback.
-        Shared endpoint services outlive their conversations and close once.
+        Shared endpoint services retain retry state only; conversations own model I/O.
    Q4.3 Scientific behavior: both typed proposals (Chef) and scientific
         preparation feedback (NMRPeak/SECS) use the same supported SDK setup.
         Rejected proposals retain the conversation for correction without
@@ -390,6 +390,43 @@ separate gates from local implementation completion.
    Stop condition: providers still construct transport/lifetime machinery, the
         SDK decides scientific validity, or a generic setup bypasses a consumer's
         source/feedback requirements. More constructors alone are not completion.
+
+   Batch 4 implementation criteria fixed before review (2026-11-24)
+
+   Mandatory gates versus graded quality:
+   C1 / Q4.1: SDK owns endpoint/material assembly, shared backoff and run joining;
+       providers retain scientific choices and resource prompts. Counterexample:
+       a shorter constructor leaves per-provider task/lifetime plumbing intact.
+       Evidence: actual Chef, preparation-feedback consumer and example call sites.
+   C2 / Q4.2: captured material and all selected limits/proxy/TLS grants survive
+       unchanged; invalid configuration causes no model/scientific effects.
+       Counterexample: a key/CA path is reopened after its snapshot was captured.
+       Evidence: mutation-after-capture and transport-budget tests; service grants
+       with the same name remain independent unless explicitly shared.
+   C3 / Q4.3: typed proposals and preparation corrections preserve their scientific
+       contracts. Rejection must not authorize generation or replay preparation;
+       malformed structured input stays structured. Counterexample: convenience
+       handling converts an inspection failure into an accepted empty input.
+       Evidence: consumer correction/inspection/structured-input tests and SDK
+       example preparation-to-generation flow. Unsupported source failures stay
+       explicit; credential text stays out of public outcomes.
+   C4 / Q4.4: stopping interpretation joins admitted tool work before enclosing
+       resources close. No later dispatch/retry follows retirement. Original work
+       and independent cleanup failures, and already accepted results, survive.
+       Counterexample: cancelled HTTP waiter returns while its tool reads a freed
+       source. Evidence: controlled cancellation/cleanup barriers and ordered
+       effects, plus shared-backoff and model-retirement tests.
+
+   Each mandatory failure blocks acceptance. Grade interface clarity, deletion
+   of duplicated machinery and strength of decisive evidence within these gates.
+   Anchors: 0 absent/broken; 5 plausible but material gaps; 7 core path works with
+   incomplete failure evidence; 9 complete claimed scope with minor limitations;
+   10 no substantiated material gap and decisive evidence for the claimed scope.
+   Plan ratings and constructor-only tests grant no end-to-end completion credit.
+   Independent criteria critics challenged ownership and evidence; accepted the
+   requirement to join run tasks, preserve deliberate low-level crash reporting,
+   and test real preparation feedback. Rejected inventing close work for the
+   resource-free ProseService. Batch 5 service composition and NMRNet stay separate.
 
 5. Consolidate service composition and multiple offerings
 
@@ -819,20 +856,22 @@ validation matrix before consumers can use the interface.
 
 SDK commits so far: 3eeed6ad makes operation declarations authorize exact
 retryable failures; 41e0f0c6 adds one optional total_seconds invocation budget.
-78fef221 preserves NMRNet's existing 2 MiB payload support. e64c0db9 adds worker
+78fef221 preserves NMRNet's existing 2 MiB payload support. 4aba0a76 adds worker
 replacement through open_process_call, preserving one retry loop and moving
 worker acquisition/retirement out of provider code. The managed call serializes
 invocations, keeps the original encoded input across retry, confirms retirement
 before replacement, and compares optional scientific runtime evidence before
-redispatch. Interrupted replacement remains owned until context cleanup.
+redispatch. Interrupted replacement remains owned until cleanup. The unstarted call object
+also provides start()/close() for providers with explicit preparation and
+retirement methods; closing during startup cannot lose the original worker.
 
-Focused SDK lanes pass: scientific_call (22), process_lifecycle (20),
+Focused SDK lanes pass: scientific_call (22), process_lifecycle (22),
 process_wire (24), all through the installed container test lane. This settles
 the SDK interface for parallel NMRNet migration; it does not establish consumer
 migration completion, publication or deployment. A committed-source local
-candidate was built from e64c0db957526c8bad4925c0cbed51f4303a02f2 without
+candidate was built from 4aba0a76c48e77b8c4d42febee188de95cf6d6a8 without
 overwriting published release artifacts. Its wheel SHA256 is
-398fa45eb7c853332268af9d471492ede583ccb4a3b105a3b67228fc84947002.
+0ab7736af430bafdbcc99f09b87d68da418c59b58919b2a48e686d73b776e8d9.
 It retains the development tree's 0.7.2 metadata and is not the published 0.7.2
 release; consumer qualification must select this candidate by its hash.
 
@@ -1105,3 +1144,154 @@ Paths are relative to /home/ra/repos/.
   typed validation/generation, retry and per-Attempt adaptation
 - magnet-deploy/models/{e_02_ch_nmrexp,g_01_nmr_forward}/provider/
   magnet_provider_bindings/: additional model-specific contracts and callers
+
+Batch 4 implementation / critical-panel round 1 — 2026-11-24
+
+Reviewed SDK 761ba12b88d7385ff394f8675488f16de9c012eb; Chef base
+134bf20 with provider/test edits; SECS isolated branch based on 7dcedfe.
+The SDK slice was independently audited before committing. Its candidate wheel
+SHA256 is 8a4afefea7ae7ef5dd3b381fa57fecc05cc46ebd69fb97a637b9727e8b7b13e6.
+It retains development 0.7.2 metadata and is NOT the published 0.7.2 wheel.
+
+Independent Luna-medium primary assessments:
+- C1 separation/integration: 5/10, mandatory failure. Consumers' tracked pins
+  still select SDK releases without InterpreterSettings. Accepted; installed
+  candidate tests are not proof that the ordinary consumer build works.
+- C2 captured configuration: 7/10, evidence incomplete. Existing test mutates
+  proxy settings but does not assert final proxy/CA/byte limits or endpoint order.
+  Accepted; add those assertions through the actual from_config/carrier path.
+- C3 scientific behavior: 9/10, behavior gate passes. Typed proposals, source
+  inspection, correction and generation remain provider-owned and tested;
+  published dependency integration remains outstanding (also owned by C1).
+- C4 lifecycle: 9/10, behavior gate passes. Missing controlled proof that managed
+  scientific failures wait through blocked model cleanup, in contrast to the
+  deliberately low-level Interpreter. Accepted; add that exact barrier case.
+
+Raw checks: /tmp/batch4-settings-tests.log (9 passed),
+/tmp/batch4-interpreter-regression.log (52, two privacy skips),
+/tmp/batch4-peak-example.log (34 passed), /tmp/batch4-chef-tests.log (13 passed),
+/tmp/batch4-secs-tests.log (96 passed on the real Python 3.12 provider image).
+The first SECS harness incorrectly used Chef's Python 3.13 image and lacked its
+normal isolated-child import path; corrected to the SECS image and /opt code
+mount before claiming the 96-test result. No model weights, live API credentials
+or network were used. Package tests install a committed candidate wheel, not
+SDK sources on PYTHONPATH. Native extension loading uses only the disposable
+Python environment's executable tmpfs; source mounts remain read-only.
+
+Full SDK repository quality check: 461 tests, 25 failures, nine skips;
+/tmp/batch4-sdk-quality.log retains findings, including existing repository debt.
+Local layout/naming findings in the new code were corrected; a full-repository
+clean-quality claim is not made. The preparation example's prompts were already
+resources. SECS's inline interpretation prompt is now a resource with the same
+text; its six former SDK implicit limits are explicit provider policy material.
+Its per-request context cap still reserves the actual carrier envelope.
+
+Round 1 repairs under verification: expanded capture/order/transport assertions
+and managed-failure cleanup barrier, /tmp/batch4-settings-round2.log (10 passed).
+Dependency publication/pin integration remains open; no batch acceptance yet.
+
+Round 1 follow-up: coordinator found an additional C4 defect. asyncio.shield can
+propagate a fresh CancelledError that loses the tool's original cleanup cause;
+requested-stop handling also suppressed that independent cause. The managed
+owner now propagates Interpreter.last_failure when its owned task is cancelled,
+and uses the existing independent_interruption_failure authority during stop.
+Two regression tests prove original exception identity/cause and aggregation
+with requested cancellation. All 12 focused tests pass; the lifecycle reviewer
+independently audited the repair and found no remaining defect. C4 acceptance
+is reopened for a fresh final assessment.
+
+SDK implementation is now 79aa9467; release metadata/inventory commit 4658121e.
+The first 0.7.3 qualification caught missing new modules in the installed-wheel
+contract inventory; the inventory was repaired and its nine tests passed (one skip).
+The superseded second qualification was interrupted through its owning wrapper;
+its artifacts remain as evidence. A fresh clean-source qualification uses
+/tmp/provider-core-v0.7.3-qualified-r3. No release has been published yet.
+
+Batch 4 final review and integration — 2026-11-24
+
+Frozen runtime implementation: SDK 4658121e (implementation 79aa9467), Chef
+ce7ec72, SECS d04f1b2 (audited as a1eac2a, then amended only for test
+indentation). The correction changes no runtime behavior. All three local main checkouts now
+contain the integration; NMRNet remains delegated to the other session.
+
+Fresh independent Luna-medium assessments and follow-ups:
+- C1 separation and usable integration: 10/10, mandatory PASS. Both consumers
+  pin the published wheel; normal locked images build and run installed code.
+- C2 configuration: initially 9/10, mandatory PASS. Reviewer requested direct
+  retry-state isolation evidence beyond service identity. Accepted: the real
+  SECS adapter now exercises a 503 Retry-After with independent settings and an
+  explicitly shared service. Its factory creates fresh carriers with the same
+  endpoint identity. Real endpoint/key files replace permissive reader mocks.
+  Reassessment: 10/10; normal provider lane also exercises real TLS Retry-After.
+- C4 lifecycle: initially 9/10, mandatory PASS. Reviewer requested a real
+  provider resource-stack witness. Accepted: SecsSession retirement blocks until
+  admitted preparation settles, then releases sources after worker stop. This
+  complements existing actual worker-process retirement tests. Reassessment:
+  10/10; original and independent cleanup failures and accepted results survive.
+- C3 science: initially 9/10, mandatory PASS, because the installed NMRPeak
+  example evidence preceded the final SDK repair. Accepted: all 34 example
+  tests were rerun using the exact qualified release wheel. Reassessment stayed
+  9/10 because the SECS scientific-handler correction scenarios lacked current
+  execution evidence. Those seven existing scenarios now pass against the final
+  SDK and actual scientific handler. Final reassessment: 10/10, mandatory PASS.
+
+Independent precommit audit additionally caught removed SDK file-reader label
+arguments in SECS. Removed all obsolete arguments, including the live-test lane;
+real-file configuration capture now exercises this boundary. The full normal
+provider lane caught an old interpreter constructor in the outage test and a
+ConfigurationError(str(StartupFileRejected)) wrapper that copied private paths
+into structured evidence. Migrated the test and removed the wrapper; safe fixed
+constraints retain read/close causes without copying path-bearing text.
+Non-ASCII interpreter keys still fail safely with the SDK ValueError and source
+frames. Its text is not exposed by SECS's narrow ConfigurationError projection;
+we deliberately avoided adding a message-specific consumer translation layer.
+
+Release and reproducible evidence:
+- https://github.com/numpde/nmr-provider-tools/releases/tag/v0.7.3
+  Published from SDK 4658121e. Wheel SHA256:
+  dcd279f290d94dffed0a55a7c59d9b6ca8f77fa121a415bfd265e183fe29d33d.
+  Both consumers select target-compatible dependency hashes with the SDK tool.
+- Exact qualification: 1,141 unit, 18 wheel contract, 317 integration, 18 sdist
+  contract and 254 native tests; all suites passed (privacy skips remain explicit).
+  Logs and all eight qualified artifact receipts are release assets, also kept
+  at /tmp/provider-core-v0.7.3-qualified-r3/release-test.log.
+- The bounded GitHub upload timed out with nine of ten draft assets present.
+  Uploaded only the missing acquisition archive, downloaded all ten assets and
+  byte-compared them with qualified originals before publishing. Remote receipts:
+  /tmp/batch4-release-verification.log; non-draft state and ten-asset inventory:
+  /tmp/batch4-release-published.json. Published assets were never overwritten.
+- Chef: ordinary Compose worker/provider build passed using the public release
+  URL and hashes (/tmp/batch4-chef-images.log). Built provider image ea5f09ec56f0;
+  worker facc0c8bf7eb. All 13 provider tests pass inside the installed provider
+  image without SDK/application source overrides (/tmp/batch4-chef-image-tests.log).
+  Worker runner/process-worker/binding imports pass with installed SDK 0.7.3
+  (/tmp/batch4-chef-worker-import.log).
+- SECS: normal make provider/image and make test/provider passed; 146 tests,
+  /tmp/batch4-secs-normal-provider-tests-r2.log. Final provider image is
+  a746f69ee311d0c1c45165efd05a3da082ccc3e517d0fbc3853b02d4e77fa5d5.
+  Separate installed-wheel boundary
+  run: 98 tests, /tmp/batch4-secs-final-tests-r3.log. Both used Python 3.12.
+- NMRPeak installed example: 34 tests, /tmp/batch4-final-example-tests.log,
+  using the exact release wheel through the existing installed-example harness.
+- SECS scientific correction: seven tests, all pass,
+  /tmp/batch4-secs-scientific-scenarios-r3.log. The existing CPU scientific image
+  runs current source plus the exact SDK wheel. The scientific handler/parsers
+  are real; inference and candidate retrieval use the existing test fixtures.
+  Local tokenizer material was verified against molformer.lock.toml and mounted
+  read-only; no downloads or ProArt access occurred. Earlier harness attempts
+  omitted the temporary Torch cache and local tokenizer mount; those failures
+  were corrected before claiming the seven-test result.
+- SDK repository quality report is updated in notes/092_repo_checks_status.html.
+  Latest full check: 461 checks, 24 failing categories, nine skips. Existing
+  repository-wide convention debt is not described as clean or hidden by the
+  package-test result. Final batch acceptance concerns the four fixed criteria.
+
+Scope limits: no live API job, model inference qualification, or deployment
+restart was performed. Existing live containers retain their previous images.
+Batch 5 service composition and the separately delegated NMRNet work remain.
+
+Final acceptance: C1 10/10, C2 10/10, C3 10/10, C4 10/10; every mandatory
+condition passes. Each criterion meets the requested 9.5/10 threshold without
+averaging. Earlier unfavorable scores and their dispositions remain above.
+All batch 4 checklist items are complete. Runtime/deployment limits remain as
+stated; this acceptance does not claim batch 5 or NMRNet completion.
