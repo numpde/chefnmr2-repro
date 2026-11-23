@@ -65,7 +65,7 @@ def serve_connection(connection: socket.socket, model: ChefNMR2) -> None:
         send_message(connection, response)
 
 
-def serve(listener: socket.socket, **kw) -> None:
+def serve_to(listener: socket.socket, **kw) -> None:
     # Start/re-start queuing incoming connections for the bound Unix socket.
     # Non-blocking.
     listener.listen(kw.pop("max_pending_connections"))
@@ -111,7 +111,7 @@ def main() -> None:
         bound_entry = socket_path.lstat()
 
         try:
-            serve(listener, checkpoints=checkpoints, **args)
+            serve_to(listener, checkpoints=checkpoints, **args)
         finally:
             with suppress(FileNotFoundError):
                 if os.path.samestat(bound_entry, socket_path.lstat()):
