@@ -131,7 +131,7 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
        subsequent model reuse, and unresolved failure through host-context exit.
        SDK scientific-call and process-lifecycle suites pass on the released
        SDK in the provider image. This source change has not been deployed.
-   [ ] Read Chef deployment configuration once and pass the parsed document to
+   [x] Read Chef deployment configuration once and pass the parsed document to
        scientific setup. Keep the manual batch client using the same setup.
    [ ] Separately evaluate spectrum as the concrete consumer of an SDK-owned
        invocation that runs a provider-authored sequence of ordinary stage calls.

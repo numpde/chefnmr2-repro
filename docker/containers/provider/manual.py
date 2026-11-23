@@ -6,6 +6,7 @@ import json
 import logging
 import pathlib
 import sys
+import tomllib
 
 if __package__:
     from .provider import open_provider
@@ -16,7 +17,10 @@ else:
 async def main(*, config: pathlib.Path) -> None:
     """Read one JSON batch per line; keep the loaded model until stdin closes."""
 
-    async with open_provider(config) as provider:
+    with config.open("rb") as configuration:
+        deployment = tomllib.load(configuration)
+
+    async with open_provider(deployment) as provider:
         call = provider.inference.binding
 
         for line in sys.stdin:

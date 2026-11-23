@@ -60,7 +60,7 @@ async def serve(*, config: pathlib.Path) -> None:
     lifetime = ProviderLifetime(pathlib.Path(deployment["service"]["lifetime_directory"])).open()
 
     try:
-        async with open_provider(config) as provider:
+        async with open_provider(deployment) as provider:
             service = JobService(
                 provider_ref=provider_ref,
                 consumer_id="chefnmr2",

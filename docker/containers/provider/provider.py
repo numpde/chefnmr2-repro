@@ -1,7 +1,5 @@
 """Run ChefNMR2 operations through the SDK's native scientific host."""
 
-import pathlib
-import tomllib
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
@@ -24,11 +22,8 @@ class Provider:
 
 
 @asynccontextmanager
-async def open_provider(deployment_config_path: pathlib.Path) -> AsyncIterator[Provider]:
+async def open_provider(deployment: dict) -> AsyncIterator[Provider]:
     """Configure the ChefNMR2 offering for the selected deployment."""
-
-    with deployment_config_path.open("rb") as configuration:
-        deployment = tomllib.load(configuration)
 
     execution = ExecutionSettings(deployment["execution"])
 
