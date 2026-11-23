@@ -2,7 +2,7 @@ Provider SDK simplification and batch execution plan
 ===================================================
 
 Date: 2026-11-23
-Status: planned; source comparison and iterative Luna-medium review completed
+Status: step 1 complete; steps 2-6 planned
 
 Purpose
 -------
@@ -18,8 +18,8 @@ secs-repro and magnet-deploy. Sibling paths below are inspection references,
 not runtime dependencies. Recheck source and repository instructions when
 starting each implementation slice.
 
-Starting point
---------------
+Starting point before implementation
+------------------------------------
 
 - ChefNMR2 pins provider-core 0.7.2. Its working tree already contains an
   uncommitted batch-wire change: ElucidationBatch.requests is processed
@@ -35,8 +35,6 @@ Starting point
   open_contribution() and open_process_call().
 - JobService currently runs one API job at a time. NMRPeak and Magnet retain
   their own service composition for multiple offerings.
-- This review changes only the planning note; it does not implement or release
-  SDK/provider behavior or deploy services.
 
 End-state contract
 ------------------
@@ -133,7 +131,7 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
        SDK in the provider image. This source change has not been deployed.
    [x] Read Chef deployment configuration once and pass the parsed document to
        scientific setup. Keep the manual batch client using the same setup.
-   [ ] Separately evaluate spectrum as the concrete consumer of an SDK-owned
+   [x] Separately evaluate spectrum as the concrete consumer of an SDK-owned
        invocation that runs a provider-authored sequence of ordinary stage calls.
        First check whether existing controller/task ownership suffices. If a
        new public owner is necessary, prototype its explicit invocation handle
@@ -144,9 +142,28 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
        new work. Existing Submission retains one operation, not this multi-stage
        coroutine. Do not describe the proposed owner as an existing SDK feature,
        or make it a prerequisite for Chef cleanup if Chef does not need it.
-   [ ] Migrate spectrum-summary only when an interrupted observer can rejoin
+   [x] Migrate spectrum-summary only when an interrupted observer can rejoin
        that original invocation without cancelling or repeating either stage.
        Keep any necessary existing handles until this contract is demonstrated.
+
+       Completed: Submission retains one operation, ScientificCall settles one
+       call, and AttemptController requires API Attempt ownership. None owns a
+       standalone sequence of calls. SDK open_invocation now retains that one
+       coroutine; wait cancellation leaves it running, while close cancels once
+       and joins settlement through repeated observer cancellation. The scope
+       stays inside the two host lifetimes and provides no restart recovery.
+       Spectrum now awaits baseline correction and then peak detection through
+       ScientificCall. Removed its submission/result-release state machine.
+       Peak admission uses configured bounded retries with the corrected input;
+       exhaustion is terminal for that invocation. Baseline cleanup failure
+       prevents downstream dispatch. These deliberately replace caller-driven
+       indefinite admission retry and independent intermediate-release handling.
+       Tests cover interruption after either stage dispatch, rejoining without
+       replay, closing during either stage, independent cleanup failures, lost
+       submission replies, and both thread/process backends. SDK publication
+       and deployment qualification remain separate. Chef continues using the
+       released ScientificCall interface and needs no SDK pin change here.
+       SDK commits: eb785a51 (invocation owner), b76794e0 (spectrum migration).
 
    Acceptance: independent callers have no submission/admission/result-release
    plumbing. Cancellation still settles work, and resuming observation cannot
