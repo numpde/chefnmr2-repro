@@ -82,6 +82,7 @@ compatibility/check: ## Build, verify one checkpoint pair, and qualify CPU infer
 	$(compatibility_build)
 	"$${compatibility_docker[@]}" volume inspect chefnmr2-weights_checkpoints >/dev/null
 	"$${compatibility_docker[@]}" run --rm --init --pull never --network none --read-only \
+	    --log-driver local --log-opt max-size=1m --log-opt max-file=2 --log-opt compress=true \
 	    --user 65532:65532 --cap-drop ALL --security-opt no-new-privileges \
 	    --pids-limit 64 --cpus 2 --memory 8g --memory-swap 8g \
 	    --tmpfs /tmp:rw,nosuid,nodev,noexec,size=64m \

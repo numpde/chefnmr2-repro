@@ -24,6 +24,9 @@ x-curl-image: &curl-image docker.io/curlimages/curl:8.21.0@sha256:7c12af72ceb38b
 x-contained: &contained
   # The digest-pinned curl image is about 11 MB, so Compose may fetch it when missing
   image: *curl-image
+  logging:
+    driver: local
+    options: {max-size: "1m", max-file: "2", compress: "true"}
   init: true
   read_only: true
   security_opt:

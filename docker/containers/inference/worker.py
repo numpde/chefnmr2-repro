@@ -53,6 +53,7 @@ def load_model(
     """
     from chefnmr2.infer import ChefNMR2
 
+    log.info(f"Loading {len(checkpoints)} checkpoint(s) on {device}")
     model = ChefNMR2(checkpoints, device=device, recon_workers=recon_workers)
 
     try:
@@ -165,6 +166,10 @@ def serve_connection(connection: Connection, model: ChefNMR2) -> None:
 
         msg_bytes = json.dumps(asdict(response), allow_nan=False).encode("utf-8")
         connection.send_bytes(msg_bytes)
+        if isinstance(response, ModelFailure):
+            log.warning(f"Sent model failure ({response.exception_type})")
+        else:
+            log.info(f"Sent inference result with {response.n_valid}/{response.n_samples} valid samples")
 
 
 def serve_to(listener: socket.socket, **kw) -> None:
@@ -173,6 +178,7 @@ def serve_to(listener: socket.socket, **kw) -> None:
     listener.listen(kw.pop("max_pending_connections"))
 
     with load_model(**kw) as model:
+        log.info(f"Model loaded; accepting requests on {listener.getsockname()}")
         while True:
             # Blocks until a client connects.
             # Returns a separate socket for talking to it.
@@ -196,6 +202,8 @@ def parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = vars(parse_args())
+    logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s %(message)s")
+    log.setLevel(logging.INFO)
 
     checkpoints = [
         # E.g., /weights/chefnmr2-epoch1399/{model.pt, config.yaml}
