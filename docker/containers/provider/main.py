@@ -5,7 +5,7 @@ import asyncio
 from dataclasses import replace
 from hashlib import sha256
 import logging
-from pathlib import Path
+import pathlib
 import signal
 import tomllib
 
@@ -26,11 +26,11 @@ else:
     from provider import open_provider
 
 
-async def serve(*, config: Path) -> None:
+async def serve(*, config: pathlib.Path) -> None:
     """Keep the model loaded while the SDK job service consumes API work."""
     configuration = config.read_bytes()
     deployment = tomllib.loads(configuration.decode())
-    settings, provider_ref, publication = api_settings_with_material(deployment["api"], read_startup_file)
+    (settings, provider_ref, publication) = api_settings_with_material(deployment["api"], read_startup_file)
     grants = SharedGrants(**deployment["shared"])
     settings = replace(settings, http=replace(settings.http, proxy_socket=str(grants.proxy_socket)))
     stopping = asyncio.Event()
@@ -50,7 +50,8 @@ async def serve(*, config: Path) -> None:
             retirement_seconds=settings.http.retirement_seconds,
         )
 
-    lifetime = ProviderLifetime(Path(deployment["service"]["lifetime_directory"])).open()
+    lifetime = ProviderLifetime(pathlib.Path(deployment["service"]["lifetime_directory"])).open()
+
     try:
         async with open_provider(config) as provider:
             service = JobService(
@@ -67,9 +68,11 @@ async def serve(*, config: Path) -> None:
                 new_delivery=new_delivery,
                 stopping=stopping,
             )
+
             await service.serve()
     finally:
         lifetime.close()
+
         for number in (signal.SIGINT, signal.SIGTERM):
             loop.remove_signal_handler(number)
 
@@ -77,6 +80,8 @@ async def serve(*, config: Path) -> None:
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s pid=%(process)d %(message)s")
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--config", required=True, type=Path)
+
+    parser.add_argument("--config", required=True, type=pathlib.Path)
     args = vars(parser.parse_args())
+
     asyncio.run(serve(**args))
