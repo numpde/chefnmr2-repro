@@ -58,6 +58,10 @@ RUN --network=none --mount=from=supervisor,source=/wheels,target=/tmp/sdk-wheels
 # Use writable temporary storage for HOME, avoid bytecode writes on the read-only
 # runtime filesystem, and send Python log output without buffering.
 ENV HOME=/tmp PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+
+# The runner starts model processes in private session scratch directories.
+# Keep the copied binding and ChefNMR2 importable independently of that cwd.
+ENV PYTHONPATH=/opt/inference
 WORKDIR /opt/inference
 
 # The SDK runner requires a private endpoint directory and lease file owned by
