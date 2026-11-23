@@ -510,6 +510,132 @@ separate gates from local implementation completion.
         replay after uncertainty. Tensor batching and parallel model execution
         are not required; the first worker may process entries sequentially.
 
+
+Batch 1 critical-panel evaluation — 2026-11-23
+--------------------------------------------
+
+Reviewed implementation: Chef 0786ca008ff28f2d3f9e65d10c3ca73498d436d6;
+SDK 9e006f8452f605560bf397d29e61cca6860f4fa5. Both trees were clean at freeze
+and stayed unchanged during source review and execution checks. The subsequent
+change recording this evaluation is documentation only.
+
+Four independent gpt-6-luna / medium reviewers used fresh contexts, each with
+one primary criterion. They received owning source, tests, raw logs and the
+criterion text, without previous verdicts or the completed-work narrative.
+They challenged the criteria before grading. No target score was supplied.
+
+Scoring anchors: 0-3 absent/unsafe contract; 4-5 important correctness or
+ownership defects; 6-7 significant bounded gaps or missing decisive evidence;
+8-9 coherent behavior supported by evidence with bounded residual weaknesses;
+10 all assigned obligations established without a material weakness. Mandatory
+ownership, replay, correlation, cleanup-truth and independent-failure conditions
+cannot be offset by scores. Ratings below are not averaged.
+
+Criteria clarification, frozen before the graded round:
+- Q1.1 assesses responsibility and custody; Q1.3 assesses cancellation behavior.
+  An ordinary returned value needs no invented release owner. Publication has
+  its existing provider/API owner after scientific resource cleanup.
+- Q1.2's single configuration read means deployment TOML per startup, shared
+  with scientific setup. Extending that to credential/CA caching was rejected
+  as batch 4 scope. Worker batches preserve per-entry settings; API singleton
+  requests instead use deployment-owned settings and reject caller overrides.
+  Exact intermediate data includes positions/intensities across the codec.
+- Q1.3 distinguishes observer cancellation from owner close: observation leaves
+  work running; close requests stop at most once for pending work, prevents
+  later stage dispatch and joins settlement. Completed work needs no stop.
+- Q1.4 explicitly includes producer encoding, consumer decoding/consumption,
+  and later API handoff. Where independent failures occur, both original causes
+  must remain inspectable. Existing component and consumer proofs may compose;
+  neither every permutation in one integration test nor live deployment is
+  automatically required.
+
+Round 1 ratings and deductions:
+Criterion  Primary reviewer       Score  Mandatory gate
+Q1.1       panel1_ownership        9/10   Pass
+Q1.2       panel1_interface        9/10   Pass
+Q1.3       panel1_interruption     9/10   Pass
+Q1.4       panel1_failure          8/10   Pass
+
+Q1.1: SDK ScientificCall owns analysis/result cleanup; host scopes own models;
+Chef delegates execution and handoff to the SDK controller/executor; spectrum
+invocation owns its standalone task and returned value/failure. No duplicate
+provider lifecycle owner was found. Deduction: raw test logs do not embed their
+source revision; attribution relies on the frozen clean trees and recorded runs.
+
+Q1.2: typed spectrum composition and codec equality preserve corrected data;
+Chef mixed batches preserve order, failures, budgets and seeds. A new independent
+stage changes scientific binding/setup and ordinary composition, not lifecycle
+machinery. Deduction: exact process receiver data is proved through codec and
+workflow evidence rather than one receiver-side assertion; single TOML read is
+established directly by source, not a read-counter test. Neither was a blocker.
+
+Q1.3: wait rejoins original work; one retained close settlement survives repeated
+closer cancellation; active science settles before host teardown can proceed.
+Deduction: repeated closer cancellation is tested in the invocation owner,
+while consumer tests close during either stage without repeating cancellation.
+The reviewer accepted that composed proof with the shared source path.
+
+Q1.4: encoding/decoding/receiver/cleanup/uncertain-submit failures do not grant
+scientific retry; bounded peak admission retries retain corrected input. API
+handoff recovery retains the same outcome without another calculation. The
+reviewer initially raised missing real-worker encoding-failure injection as a
+possible blocker, without assigning a score. After tracing the shared executor,
+process framing and typed-call paths and examining additional existing tests,
+the reviewer classified it as a bounded assurance weakness and rated 8/10.
+
+Coordinator adjudication:
+- Accepted the process-encoding test gap and log-provenance limitation as real
+  assurance limits; neither demonstrates incorrect behavior.
+- Rejected absence of one combined process test as a mandatory blocker: worker
+  execution uses the tested embedded executor, framing preserves its failure,
+  and ScientificCall requires a usable result before any downstream call and
+  excludes encoding failures from retry. Current component tests corroborate
+  those links. The failure reviewer independently retained the lower score.
+- Deferred additional combined tests/read counters and build-log metadata work:
+  no decisive link remains unproved under the frozen criteria, and duplicating
+  coverage solely to raise scores is not warranted. Revisit if those boundaries
+  change. No production-code repair was justified by this evaluation.
+
+Evidence (SDK paths are under ../nmr-provider-tools/):
+- Ownership: packages/provider-core/src/provider_core/scientific_call.py:119;
+  execution_setup.py:143; scientific_invocation.py:17; execution.py:1272;
+  Chef docker/containers/provider/application.py:100 and main.py:63.
+- Interfaces: examples/spectrum-summary-provider/src/spectrum_provider/provider.py:25;
+  tests/test_spectrum_binding.py:44 and test_spectrum_workflow.py:44 in that
+  example; Chef docker/containers/_shared/binding.py:47 and tests/test_provider.py:219.
+- Interruption: packages/provider-core/tests/native/test_scientific_invocation.py:38;
+  test_scientific_call.py:304; example tests/test_spectrum_workflow.py:90;
+  packages/provider-core/tests/unit/normative/test_cleanup_settlement.py:39.
+- Failure composition: packages/provider-core/src/provider_core/process_worker.py:61,
+  _embedded_operation.py:241 and scientific_call.py:177; native
+  test_process_host.py:366 and test_scientific_call.py:251; example
+  test_spectrum_workflow.py:178; unit/normative/test_controller_recovery.py:19.
+  The source map later in this note supplies the complete module roots.
+
+Fresh checks at the frozen revisions, 80 tests total:
+- SDK native: test_scientific_invocation.py (7), test_process_lifecycle.py (16),
+  test_process_host.py (11), test_scientific_call.py (18).
+- SDK integration: test_spectrum_workflow.py (8).
+- SDK unit: test_controller_recovery.py (7).
+- Chef source-mounted provider image: test_provider.py (13), using its pinned SDK.
+All passed. SDK commands used make tests/<lane>/provider-core with
+DOCKER_CONTEXT=science WHEELHOUSE=/home/ra/Downloads/wheelhouse PRIVACY_TESTS=0
+and TEST_PATTERN=<filename>. Chef used its contained unittest lane with frozen
+provider/shared/tests source mounted read-only and networking disabled.
+Raw local outputs: /tmp/panel1-scientific-invocation.log,
+/tmp/panel1-process-lifecycle.log, /tmp/panel1-process-host.log,
+/tmp/panel1-scientific-call.log, /tmp/panel1-spectrum-workflow.log,
+/tmp/panel1-controller-recovery.log, /tmp/panel1-chef-provider.log.
+These /tmp files are local evidence, not durable release artifacts. Previously
+run installed spectrum process/binding/science tests are corroborating evidence,
+not counted among the 80 fresh checks. The full SDK repository report retains
+its existing failed checks; focused success does not declare that report clean.
+
+Acceptance: all four assigned mandatory gates pass for batch 1 at these source
+revisions. The panel found no implementation defect requiring a repair. This
+assessment does not qualify batches 2-6, publish an SDK version, or establish
+real-model/live API deployment behavior.
+
 Initial batch retry and outcome rules
 ------------------------------------
 
