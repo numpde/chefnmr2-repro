@@ -19,16 +19,17 @@ Path("/torch.txt").write_text(torch + "\n")
 Path("/inference.txt").write_text("\n".join(pin for pin in dependencies if pin != torch) + "\n")
 PY
 
-# Download the published SDK wheel and verify its checksum. The final stage
-# installs this verified wheel offline.
+# Download the published SDK and its native dependencies, checking every wheel
+# against the release hashes. The final stage installs these wheels offline.
 FROM base AS supervisor
 RUN --mount=from=dependency-pins,source=provider-core.txt,target=/tmp/provider-core.txt \
     --mount=type=cache,id=chefnmr2-repro-pip,target=/root/.cache/pip \
-    python -m pip download --timeout 120 --no-index --no-deps --require-hashes \
+    python -m pip download --timeout 120 --index-url https://pypi.org/simple \
+    --only-binary=:all: --require-hashes \
     --dest /wheels -r /tmp/provider-core.txt
 
 # Assemble the runtime filesystem. The temporary stages supply dependency lists
-# and the SDK wheel, while package installations share this stage's Python.
+# and the SDK wheels, while package installations share this stage's Python.
 
 FROM base
 # Mount the Torch dependency list from the requirements stage for this build step.
@@ -46,9 +47,9 @@ RUN --mount=type=bind,from=requirements,source=/inference.txt,target=/tmp/infere
     python -m pip install --timeout 120 --index-url https://pypi.org/simple -r /tmp/inference.txt \
     && python -m pip check
 
-# Mount the verified SDK wheel from the supervisor stage and install it into the
-# same Python environment. Disable network access, package-index lookup, and
-# dependency installation. The native SDK declares no runtime dependencies.
+# Mount the verified SDK and dependency wheels from the supervisor stage and
+# install them into the same Python environment. Every dependency is supplied
+# explicitly, so disable network access, index lookup, and dependency resolution.
 # Run pip check again to verify the combined environment after installing it.
 RUN --network=none --mount=from=supervisor,source=/wheels,target=/tmp/sdk-wheels \
     python -m pip install --no-index --no-deps /tmp/sdk-wheels/*.whl \
