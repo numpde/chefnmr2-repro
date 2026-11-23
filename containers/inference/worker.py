@@ -140,7 +140,7 @@ def receive_message(connection: Connection) -> ElucidationRequest | None:
 def process_request(model: ChefNMR2, request: ElucidationRequest) -> ElucidationResult | ModelFailure:
     """Run one elucidation on the loaded model and return the typed result."""
 
-    from chefnmr2.infer import Peaks
+    from chefnmr2.infer import Peaks, ChefNMR2
 
     assert type(model) == ChefNMR2
     assert type(request) == ElucidationRequest
