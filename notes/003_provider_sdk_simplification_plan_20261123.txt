@@ -114,6 +114,24 @@ their own first consumers and qualification. Step 6 is a separate capability,
 not a prerequisite for releasing earlier boilerplate reductions. Completing
 every provider migration is not a prerequisite for a first Chef/SDK release.
 
+Quality criteria below apply separately to batches 1-6. They are review gates,
+not a score to average: an ownership or correctness failure cannot be offset by
+fewer lines or more tests. For each implementation slice, record the source
+revision, applicable criteria, concrete evidence and any remaining limitation.
+A criterion requiring another consumer stays pending until that consumer is
+covered; a useful partial slice does not complete the whole batch. Adding these
+criteria does not itself constitute a new audit of completed batch 1.
+
+Across all batches, prefer the existing SDK authority, delete replaced paths,
+and keep scientific/product decisions in the provider. A new public abstraction
+must remove a demonstrated responsibility from its first consumer, not merely
+rename its callback chain. Test consequential boundaries with the smallest
+reproducible cases; do not require redundant assertions, arbitrary coverage/LOC
+scores, or live-model runs for changes that cannot affect science. Run the
+relevant maintained container lanes, review new checker findings, and retain
+existing failures honestly in the SDK report. Publication and deployment are
+separate gates from local implementation completion.
+
 1. Establish the baseline and simplify independent calls
 
    [x] Review and finish the existing Chef batch change separately from SDK
@@ -165,11 +183,35 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
        released ScientificCall interface and needs no SDK pin change here.
        SDK commits: eb785a51 (invocation owner), b76794e0 (spectrum migration).
 
-   Acceptance: independent callers have no submission/admission/result-release
-   plumbing. Cancellation still settles work, and resuming observation cannot
-   submit an extra calculation. A focused test interrupts a wait after each
-   stage's dispatch, rejoins it and verifies one submission per stage. Closing
-   the owner instead of an observer must stop and settle the original work.
+   Quality criteria for batch 1 — independent calls
+
+   Q1.1 Ownership: one SDK call owns each analysis and result release; the
+        enclosing host scope owns the loaded model. Chef's API controller owns
+        its execution task; a standalone spectrum invocation owns its sequence.
+        No provider duplicates SDK submit/wait/cancel/join/release machinery.
+   Q1.2 Interface: spectrum's scientific sequence is ordinary typed calls with
+        the exact corrected spectrum as downstream input. Adding another
+        independent stage requires scientific code and binding/setup, not a new
+        provider lifecycle state machine. Configuration is read once per startup.
+        Chef batches preserve reply order/cardinality, per-entry model failures,
+        and each request's sampling budget and seed.
+   Q1.3 Interruption: cancelling an observer after either stage dispatch allows
+        rejoining the original invocation, with one calculation per stage under
+        the one-attempt policy. Closing the owner instead requests stop once and
+        settles active work before its host can retire, including repeated
+        cancellation of the closer. An overdue flag never means cleanup ended.
+   Q1.4 Failure: failed encoding/cleanup prevents downstream dispatch; uncertain
+        submission or failed publication never reruns science. Bounded peak
+        admission retry preserves corrected input without repeating baseline.
+        Independent body/cleanup failures survive. Changed behavior is explicit
+        in the consumer contract, not hidden by deleting an old assertion.
+   Evidence: focused interruption/rejoin and close tests at both stages; exact
+        intermediate-input comparison; no-replay/failure cases; installed
+        thread/process example runs and Chef's existing call-ownership tests.
+        Include mixed-success Chef batches and sampling-parameter propagation.
+        Confirm obsolete workflow code and its callers are gone.
+   Stop condition: any unowned task/resource, hidden replay, or retained caller
+        cleanup wrapper without a distinct obligation leaves this batch open.
 
 2. Investigate preparation boundaries before changing their implementation
 
@@ -205,12 +247,35 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
        submission guarantees for that concrete consumer. Do not propose a general
        workflow engine merely to reproduce today's application state machines.
 
-   Investigation deliverable: characterize existing input identities/resource
-   lifetimes, measure costs, select a boundary and specify its migration tests.
-   Each retained state object needs a scientific or resource reason, not just a
-   legacy protocol requirement. The later implementation slice must pass those
-   tests. For stochastic generation, use controlled fixtures for mapping
-   equivalence and real-model checks for input preservation and declared behavior.
+   Quality criteria for batch 2 — preparation decisions
+
+   Q2.1 Scientific identity: each proposed boundary names the exact accepted
+        input and everything that can change its preparation. NMRPeak includes
+        model/tokenizer/dictionary settings and encoded tensors; NMRNet includes
+        geometry order, coordinates and atom/source correspondence; SECS includes
+        captured spectrum bytes, formula and representation; Magnet includes
+        typed validation inputs, model identity and result semantics.
+   Q2.2 Ownership: for each retained object, identify who owns it, who can still
+        read it, and when it can be released. A mutable path is not a substitute
+        for captured data. Retain worker state when identity or resource cost
+        requires it; removing every handle is not a quality target.
+   Q2.3 Cost: measure representative preparation time, peak memory and transferable
+        data size, alongside prediction cost, under recorded input/model/runtime
+        settings. Use those measurements and deployment limits to justify
+        recomputation versus transfer versus retention. State uncertainty and
+        supported input sizes; do not invent a universal speed threshold.
+   Q2.4 Decision: record the selected interface for each provider, rejected
+        alternatives and their concrete costs, necessary SDK capabilities, and
+        migration acceptance cases. Source inspection must address randomness
+        and mutable inputs; a few matching runs alone do not prove determinism.
+   Evidence: captured-input comparisons, corrected/rejected proposal cases,
+        source replacement/deletion after capture, cancellation while readers
+        remain active, and reproducible measurements. For stochastic science,
+        compare prepared inputs and declared behavior, not random outputs bitwise.
+   Stop condition: an unproven input identity or unmeasured cost needed for a
+        decision blocks that provider's migration. Batch 2 completes with
+        evidence-backed decisions for the listed providers, not migrated code;
+        the selected implementations belong to later batches.
 
 3. Complete common call ownership and configurable error handling
 
@@ -243,9 +308,33 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
        recovery requirements are demonstrated by the SDK/consumer slice. Apply
        that same interface to its example and remove superseded plumbing.
 
-   Acceptance: providers select policy without implementing retry loops or task
-   retirement. Failed delivery, uncertain execution and failed cleanup cannot
-   accidentally trigger another scientific calculation.
+   Quality criteria for batch 3 — recovery ownership
+
+   Q3.1 Authority: the SDK owns attempts, backoff, cancellation, acquisition and
+        retirement. Deployment selects limits; the provider supplies scientific
+        retry eligibility and required model/runtime identity. Consumers do not
+        recreate SDK failure classifications or hide their old loops in callbacks.
+   Q3.2 Replay: non-admission, confirmed calculation failure, uncertain outcome
+        and cleanup failure have distinct actions based on SDK evidence. Only
+        explicitly eligible, settled failures permit another calculation. Never
+        replay success to recover delivery, or infer an unexecuted batch suffix.
+   Q3.3 Bounds: define maximum attempts, backoff cap and recovery-budget scope.
+        Time spent stopping, replacing and preparing consumes that same recovery
+        budget; replacement cannot reset it. Budget exhaustion forbids new work
+        but does not abandon mandatory cleanup or claim a worker has stopped.
+   Q3.4 Ordering: before redispatch, confirm old-worker retirement, replacement
+        identity, unchanged prepared input and current job permission. Preserve
+        the original failure alongside independent replacement/cleanup failures.
+        A lost reply remains uncertain even when replacement is available.
+   Evidence: NMRNet allocator/worker cases covering eligible and ineligible
+        failure, exhausted budget, revocation during backoff, failed retirement,
+        incompatible replacement and lost outcome. Verify ordered effect traces
+        and identical prediction inputs; conformer generation must not recur.
+        Exercise the same supported interface in the migrated real consumers and
+        their examples; retain product-specific rejection mapping tests.
+   Stop condition: broader retry eligibility, a refreshed budget, replacement
+        before retirement, or application-owned generic recovery keeps the
+        affected migration incomplete. One consumer does not certify all others.
 
 4. Consolidate interpreter construction and lifecycle
 
@@ -258,9 +347,34 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
    [ ] Support both typed proposal decoding (Chef) and scientific preparation
        feedback (NMRPeak/SECS); reuse existing Interpreter/PreparationTool APIs.
 
-   Acceptance: providers supply scientific tools and rules, not endpoint or
-   conversation-lifetime boilerplate. Malformed structured input does not gain
-   an unintended prose fallback.
+   Quality criteria for batch 4 — interpreter setup and lifetime
+
+   Q4.1 Separation: the SDK constructs endpoints, credential/CA transport and
+        shared retry services, and settles each conversation. Provider code owns
+        source selection, scientific tools, validation feedback and public versus
+        protected diagnostics. Prompts and tool prose remain provider resource
+        files; the SDK must not embed Chef-specific instructions or outcomes.
+   Q4.2 Configuration: consume the caller's captured configuration/material
+        consistently; do not reopen mutable files behind a snapshot owner. Honor
+        explicit endpoint, proxy, TLS and budget settings without a silent fallback.
+        Shared endpoint services outlive their conversations and close once.
+   Q4.3 Scientific behavior: both typed proposals (Chef) and scientific
+        preparation feedback (NMRPeak/SECS) use the same supported SDK setup.
+        Rejected proposals retain the conversation for correction without
+        authorizing prediction. Malformed structured input does not enter prose
+        interpretation; unsupported attachments are not silently ignored.
+   Q4.4 Cancellation: revocation during a tool call or retry prevents later
+        scientific effects. Conversation tasks and any preparation readers
+        settle before their source snapshots, uploads or shared services close.
+        Endpoint failure is not presented as scientific rejection.
+   Evidence: migrate a typed-proposal consumer and a preparation-feedback
+        consumer; exercise correction, malformed structured input, endpoint
+        failure/backoff, cancellation during a tool call and shutdown. Verify
+        selected transport settings and captured-material ownership. Reuse
+        existing SDK protocol tests rather than copying their internals.
+   Stop condition: providers still construct transport/lifetime machinery, the
+        SDK decides scientific validity, or a generic setup bypasses a consumer's
+        source/feedback requirements. More constructors alone are not completion.
 
 5. Consolidate service composition and multiple offerings
 
@@ -281,20 +395,39 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
    [ ] Migrate NMRPeak/Magnet service composition only after those behaviors are
        represented; a single-host JobService wrapper is not sufficient.
 
-   Acceptance cases:
-   - Under qualified partial-startup policy, one independently hosted offering
-     fails worker construction: do not advertise it as usable; an admitted
-     sibling remains usable. Test the effective Hello/availability snapshot.
-   - One worker exits: withdraw every offering on that worker, preserve affected
-     Attempts' evidence, and keep independently hosted healthy offerings usable.
-   - Shared API/identity failure: pause admission according to common recovery
-     policy, without inventing scientific failures or discarding retained work.
-   - Shutdown: stop admission everywhere; settle every original worker and
-     Attempt/delivery obligation before claiming shutdown complete.
-   Under partial-startup policy, readiness requires at least one admitted healthy
-   offering and usable shared prerequisites. Under all-or-nothing policy, all
-   required offerings must start. API representation and publication recovery
-   are explicit gates for this migration; worker health alone is insufficient.
+   Quality criteria for batch 5 — service composition
+
+   Q5.1 Composition: SDK setup owns repeated API/delivery factories, proxy setup,
+        signal handling and process lifetime. Providers declare their offerings,
+        host associations and product mappings. Adding or removing a supported
+        offering changes that declaration, not duplicated service loops or a
+        second manually synchronized offering inventory.
+   Q5.2 Startup: invalid deployment configuration fails before startup effects.
+        A configured worker's load failure follows an explicit all-or-nothing or
+        partial-startup policy. Partial startup requires API evidence that the
+        advertised subset and later withdrawal/recovery preserve offering identity;
+        do not infer support from independently running workers alone.
+        Readiness requires usable shared prerequisites and all required offerings
+        under all-or-nothing policy, or at least one usable offering under partial
+        policy. A started process alone is insufficient.
+   Q5.3 Failure scope: worker exit withdraws every offering on that host and
+        preserves affected Attempt evidence. Independent healthy hosts remain
+        usable under partial policy. Shared API/identity failure pauses admission
+        according to shared recovery policy without inventing scientific failures.
+   Q5.4 Shutdown: stop admission, settle original execution/readers, and preserve
+        or settle selected result/delivery obligations before releasing their
+        resources. Delivery backpressure or cancellation cannot drop an accepted
+        report or rerun science. Observe the existing delivery reconciliation
+        contract rather than claiming external acceptance from a local write.
+   Evidence: use real multi-offering consumer composition, including multiple
+        offerings sharing a host and offerings on separate hosts. Test load
+        failure, worker exit, shared API failure and shutdown during delivery;
+        inspect effective Hello/availability and retained Attempt state. Qualify
+        partial publication against the API contract before enabling that policy.
+        Update examples to the same setup interface; remove old composition paths.
+   Stop condition: a single-host wrapper presented as multi-offering support,
+        advertising a failed offering, withdrawing unrelated healthy offerings
+        under partial policy, or losing outstanding delivery obligations.
 
 6. Add bounded concurrent acquisition and batch assembly
 
@@ -339,16 +472,43 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
    [ ] Keep worker execution sequential initially. Parallel preparation and
        acquisition do not imply simultaneous model calls or tensor batching.
 
-   Acceptance: with free configured capacity, slow preparation/delivery does not
-   serialize all acquisition; at capacity, admission stops. Distinguish local
-   observer cancellation, server-confirmed job revocation and provider shutdown.
-   Revoke one job after dispatch but before outcome selection: its Attempt must
-   follow existing revocation settlement without publication, retain batch
-   participation until settled, and allow a non-revoked sibling its own result.
-   Also test identical inputs from different jobs, sibling delivery failure,
-   worker exit after the first entry, and shutdown. Preserve SDK reconciliation
-   of already selected/accepted deliveries; do not invent retroactive retraction.
-   No entry is misrouted or replayed after uncertain execution. Test caps too.
+   Quality criteria for batch 6 — concurrent jobs and batch assembly
+
+   Q6.1 Bounded progress: acquisition/preparation can advance while science or
+        delivery is waiting, when capacity exists. Set explicit limits for active
+        Attempts, concurrent preparation, queued input bytes and retained
+        result/delivery bytes. Account for in-flight reservations before taking
+        more work; at capacity stop admission rather than spawning unbounded
+        waiting tasks. Size or collection deadline triggers batch dispatch.
+   Q6.2 Routing: one dispatcher owns each invocation and its immutable ordered
+        entry-to-Attempt mapping. Group only compatible worker/model/execution
+        settings; provider packing/unpacking owns the scientific schema. Check
+        the whole reply's cardinality and entry validity before routing any
+        result. Equal scientific inputs never substitute for job identity.
+   Q6.3 Cancellation: remove revoked jobs before dispatch and check permission
+        again immediately before it. After dispatch, one job cannot cancel or
+        retire sibling work. Keep its participation until settlement and suppress
+        unauthorized publication, preserving already selected delivery semantics.
+        First prove this is permitted by the API cancellation contract; if it
+        requires stopping individual entries, implement that protocol before
+        enabling shared batches. Document that current sequential entries may
+        still run after their participant is revoked.
+   Q6.4 Failure: preserve each confirmed entry outcome, but treat malformed or
+        lost whole replies as unresolved without guessed progress or replay.
+        Only the dispatcher retires shared work. Shutdown or cancellation of all
+        participants joins the shared invocation before releasing resources.
+        No second durable batch ledger or per-job host-retirement wrapper appears.
+   Evidence: controlled blocking points show a second job acquired/prepared while
+        the first is executing, and show admission stopping at each configured
+        limit. Check size/deadline dispatch, incompatible groups, identical inputs
+        from different jobs, revocation before/after dispatch, sibling delivery
+        failure, worker exit after one entry, malformed replies and shutdown.
+        Assert routed identities, bounded live counts/bytes and calculation counts;
+        a throughput number or sleeps alone do not establish these properties.
+   Stop condition: serial acquisition at free capacity, unbounded retained work,
+        premature participant release, cross-job cancellation, misrouting or
+        replay after uncertainty. Tensor batching and parallel model execution
+        are not required; the first worker may process entries sequentially.
 
 Initial batch retry and outcome rules
 ------------------------------------
