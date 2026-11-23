@@ -1,12 +1,15 @@
 """Request and result data for one ChefNMR2 elucidation.
 
-Only Peaks mirrors an upstream dataclass. ElucidateRequest groups the arguments
+Only Peaks mirrors an upstream dataclass. ElucidationRequest groups the arguments
 to ChefNMR2.elucidate(). ElucidateResult describes its return dictionary, and
 CandidateVotes and RankedCandidate describe the candidate dictionaries inside it.
 """
 
+import logging
 from dataclasses import dataclass, field
-from typing import Literal, TypedDict
+from typing import Literal, Self, TypedDict
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
@@ -33,7 +36,7 @@ class Peaks:
 
 
 @dataclass
-class ElucidateRequest:
+class ElucidationRequest:
     """Arguments for ChefNMR2.elucidate().
 
     Method signature and defaults:
@@ -44,6 +47,36 @@ class ElucidateRequest:
     formula: str
     n_samples: int | Literal["adaptive"] = 100
     seed: int | None = 0
+
+    @classmethod
+    def from_json_or_none(cls, obj: object) -> Self | None:
+        """Construct a request from decoded JSON, logging construction failures."""
+        if not isinstance(obj, dict):
+            log.warning(f"Expected a JSON object, got {type(obj)=}")
+            return None
+
+        message = obj.copy()
+
+        try:
+            peaks = Peaks(**message.pop("peaks"))
+        except KeyError:
+            log.warning(f"Missing field 'peaks' in {obj.keys()=}")
+            return None
+        except TypeError as error:
+            log.warning(f"Could not construct `Peaks` from the 'peaks' field; {error = }")
+            return None
+
+        try:
+            peaks.h = [(ppm, integration, multiplicity) for (ppm, integration, multiplicity) in peaks.h]
+        except (TypeError, ValueError) as error:
+            log.warning(f"Could not unpack `peaks.h` into (ppm, integration, multiplicity) triples; {error = }")
+            return None
+
+        try:
+            return cls(peaks=peaks, **message)
+        except TypeError as error:
+            log.warning(f"Could not construct {cls} from {obj.keys()=}; {error = }")
+            return None
 
 
 class CandidateVotes(TypedDict):

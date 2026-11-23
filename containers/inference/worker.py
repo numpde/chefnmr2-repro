@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import socket
 from collections.abc import Iterator
@@ -10,10 +11,12 @@ from multiprocessing.connection import Connection
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+log = logging.getLogger(__name__)
+
 if __package__:
-    from .wire import ElucidateRequest, Peaks
+    from .wire import ElucidationRequest, Peaks
 else:
-    from wire import ElucidateRequest, Peaks
+    from wire import ElucidationRequest, Peaks
 
 if TYPE_CHECKING:
     from chefnmr2.infer import ChefNMR2
@@ -53,12 +56,12 @@ def load_model(
 
 MAX_MESSAGE_BYTES = 2 * 1024 * 1024
 
-
-def receive_message(frames: Connection) -> ElucidateRequest | None:
-    """Read one inference request from a connected client and return an ElucidateRequest.
+def receive_message(frames: Connection) -> ElucidationRequest | None:
+    """Read one inference request from a connected client and return an ElucidationRequest or None.
 
     This call blocks until the client sends a complete request or closes its
-    sending side. If the client closes between requests, return None.
+    sending side. If the client closes between requests, return None. If the
+    initial socket check fails, log the error and return None to end the session.
 
     If a byte is available, the initial check leaves it in place so
     frames.recv_bytes() can read the length header and the complete message.
@@ -66,7 +69,8 @@ def receive_message(frames: Connection) -> ElucidateRequest | None:
     If the client closes after sending part of the header or part of the
     payload, recv_bytes() raises OSError. If it sends the complete header
     for a nonempty payload and closes before sending any payload bytes,
-    recv_bytes() raises EOFError.
+    recv_bytes() raises EOFError. In either case, log the failed frame read
+    and return None to end the session.
 
     Example JSON payload:
 
@@ -79,7 +83,7 @@ def receive_message(frames: Connection) -> ElucidateRequest | None:
 
     For this payload, receive_message() returns:
 
-        ElucidateRequest(
+        ElucidationRequest(
             peaks=Peaks(c=[], h=[(1.0, 4, "s")]),
             formula="CH4",
             n_samples=100,
@@ -87,27 +91,39 @@ def receive_message(frames: Connection) -> ElucidateRequest | None:
         )
     """
 
-    # Leave the first header byte for recv_bytes. Once it exists, any EOF is truncation.
-    with socket.fromfd(frames.fileno(), socket.AF_UNIX, socket.SOCK_STREAM) as sock:
-        if not sock.recv(1, socket.MSG_PEEK):
-            return None
+    try:
+        # Peek without consuming the first byte of the next frame. EOF here is clean.
+        # Once a byte is present, EOF before recv_bytes() finishes that frame means truncation.
+        with socket.fromfd(frames.fileno(), socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+            if not sock.recv(1, socket.MSG_PEEK):
+                return None
+    except OSError as error:
+        log.warning(f"Could not check for the next request; {error = }")
+        return None
 
-    payload = frames.recv_bytes()
-    message = json.loads(payload.decode("utf-8"))
+    try:
+        request_frame = frames.recv_bytes()
+    except EOFError:
+        log.warning("Client closed before sending the complete request frame")
+        return None
+    except OSError as error:
+        log.warning(f"Could not read the request frame; {error = }")
+        return None
 
-    if not isinstance(message, dict):
-        raise ValueError(f"Expected a JSON object, received {type(message).__name__}")
+    try:
+        obj = json.loads(request_frame.decode("utf-8"))
+    except (ValueError, RecursionError) as error:
+        log.warning(f"Could not decode the request frame as UTF-8 JSON; {error = }")
+        return None
 
-    peaks = Peaks(**message.pop("peaks"))
-    peaks.h = [(ppm, integration, multiplicity) for (ppm, integration, multiplicity) in peaks.h]
-    return ElucidateRequest(peaks=peaks, **message)
+    return ElucidationRequest.from_json_or_none(obj)
 
 
 def send_message(connection: socket.socket, message: dict[str, object]) -> None:
     ...
 
 
-def execute_request(model: ChefNMR2, request: ElucidateRequest) -> dict[str, object]:
+def process_request(model: ChefNMR2, request: ElucidationRequest) -> dict[str, object]:
     ...
 
 
@@ -115,7 +131,7 @@ def serve_connection(connection: socket.socket, model: ChefNMR2) -> None:
     # Read-only multiprocessing.connection.Connection named `frames` for the same connected Unix socket
     with Connection(os.dup(connection.fileno()), writable=False) as frames:
         while (request := receive_message(frames)) is not None:
-            response = execute_request(model, request)
+            response = process_request(model, request)
             send_message(connection, response)
 
 
