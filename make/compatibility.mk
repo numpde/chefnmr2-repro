@@ -10,7 +10,7 @@ unexport BUILDX_BUILDER BUILDKIT_HOST
 
 # Only the small operation directory is disposable; Docker owns --rm containers.
 define compatibility_setup
-compatibility_dockerfile=$$CHEFNMR2_REPOSITORY_ROOT/containers/compatibility/Dockerfile
+compatibility_dockerfile=$$CHEFNMR2_REPOSITORY_ROOT/docker/containers/compatibility/Dockerfile
 compatibility_version=$$CHEFNMR2_COMPATIBILITY_PY_VERSION
 if [[ "$$CHEFNMR2_COMPATIBILITY_PY_VERSION_ORIGIN" != 'command line' ]]; then
     compatibility_version=$$(awk '$$1 == "ARG" && $$2 ~ /^PY_VERSION=/ {sub(/^PY_VERSION=/, "", $$2); print $$2; exit}' "$$compatibility_dockerfile")
@@ -18,7 +18,7 @@ fi
 compatibility_base=$$(CHEFNMR2_SELECTED_PY_VERSION="$$compatibility_version" awk \
     '$$1 == "FROM" && $$3 == "AS" && $$4 == ("python" ENVIRON["CHEFNMR2_SELECTED_PY_VERSION"]) {print $$2; exit}' "$$compatibility_dockerfile")
 if [[ -z "$$compatibility_base" ]]; then
-    printf '%s\n' 'Cannot build the compatibility image: PY_VERSION must select a pinned Python version listed in containers/compatibility/Dockerfile.' >&2
+    printf '%s\n' 'Cannot build the compatibility image: PY_VERSION must select a pinned Python version listed in docker/containers/compatibility/Dockerfile.' >&2
     exit 2
 fi
 $(docker_setup)

@@ -3,7 +3,7 @@
 # Each hash is copied from files.<filename>.sha256 in that epoch's manifest.json
 # Example: https://huggingface.co/ziyux123/chefnmr2/blob/38a741cce3e6f7e0d5a827a66f8d3dea0728daf5/chefnmr2-epoch949/manifest.json
 # Paths are relative to the checkpoint volume root, mounted at /checkpoints
-# compose/weights.yaml verifies downloaded bytes against these upstream hashes
+# docker/compose/weights.yaml verifies downloaded bytes against these upstream hashes
 # Columns: SHA-256, maximum downloaded bytes, relative file path
 # Config caps match the upstream 1280-byte files. Model caps are 2 GB
 # The size column is omitted when passing hashes and paths to sha256sum

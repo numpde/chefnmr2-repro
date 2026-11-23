@@ -34,7 +34,7 @@ x-contained: &contained
 
 x-checksums: &checksums
   type: bind
-  source: ../requirements/checkpoints.sha256
+  source: ../../requirements/checkpoints.sha256
   target: /checks/checkpoints.sha256
   read_only: true
   bind:

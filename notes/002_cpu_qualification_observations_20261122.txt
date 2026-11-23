@@ -58,7 +58,7 @@ was investigated and was not observed in the installed dependency imports.
 Maintained image and version selection
 --------------------------------------
 
-containers/compatibility/Dockerfile remains self-contained. Its pinned Python
+docker/containers/compatibility/Dockerfile remains self-contained. Its pinned Python
 stages own the available versions and default. make/compatibility.mk reads that
 selection and accepts PY_VERSION as an explicit command-line input:
 

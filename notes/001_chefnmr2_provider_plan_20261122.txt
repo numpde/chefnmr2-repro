@@ -231,7 +231,7 @@ Proposed layout, created only as implemented responsibilities require:
     chefnmr2_provider/      product, API workflow and versioned scientific channel
     chefnmr2_worker/        Python 3.11 model adapter without an SDK dependency
     requirements/          issued SDK pins/locks, model locks, ensemble declaration
-    containers/            separate adapter, science and test build inputs
+    docker/containers/     separate adapter, science and test build inputs
     host/                  operator entrypoints and narrowly scoped build helpers
     config/                nonsecret examples and named deployment configuration
     tests/                 contract, behavior, integration and opt-in model proof

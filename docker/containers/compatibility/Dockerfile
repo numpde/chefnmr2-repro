@@ -4,7 +4,7 @@
 #
 # Build from the repository root. Docker reads upstream's dependency list without
 # copying its source into the image. This step needs internet access:
-#   docker --context <context> build --file containers/compatibility/Dockerfile \
+#   docker --context <context> build --file docker/containers/compatibility/Dockerfile \
 #     --build-arg PY_VERSION=3.13 --target check \
 #     --tag chefnmr2-python313:check ./chefnmr2-upstream
 #

@@ -4,7 +4,7 @@
 define weights_setup
 $(docker_setup)
 weights_compose=(docker --host "$$selected_docker_endpoint" compose --env-file /dev/null \
-    --project-name chefnmr2-weights --file "$$CHEFNMR2_REPOSITORY_ROOT/compose/weights.yaml")
+    --project-name chefnmr2-weights --file "$$CHEFNMR2_REPOSITORY_ROOT/docker/compose/weights.yaml")
 endef
 
 # Preserve an operation failure, but fail successful work if cleanup fails
