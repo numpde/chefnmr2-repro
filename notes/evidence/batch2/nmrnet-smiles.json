@@ -1,0 +1,495 @@
+{
+  "cases": [
+    {
+      "conformers": [
+        {
+          "id": 0,
+          "request_base64": "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkYiLCJDIiwiQ2wiLCJCciIsIkgiXSwiY29vcmRpbmF0ZXMiOltbLTAuMTM1NDM1NjM3MDE3MzMwMzYsMS4yMDAwMTUwMzA1OTYzODc3LDAuNzM2MzA2MjQ2NDUxNDAyXSxbLTAuMDU4NjM5ODc4NTg4MTcyNDYsMC4wNzMyMjU3NTM5OTIxMzQ1MywtMC4wNzY1NjczNTQyMTM2ODIzXSxbLTEuMzY2MjkwMjk4MDIwNjc0OCwtMS4wNDM2MTIxNDgwNTUzMzA2LDAuMjc5MTI1Njg1ODA0MjUzNF0sWzEuNzAxMjQ4MjY4OTI3NDM2NCwtMC42OTIzMTE4OTA5ODU1MTE3LDAuMTgyMjc5MDQ3NzM2OTIxMzNdLFstMC4xNDA4ODI0NTUzMDEyNjI0OCwwLjQ2MjY4MzI1NDQ1MjMxODg0LC0xLjEyMTE0MzYyNTc3ODg4OTZdXX0=",
+          "request_sha256": "50387f093ff19e37bed1863bffd08b903cd3e6accb046ffaba8d48aab07d89c1",
+          "stereochemistry": {
+            "atoms": [
+              {
+                "atom_index": 1,
+                "chiral_tag": "CHI_TETRAHEDRAL_CCW",
+                "cip_code": "R"
+              }
+            ],
+            "bonds": [],
+            "method": "RDKit.AssignStereochemistryFrom3D(replaceExistingTags=True)",
+            "origin": "generated_coordinates"
+          }
+        },
+        {
+          "id": 1,
+          "request_base64": "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkYiLCJDIiwiQ2wiLCJCciIsIkgiXSwiY29vcmRpbmF0ZXMiOltbLTAuMTY4OTcyNDU5MDExMzY1NTQsMS4xNTc1MjIzMTkzNzM1MDc4LDAuNzkwMjgyMjUwNzI3MDI1Nl0sWy0wLjA1NTU1MjIwODI1MjExNTIzLDAuMTA0OTM4MDE0MjA1NDc5NzEsLTAuMDkzODg0MTYyNDgxMTczMDddLFstMS40MDEyMDA2Mjc0NjI3Mjk2LC0wLjk5NTk1NjE4NTIzNDQ0MDMsMC4yMzI1NDk1ODYyNjE5NDM4Nl0sWzEuNjY3MjQxODE5NDU3NTk4LC0wLjcyOTkxMzg2Njk0NzcxNjIsMC4yMTE2MzY3MTgzNjc3N10sWy0wLjA0MTUxNjUyNDczMTM5MDc4LDAuNDYzNDA5NzE4NjAzMTczNiwtMS4xNDA1ODQzOTI4NzU1NjEyXV19",
+          "request_sha256": "08dc1dfb3dc42e2c6620d1ee7e324c3047c2203a84734e865fd49f1d8c46af7e",
+          "stereochemistry": {
+            "atoms": [
+              {
+                "atom_index": 1,
+                "chiral_tag": "CHI_TETRAHEDRAL_CCW",
+                "cip_code": "R"
+              }
+            ],
+            "bonds": [],
+            "method": "RDKit.AssignStereochemistryFrom3D(replaceExistingTags=True)",
+            "origin": "generated_coordinates"
+          }
+        }
+      ],
+      "measurement": {
+        "VmHWM": 79540224,
+        "VmRSS": 79540224,
+        "rss_before_bytes": 26943488,
+        "seconds": 0.19306511094328016
+      },
+      "provenance": {
+        "added_hydrogen_parents": [
+          [
+            4,
+            1
+          ]
+        ],
+        "component_count": 1,
+        "embedding": {
+          "failure_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "parameters": {
+            "ETversion": "2",
+            "basinThresh": "5",
+            "boundsMatForceScaling": "1",
+            "boxSizeMult": "2",
+            "clearConfs": "true",
+            "embedForceField": "UFF",
+            "embedFragmentsSeparately": "true",
+            "enableSequentialRandomSeeds": "false",
+            "enforceChirality": "true",
+            "forceTransAmides": "true",
+            "ignoreSmoothingFailures": "false",
+            "initialEmbeddingMode": "DG_EMBEDDING",
+            "maxIterations": "200",
+            "numThreads": "1",
+            "numZeroFail": "1",
+            "onlyHeavyAtomsForRMS": "true",
+            "onlyInitialEmbedding": "false",
+            "optimizerForceTol": "0.001",
+            "pruneRmsThresh": "-1",
+            "randNegEig": "true",
+            "randomSeed": "17",
+            "symmetrizeConjugatedTerminalGroupsForPruning": "true",
+            "timeout": "1",
+            "trackFailures": "true",
+            "useBasicKnowledge": "true",
+            "useExpTorsionAnglePrefs": "true",
+            "useLegacyImplementation": "true",
+            "useMacrocycle14config": "true",
+            "useMacrocycleTorsions": "true",
+            "useRandomCoords": "false",
+            "useSmallRingTorsions": "false",
+            "useSymmetryForPruning": "true",
+            "verbose": "false"
+          },
+          "preset": "ETKDGv3",
+          "requested_settings": {
+            "clearConfs": true,
+            "enforceChirality": true,
+            "maxIterations": 200,
+            "numThreads": 1,
+            "pruneRmsThresh": -1.0,
+            "randomSeed": 17,
+            "timeout": 1,
+            "trackFailures": true
+          }
+        },
+        "hydrogen_expansion": {
+          "addCoords": false,
+          "explicitOnly": false
+        },
+        "model_projection": "Coordinate requests contain elements and positions; isotope, charge and graph stereochemistry remain provenance, not separate prediction features.",
+        "parser": {
+          "allowCXSMILES": false,
+          "parseName": false,
+          "removeHs": false,
+          "sanitize": true
+        },
+        "requested_count": 2,
+        "runtime": {
+          "python": "3.12.12",
+          "rdkit": "2026.09.1"
+        },
+        "source_atoms": [
+          {
+            "atom_map_number": 0,
+            "chiral_tag": "CHI_UNSPECIFIED",
+            "cip_code": null,
+            "element": "F",
+            "formal_charge": 0,
+            "isotope": 0,
+            "source_atom_index": 0
+          },
+          {
+            "atom_map_number": 0,
+            "chiral_tag": "CHI_TETRAHEDRAL_CCW",
+            "cip_code": "R",
+            "element": "C",
+            "formal_charge": 0,
+            "isotope": 0,
+            "source_atom_index": 1
+          },
+          {
+            "atom_map_number": 0,
+            "chiral_tag": "CHI_UNSPECIFIED",
+            "cip_code": null,
+            "element": "Cl",
+            "formal_charge": 0,
+            "isotope": 0,
+            "source_atom_index": 2
+          },
+          {
+            "atom_map_number": 0,
+            "chiral_tag": "CHI_UNSPECIFIED",
+            "cip_code": null,
+            "element": "Br",
+            "formal_charge": 0,
+            "isotope": 0,
+            "source_atom_index": 3
+          }
+        ],
+        "source_bonds": [
+          {
+            "begin_atom_index": 0,
+            "bond_type": "SINGLE",
+            "direction": "NONE",
+            "end_atom_index": 1,
+            "stereo": "STEREONONE",
+            "stereo_atom_indices": []
+          },
+          {
+            "begin_atom_index": 1,
+            "bond_type": "SINGLE",
+            "direction": "NONE",
+            "end_atom_index": 2,
+            "stereo": "STEREONONE",
+            "stereo_atom_indices": []
+          },
+          {
+            "begin_atom_index": 1,
+            "bond_type": "SINGLE",
+            "direction": "NONE",
+            "end_atom_index": 3,
+            "stereo": "STEREONONE",
+            "stereo_atom_indices": []
+          }
+        ],
+        "source_sha256": "bfc4ac69054e81d064fd4a771c9e0033331f52f17ea23658cca988bd02589af7"
+      },
+      "requested_count": 2,
+      "source": "F[C@H](Cl)Br"
+    },
+    {
+      "conformers": [
+        {
+          "id": 0,
+          "request_base64": "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkMiLCJDIiwiQyIsIkMiLCJIIiwiSCIsIkgiLCJIIiwiSCIsIkgiLCJIIiwiSCIsIkgiLCJIIl0sImNvb3JkaW5hdGVzIjpbWzEuOTEyMTM5NDUxNjc2MzUxLC0wLjA3NDkyNjQxODAzMzY5MTI0LDAuMDkzODkzMTYyNTA4MzgzNTddLFswLjQ4NTM0MjQyNjExMTk5NywtMC40ODA3Njg3OTcwMzE4NDE2LDAuMjkwODI1MjIxMDU1MTY5ODRdLFstMC40OTU2NzY1NjgwNTkwOTQ0NCwwLjY1ODA5MDQ0MTg0NjIyNjYsMC4xMDc2MDE5ODQzNjMwMTMzNV0sWy0xLjg2OTMyNTU1ODExNDQzMzUsMC4wNDUzOTMzNDc0NzIwMjgyODUsMC4zNDcwNDIzOTk4ODQxNzM3XSxbMi4xNDAyODY0NzYzODc0NTQ1LDAuOTc1ODgzMzU1NDg5Njc5MSwwLjM2NDU4MzE3ODQ2MjI5MDc3XSxbMi4xNjEzMzI1NzgwMzgxOTkzLC0wLjE1NjY3NjMyMjA1NjU2MzU3LC0xLjAwMzk4OTY3Nzg3NDEwNThdLFsyLjU0NjAzNjgxNjM4MzUzMjMsLTAuODIyMjcxMTk0MjI1MDI4NiwwLjYxODc2NDk3NTUwODA5MjZdLFswLjMxNDg1NDI1MzgxODE3MzU2LC0wLjg4OTkzNjUzODMwOTQyLDEuMzE2MTk1OTg0ODM1NjU0MV0sWzAuMTgxNjAwNjQ2ODg3MjQ0MTQsLTEuMzExNzA5OTI2OTA4MzQzMiwtMC40MTA0MTAyMzU3MDgzOTQ4NV0sWy0wLjM0NzY4MDE4NjU0NDI2MTc1LDEuNDk0MDAyNzU2OTM0Njc4LDAuODA2ODYzODc3NTM3MTI5OF0sWy0wLjUxNTIwMjkwMDg5MjkxMzUsMS4wMjA5MzYyODg5ODI3MDM2LC0wLjkzNjc0ODc2MjAyNjE1MThdLFstMi4yMjM5NzEzNDYwMTQ2NzksLTAuMzI4ODY0NjMyNDE2MjQ5OSwtMC42MjIxOTU5NTU5MDM0MzQ2XSxbLTIuNTUyNTcwODQwNTQ2ODcsMC43MjUyNjAxNzQ3MjQ4NjY1LDAuODcwODQzMDczODM1NzMyXSxbLTEuNzM3MTY1MjQ5MTMwNjg1LC0wLjg1NDQxMjUzNjQ2OTA0OCwxLjAwMTc4MzkxOTk3MTQxNzFdXX0=",
+          "request_sha256": "15106eff78b8df5dc37fdbf2978168f5d0ee86706986b301951492f66b293a8b",
+          "stereochemistry": {
+            "atoms": [],
+            "bonds": [],
+            "method": "RDKit.AssignStereochemistryFrom3D(replaceExistingTags=True)",
+            "origin": "generated_coordinates"
+          }
+        },
+        {
+          "id": 1,
+          "request_base64": "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkMiLCJDIiwiQyIsIkMiLCJIIiwiSCIsIkgiLCJIIiwiSCIsIkgiLCJIIiwiSCIsIkgiLCJIIl0sImNvb3JkaW5hdGVzIjpbWzEuOTMyOTg4MDYwNzEyMzcsLTAuMDUwMDgzNjE0NDczMDc2NzMsMC40OTY3NTM5MjY2Mjk5ODc5Nl0sWzAuNTQ2OTEzMTAyNjM4NzY1MiwwLjQ5NTczNTI0OTQ1NjU3ODY1LDAuMzY3NTg0NjQ5MTg4OTE5N10sWy0wLjU0NjE5MjMzMzU4MTU1NDUsLTAuNTM1NDczMzU0NjE4NjAwOCwwLjQwMjA3MTc3MDM3NzU5NF0sWy0xLjkyMzg3Nzc0Mzc2MTQ1NTQsMC4wNTU2NzA3ODkwMjI4NTg2NjUsMC4yNjkwMDcxMTUwNTA1MjgxXSxbMi41NTM1NjE2OTIyMDUwOSwwLjcxNjI1MTgyODM1ODczNTgsMS4wMDcwMDkyMjE2MTI5MjI1XSxbMi4yOTU5MjgzNDY5ODEzODQ1LC0wLjIzOTc0MzM5MjI2MTQzMTQzLC0wLjU1MDY2MjA0NjY4NzI0NjddLFsyLjAxMjcwNjY3NjAyNzA3NDQsLTAuOTc3OTA5MDY0NDM1NjUxLDEuMTA0NzIyNjU0MTc4NzM3OF0sWzAuMzk2ODM5MTQ2OTY5MDg3MjMsMS4xNjI1NDY5NTcyNTM4MTIsMS4yNTY5NzY1OTgxOTYwNjc0XSxbMC40OTQ2OTUwNjQzNzI1MDMwNSwxLjEwODczNDk0NjI0NDUwNDIsLTAuNTUxNDU4ODM5Mzk4ODgxNF0sWy0wLjQzMzYwNjI0MTQ3NTkyMDEsLTEuMzM0MjAzMDQ3OTY3NzU1NCwtMC4zMzM4ODQ3MjEyNjIzMTI1Nl0sWy0wLjQ3MTI2OTg4MTU0OTQ5MDksLTEuMDIyMTMxNzg2NDM3MDc1NiwxLjQxNzUwMDc0NzA4NjU5NTVdLFstMi4zNjM0OTQ2MjgzNDIwMjc1LDAuMDgzMTk1NTA1NDQ5NzYyMjMsMS4yOTQ1MjQyNTM2MTg3NDU4XSxbLTEuOTEzNTgyOTIwODcyMjA0MiwxLjExNzY4MjUwNjI5ODc5MDMsLTAuMTA0NjU2NDY5OTA1MDU3NjddLFstMi41ODE2MDgzNDAzMjM2MjIsLTAuNTgwMjczNTIxODkxNDU1MSwtMC4zODUzODI1NzIzMDc5MjE1XV19",
+          "request_sha256": "6ed8c27fcc1091f0b59c93e16424b2438fd28ef7b48ecc2497b08e74084091a8",
+          "stereochemistry": {
+            "atoms": [],
+            "bonds": [],
+            "method": "RDKit.AssignStereochemistryFrom3D(replaceExistingTags=True)",
+            "origin": "generated_coordinates"
+          }
+        },
+        {
+          "id": 2,
+          "request_base64": "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkMiLCJDIiwiQyIsIkMiLCJIIiwiSCIsIkgiLCJIIiwiSCIsIkgiLCJIIiwiSCIsIkgiLCJIIl0sImNvb3JkaW5hdGVzIjpbWzEuODg3ODgyOTI5MjM2ODUzMywwLjAxMjk5MjMyMjE2MDcwNzgzMywtMC4wMDg2MTU0MTQzMDgzNDkxNTVdLFswLjUxMTU1OTgyODA0MjUxNDgsMC4yNjc5Njc2MTA5MDU4NjQ4NSwtMC41ODU0NzI1NzU3NDk2ODc1XSxbLTAuNDg1MTM2MDgxOTMwMzc0MDUsLTAuMTY2Mjg1MTI1MjQwNzE4ODcsMC40NjU4ODc2MzYxODk0NzA3N10sWy0xLjkyMDgzODQyNjYzNDkxNDgsMC4wMjcyMjA1NTM3NDQ1NDEyLDAuMDM2MTQ4MTkyNTY1ODU1MTg1XSxbMi4yMDc3MzIyNjc4MDg4MTYsMC44ODExNjQxMzE3MzQ4ODMzLDAuNTcwMDk4ODY2MzM5MDg0MV0sWzIuNjA4ODg3MTk1NDY1OTI2NywtMC4zMjUyOTczNzYyMDI3MDAzMywtMC43NzQ1MDYxNjI0MDAzNzE0XSxbMS43NzgxNjM1OTAzODUwNjM0LC0wLjgzNzYxODQ2Nzc0NTI5NSwwLjcxMTM3MDU1MTkzNzM2OF0sWzAuNDE1NDAxMjA1MTI4NTA4MDMsMS4zNDk3NzAxMzUyODI4NTMsLTAuODMzMzUxMzQ3NzgyNDgxMV0sWzAuMzcwODUzNzk1OTUzMTkzMywtMC4zMDEzMDI2NTQ3Mjg0MzAyLC0xLjUyODMxMTgzMjI0NTU2OThdLFstMC4yNDgwNzUzNTA5Mzg5ODY5MiwwLjMyNjg5OTk3MjczNDg4NDM2LDEuNDMxODY3MjMxNTA1MjA2M10sWy0wLjM0NzU0NjU4MjE0OTUxNDYsLTEuMjYxMzQyMDgyMTk0NDc5NiwwLjU5NTQ2NjE3MjIxOTk0ODFdLFstMi4xOTA0NTIzNzQxODcyNDIsLTAuOTA5NTYxOTM0NTA1MzY0MiwtMC41MDI3Njg4NDQ0NDQxOTY4XSxbLTIuNTM0NDE2NjEyNTE4NjAzNiwwLjAwNzk2NjUyMDI3Mjc3MDgxMiwwLjk3NDcwOTczNTIxNTYzMzRdLFstMi4wNTQwMTUzODM2NjEyNSwwLjkyNzQyNjM5Mzc4MDQ4NTUsLTAuNTUyNTIyMjA5MDQxOTExXV19",
+          "request_sha256": "8e932f7be52140caa2dc3bcad4605584ad6216e4de7ba6f03e75b559eff785c5",
+          "stereochemistry": {
+            "atoms": [],
+            "bonds": [],
+            "method": "RDKit.AssignStereochemistryFrom3D(replaceExistingTags=True)",
+            "origin": "generated_coordinates"
+          }
+        }
+      ],
+      "measurement": {
+        "VmHWM": 79663104,
+        "VmRSS": 79663104,
+        "rss_before_bytes": 79540224,
+        "seconds": 0.00821752194315195
+      },
+      "provenance": {
+        "added_hydrogen_parents": [
+          [
+            4,
+            0
+          ],
+          [
+            5,
+            0
+          ],
+          [
+            6,
+            0
+          ],
+          [
+            7,
+            1
+          ],
+          [
+            8,
+            1
+          ],
+          [
+            9,
+            2
+          ],
+          [
+            10,
+            2
+          ],
+          [
+            11,
+            3
+          ],
+          [
+            12,
+            3
+          ],
+          [
+            13,
+            3
+          ]
+        ],
+        "component_count": 1,
+        "embedding": {
+          "failure_counts": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "parameters": {
+            "ETversion": "2",
+            "basinThresh": "5",
+            "boundsMatForceScaling": "1",
+            "boxSizeMult": "2",
+            "clearConfs": "true",
+            "embedForceField": "UFF",
+            "embedFragmentsSeparately": "true",
+            "enableSequentialRandomSeeds": "false",
+            "enforceChirality": "true",
+            "forceTransAmides": "true",
+            "ignoreSmoothingFailures": "false",
+            "initialEmbeddingMode": "DG_EMBEDDING",
+            "maxIterations": "200",
+            "numThreads": "1",
+            "numZeroFail": "1",
+            "onlyHeavyAtomsForRMS": "true",
+            "onlyInitialEmbedding": "false",
+            "optimizerForceTol": "0.001",
+            "pruneRmsThresh": "-1",
+            "randNegEig": "true",
+            "randomSeed": "17",
+            "symmetrizeConjugatedTerminalGroupsForPruning": "true",
+            "timeout": "1",
+            "trackFailures": "true",
+            "useBasicKnowledge": "true",
+            "useExpTorsionAnglePrefs": "true",
+            "useLegacyImplementation": "true",
+            "useMacrocycle14config": "true",
+            "useMacrocycleTorsions": "true",
+            "useRandomCoords": "false",
+            "useSmallRingTorsions": "false",
+            "useSymmetryForPruning": "true",
+            "verbose": "false"
+          },
+          "preset": "ETKDGv3",
+          "requested_settings": {
+            "clearConfs": true,
+            "enforceChirality": true,
+            "maxIterations": 200,
+            "numThreads": 1,
+            "pruneRmsThresh": -1.0,
+            "randomSeed": 17,
+            "timeout": 1,
+            "trackFailures": true
+          }
+        },
+        "hydrogen_expansion": {
+          "addCoords": false,
+          "explicitOnly": false
+        },
+        "model_projection": "Coordinate requests contain elements and positions; isotope, charge and graph stereochemistry remain provenance, not separate prediction features.",
+        "parser": {
+          "allowCXSMILES": false,
+          "parseName": false,
+          "removeHs": false,
+          "sanitize": true
+        },
+        "requested_count": 3,
+        "runtime": {
+          "python": "3.12.12",
+          "rdkit": "2026.09.1"
+        },
+        "source_atoms": [
+          {
+            "atom_map_number": 0,
+            "chiral_tag": "CHI_UNSPECIFIED",
+            "cip_code": null,
+            "element": "C",
+            "formal_charge": 0,
+            "isotope": 0,
+            "source_atom_index": 0
+          },
+          {
+            "atom_map_number": 0,
+            "chiral_tag": "CHI_UNSPECIFIED",
+            "cip_code": null,
+            "element": "C",
+            "formal_charge": 0,
+            "isotope": 0,
+            "source_atom_index": 1
+          },
+          {
+            "atom_map_number": 0,
+            "chiral_tag": "CHI_UNSPECIFIED",
+            "cip_code": null,
+            "element": "C",
+            "formal_charge": 0,
+            "isotope": 0,
+            "source_atom_index": 2
+          },
+          {
+            "atom_map_number": 0,
+            "chiral_tag": "CHI_UNSPECIFIED",
+            "cip_code": null,
+            "element": "C",
+            "formal_charge": 0,
+            "isotope": 0,
+            "source_atom_index": 3
+          }
+        ],
+        "source_bonds": [
+          {
+            "begin_atom_index": 0,
+            "bond_type": "SINGLE",
+            "direction": "NONE",
+            "end_atom_index": 1,
+            "stereo": "STEREONONE",
+            "stereo_atom_indices": []
+          },
+          {
+            "begin_atom_index": 1,
+            "bond_type": "SINGLE",
+            "direction": "NONE",
+            "end_atom_index": 2,
+            "stereo": "STEREONONE",
+            "stereo_atom_indices": []
+          },
+          {
+            "begin_atom_index": 2,
+            "bond_type": "SINGLE",
+            "direction": "NONE",
+            "end_atom_index": 3,
+            "stereo": "STEREONONE",
+            "stereo_atom_indices": []
+          }
+        ],
+        "source_sha256": "90b4853e06e722c63b4270463cf558684d7a1e77605d3ad36489d6146e42ab87"
+      },
+      "requested_count": 3,
+      "source": "CCCC"
+    }
+  ],
+  "container_command": [
+    "docker",
+    "--context",
+    "science",
+    "run",
+    "--rm",
+    "--pull",
+    "never",
+    "--init",
+    "--cidfile",
+    "/tmp/preparation-probe-b6zwvgt7/container",
+    "--network",
+    "none",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges:true",
+    "--pids-limit",
+    "256",
+    "--cpus",
+    "4",
+    "--memory",
+    "8g",
+    "--memory-swap",
+    "8g",
+    "--shm-size",
+    "256m",
+    "--tmpfs",
+    "/tmp:rw,noexec,nosuid,nodev,size=512m,mode=1777",
+    "--env",
+    "OMP_NUM_THREADS=4",
+    "--env",
+    "MKL_NUM_THREADS=4",
+    "--mount",
+    "type=bind,src=/home/ra/repos/chefnmr2-repro/notes/evidence/batch2/nmrnet_preparation.py,dst=/probe.py,readonly",
+    "--entrypoint",
+    "/opt/rdkit/environment/bin/python",
+    "sha256:ac65b48cb927105349c103dc5a8d623b89b9b604330f79a2e6f3b21adbf76788",
+    "-I",
+    "-B",
+    "/probe.py",
+    "smiles"
+  ],
+  "installed_source_sha256": {
+    "nmrnet_provider.input_geometry": "029fdd793c86f2132de4649b6a5372ec921c492b93fd40653253d5db41873a15",
+    "nmrnet_provider.smiles": "392d2cf5e878f9829164e835f5a8ec4693e58852474ba18f6aa4deaffa1216d8"
+  },
+  "kernel": "7.0.0-43-generic",
+  "memory_method": "Linux per-phase clear_refs=5 VmHWM, includes imported modules and model/head loads",
+  "phase": "smiles",
+  "probe_sha256": "e7edb532c06a4365d68c6afe84efca7495c6d972c3a288eeb3917cf8b8799200",
+  "python": "3.12.12",
+  "rdkit_version": "2026.9.1"
+}

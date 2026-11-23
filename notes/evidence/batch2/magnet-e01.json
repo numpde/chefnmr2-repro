@@ -1,0 +1,376 @@
+{
+  "admission": {
+    "VmHWM": 454631424,
+    "VmRSS": 454631424,
+    "rss_before_bytes": 454590464,
+    "seconds": 0.0015426569152623415
+  },
+  "admitted_tensor_facts": {
+    "atom_formula": {
+      "atom_z": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 72,
+        "sha256": "e79d831aa74333aece028e2707927ddab9750506b623afb3a34f71f23fa774bc",
+        "shape": [
+          9
+        ]
+      },
+      "batch": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 72,
+        "sha256": "834a709ba2534ebe3ee1397fd4f7bd288b2acc1d20a08d6c862dcd99b6f04400",
+        "shape": [
+          9
+        ]
+      }
+    },
+    "peak_mask": {
+      "device": "cpu",
+      "dtype": "torch.bool",
+      "nbytes": 1,
+      "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+      "shape": [
+        1,
+        1
+      ]
+    },
+    "peaks": {
+      "integral": {
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "nbytes": 4,
+        "sha256": "ea2845900b5856c9bf354b1aa9761b5aa6888e5ed61738fe9579ca42bc0f6054",
+        "shape": [
+          1,
+          1,
+          1
+        ]
+      },
+      "j_vals": {
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "nbytes": 32,
+        "sha256": "af23c85a2a0d09ca95077ad80ccf7d95786c888e528c112cfe54718dac745d4c",
+        "shape": [
+          1,
+          1,
+          8
+        ]
+      },
+      "mhz": {
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "nbytes": 4,
+        "sha256": "ac8fb139930df65fdb788559d7299840c359549afc851b82ba08d1485e67f3b7",
+        "shape": [
+          1,
+          1,
+          1
+        ]
+      },
+      "mult_ids": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 8,
+        "sha256": "4779cee98e83f1a1592de4f293107545fabab96772e43de89f3437b35f08938f",
+        "shape": [
+          1,
+          1
+        ]
+      },
+      "nuc_ids": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 8,
+        "sha256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc",
+        "shape": [
+          1,
+          1
+        ]
+      },
+      "shift_hi": {
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "nbytes": 4,
+        "sha256": "e7d9a957c3c942d3551b291f30acbb11064e373eb6adcf4dc54671f8a64f965f",
+        "shape": [
+          1,
+          1,
+          1
+        ]
+      },
+      "shift_lo": {
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "nbytes": 4,
+        "sha256": "e00e5eb9444182f352323374ef4e08ebcb784725fdd4fd612d7730540b3e0c8c",
+        "shape": [
+          1,
+          1,
+          1
+        ]
+      },
+      "solvent_ids": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 8,
+        "sha256": "aae89fc0f03e2959ae4d701a80cc3915918c950b159f6abb6c92c1433b1a8534",
+        "shape": [
+          1,
+          1
+        ]
+      }
+    }
+  },
+  "attempt": "batch2-fixture",
+  "checkpoint_sha256": "f7f2c7fca51d394184a85162ce0203086cf5260cfc689d918653416c17855bf4",
+  "config_sha256": "98c2a48b4bc1596937788bfdd891a6694c4cd0bb06b2af5f0a69647a901e7a61",
+  "container_command": [
+    "docker",
+    "--context",
+    "science",
+    "run",
+    "--rm",
+    "--pull",
+    "never",
+    "--init",
+    "--cidfile",
+    "/tmp/preparation-probe-hp50j9nv/container",
+    "--network",
+    "none",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges:true",
+    "--pids-limit",
+    "256",
+    "--cpus",
+    "4",
+    "--memory",
+    "8g",
+    "--memory-swap",
+    "8g",
+    "--shm-size",
+    "256m",
+    "--tmpfs",
+    "/tmp:rw,noexec,nosuid,nodev,size=512m,mode=1777",
+    "--env",
+    "OMP_NUM_THREADS=4",
+    "--env",
+    "MKL_NUM_THREADS=4",
+    "--mount",
+    "type=bind,src=/home/ra/repos/chefnmr2-repro/notes/evidence/batch2/magnet_preparation.py,dst=/probe.py,readonly",
+    "--entrypoint",
+    "python",
+    "sha256:964ba65f5a8b681a6aa96dd8e55d58427798043bb778cc85f42f959ab7ca2edc",
+    "-P",
+    "-B",
+    "/probe.py",
+    "e01"
+  ],
+  "decode_policy": {
+    "do_sample": true,
+    "max_new_tokens": 96,
+    "min_new_tokens": 1,
+    "num_beams": 1,
+    "num_return_sequences": 100,
+    "temperature": 0.9,
+    "top_k": null,
+    "top_p": 0.9,
+    "use_cache": true
+  },
+  "encoded_input": {
+    "atom_counts": {
+      "C": 2,
+      "H": 6,
+      "O": 1
+    },
+    "nmr": {
+      "mhz": "400",
+      "peaks": [
+        {
+          "integral": "3",
+          "j_vals": [
+            "7"
+          ],
+          "multiplicity": "d",
+          "shift_hi": "1.1",
+          "shift_lo": "1"
+        }
+      ],
+      "solvent": "CDCl3"
+    }
+  },
+  "family": "e01",
+  "generation": {
+    "VmHWM": 518373376,
+    "VmRSS": 498466816,
+    "candidate_count": 100,
+    "rss_before_bytes": 454631424,
+    "seconds": 0.3525423629907891
+  },
+  "generation_conversion_seconds": 0.0012898609274998307,
+  "generation_tensor_identity": true,
+  "input_json_bytes": 166,
+  "installed_worker_sha256": "94824e46525d6dbf184888457ec2ba73356b91f53b21c144681b6ec9649e3684",
+  "load": {
+    "VmHWM": 454524928,
+    "VmRSS": 454524928,
+    "rss_before_bytes": 420675584,
+    "seconds": 0.4776148149976507
+  },
+  "memory_method": "Per-phase Linux clear_refs=5 VmHWM; includes resident checkpoint; generation includes tensor-witness overhead",
+  "preparation_median_seconds": 0.0011996954563073814,
+  "preparations": [
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0013889780966565013
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0012273730244487524
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.001183290034532547
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0011539950501173735
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0011491960613057017
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0011543849250301719
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.001289950916543603
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.001191123970784247
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0011917359661310911
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0013278329279273748
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0012012729421257973
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0012506169732660055
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0029909759759902954
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0011981179704889655
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0011948220198974013
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0012227039551362395
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0013169519370421767
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0012038479326292872
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0011902429396286607
+    },
+    {
+      "VmHWM": 454631424,
+      "VmRSS": 454631424,
+      "rss_before_bytes": 454631424,
+      "seconds": 0.0011875380296260118
+    }
+  ],
+  "probe_sha256": "665d88457b1416a02c10cb2a1e081fa62fc83b4fb4d58db3e89ccede95b916c2",
+  "python": "3.12.12",
+  "seed": 4281166726799898410,
+  "semantic_input": {
+    "atom_counts": {
+      "C": 2,
+      "H": 6,
+      "O": 1
+    },
+    "nmr": {
+      "mhz": 400.0,
+      "peaks": [
+        {
+          "integral": 3.0,
+          "j_vals": [
+            7.0
+          ],
+          "multiplicity": "d",
+          "shift_hi": 1.1,
+          "shift_lo": 1.0
+        }
+      ],
+      "solvent": "CDCl3"
+    }
+  },
+  "threads": 4,
+  "torch": "2.12.0+cpu"
+}

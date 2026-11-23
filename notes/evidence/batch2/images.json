@@ -1,0 +1,166 @@
+{
+  "images": {
+    "magnet-e01": {
+      "architecture": "amd64",
+      "created": "2026-11-13T11:19:10.601092181+03:00",
+      "id": "sha256:964ba65f5a8b681a6aa96dd8e55d58427798043bb778cc85f42f959ab7ca2edc",
+      "labels": {
+        "io.magnet.image.input-id": "sha256:5aa9b24bd66bd0fda2441241e9dd9baf320be0a8eae384738106549d0137ab19",
+        "io.magnet.image.role": "runner",
+        "io.magnet.image.wheel-selection-id": "sha256:9aef35bc7223fb0f6df8b0463dffcabac69cf09530d2eba98e7b768e7180df71",
+        "io.magnet.runner.contract-id": "magnet.e01.runner.v4",
+        "io.magnet.runner.ref": "e_01_jvae_nmrexp",
+        "io.magnet.runner.target": "cpu-x86_64",
+        "org.opencontainers.image.revision": "9dd8406d10bb05cdf9b778a973461edb91e8fe0c"
+      },
+      "os": "linux",
+      "source_comparison": {
+        "serving_worker": {
+          "checkout_sha256": "94824e46525d6dbf184888457ec2ba73356b91f53b21c144681b6ec9649e3684",
+          "equal": true,
+          "installed_sha256": "94824e46525d6dbf184888457ec2ba73356b91f53b21c144681b6ec9649e3684"
+        }
+      },
+      "user": "65532:65532"
+    },
+    "magnet-e02": {
+      "architecture": "amd64",
+      "created": "2026-11-13T11:25:12.893115994+03:00",
+      "id": "sha256:c93c8e7dd4b948b146131c7bcd14c93d29585f0410674cb7702b0d90dd575c5b",
+      "labels": {
+        "io.magnet.image.input-id": "sha256:776a13971ec8d1077e5df354231f31d677365324e980e1ba369cd50afbda0b3a",
+        "io.magnet.image.role": "runner",
+        "io.magnet.image.wheel-selection-id": "sha256:9e9c2c7b7c256a07fa05a9866e8f41829176b31b47e8e020513d959dc3091408",
+        "io.magnet.runner.contract-id": "magnet.e02.runner.v3",
+        "io.magnet.runner.ref": "e_02_ch_nmrexp",
+        "io.magnet.runner.target": "cpu-x86_64",
+        "org.opencontainers.image.revision": "9dd8406d10bb05cdf9b778a973461edb91e8fe0c"
+      },
+      "os": "linux",
+      "source_comparison": {
+        "serving_worker": {
+          "checkout_sha256": "40c3185d05f414ab20313fa09fa1e94a051a8403440a1c4b6a67c896505c6089",
+          "equal": true,
+          "installed_sha256": "40c3185d05f414ab20313fa09fa1e94a051a8403440a1c4b6a67c896505c6089"
+        }
+      },
+      "user": "65532:65532"
+    },
+    "nmrnet-prediction": {
+      "architecture": "amd64",
+      "created": "2026-11-13T11:01:35.18475932+03:00",
+      "id": "sha256:6ad9aee418867a3dba64ef66b69d395bfb05c8ba31232610c9f5a51daa97c706",
+      "labels": {
+        "io.nmrnet-repro.inference-inputs": "sha256:8b7299fb27cc939883066fbe32d9b2f9daad06016101cd8f5445c57bc5bee05a",
+        "io.nmrnet-repro.inference-wheels": "sha256:27d76f078250dce209551602190aa510624ee33f484b68dd38efda6794c7e482",
+        "io.nmrnet-repro.upstream-revision": "3ba8b9c2f3d0a390d00685d238618345c6ab24d7"
+      },
+      "os": "linux",
+      "source_comparison": {
+        "nmrnet_inference.model": {
+          "checkout_sha256": "902b590322e6f2511f718f0dbbfb54f26d0612c452779e2d8e2c015a3826d8da",
+          "equal": true,
+          "installed_sha256": "902b590322e6f2511f718f0dbbfb54f26d0612c452779e2d8e2c015a3826d8da"
+        },
+        "nmrnet_inference.predict": {
+          "checkout_sha256": "9f14e4451f0a9bc2ad6b416d705d3c7693d4f3395324172d56ef4b6eace50889",
+          "equal": true,
+          "installed_sha256": "9f14e4451f0a9bc2ad6b416d705d3c7693d4f3395324172d56ef4b6eace50889"
+        },
+        "nmrnet_inference.release": {
+          "checkout_sha256": "ff3e30c60b151d168bb6f626a1c8f1b3f18761bd3c2e22aa0694cafdee501d0c",
+          "equal": true,
+          "installed_sha256": "ff3e30c60b151d168bb6f626a1c8f1b3f18761bd3c2e22aa0694cafdee501d0c"
+        }
+      },
+      "user": "65532:65532"
+    },
+    "nmrnet-smiles": {
+      "architecture": "amd64",
+      "created": "2026-11-13T11:03:16.274230854+03:00",
+      "id": "sha256:ac65b48cb927105349c103dc5a8d623b89b9b604330f79a2e6f3b21adbf76788",
+      "labels": {
+        "io.nmrnet-repro.geometry-inputs": "sha256:33a5b05120b5fc5f3624fe94438ffd15c6de9c68f3bbe52125f9cc3dabb08b70",
+        "io.nmrnet-repro.geometry-wheels": "sha256:65010112498fd603db589d3e2d2e5bbe982c7e6bee603a7eb28259e9195ab6f4"
+      },
+      "os": "linux",
+      "source_comparison": {
+        "nmrnet_provider.input_geometry": {
+          "checkout_sha256": "029fdd793c86f2132de4649b6a5372ec921c492b93fd40653253d5db41873a15",
+          "equal": true,
+          "installed_sha256": "029fdd793c86f2132de4649b6a5372ec921c492b93fd40653253d5db41873a15"
+        },
+        "nmrnet_provider.smiles": {
+          "checkout_sha256": "392d2cf5e878f9829164e835f5a8ec4693e58852474ba18f6aa4deaffa1216d8",
+          "equal": true,
+          "installed_sha256": "392d2cf5e878f9829164e835f5a8ec4693e58852474ba18f6aa4deaffa1216d8"
+        }
+      },
+      "user": "65532:65532"
+    },
+    "nmrpeak-chf": {
+      "architecture": "amd64",
+      "created": "2026-11-22T12:31:54.258520402+03:00",
+      "id": "sha256:ba8f79d694f567077b33c4524890d7d623445397db54c9ad356e18ea3fd63901",
+      "labels": {
+        "io.numpde.nmrpeak.build.input-id": "sha256:caca5e544e7ed8f08602af6198d0efaaac9922ff1782bd165232e2908e9cf138",
+        "io.numpde.nmrpeak.image.input-id": "sha256:3ddaa7017b199a5404865d4178e53d62c799825a4139b8099fb13b029d061ad5",
+        "io.numpde.nmrpeak.runner.contract-id": "nmrpeak.contribution.chf.v1",
+        "io.numpde.nmrpeak.runner.ref": "nmrpeak_chf_v1",
+        "io.numpde.nmrpeak.runner.target": "cpu-x86_64",
+        "io.numpde.nmrpeak.wheelhouse.selection": "sha256:c66238d0788dc85f329d38985c0de115290b128761fd3bd7cc51998fd937fa71",
+        "org.opencontainers.image.revision": "3288d5cbe4eac02e45645c321a52e4e68c90a370"
+      },
+      "os": "linux",
+      "user": "65532:65532"
+    },
+    "nmrpeak-hf": {
+      "architecture": "amd64",
+      "created": "2026-11-22T12:32:02.324766338+03:00",
+      "id": "sha256:89e3f1cd0bb00fa6abe31651d91557d491de2ed4d7bbf6a56a0d01ee9a85a505",
+      "labels": {
+        "io.numpde.nmrpeak.build.input-id": "sha256:20d2e490d63a2ea7539643b3acb42b1dd429010df430b1519f02a156987f29ea",
+        "io.numpde.nmrpeak.image.input-id": "sha256:241db6d5d1ee6195c7811b15eb19ea556fa0d8f4418b55e10618b5a8cc69e77f",
+        "io.numpde.nmrpeak.runner.contract-id": "nmrpeak.contribution.hf.v1",
+        "io.numpde.nmrpeak.runner.ref": "nmrpeak_hf_v1",
+        "io.numpde.nmrpeak.runner.target": "cpu-x86_64",
+        "io.numpde.nmrpeak.wheelhouse.selection": "sha256:c66238d0788dc85f329d38985c0de115290b128761fd3bd7cc51998fd937fa71",
+        "org.opencontainers.image.revision": "3288d5cbe4eac02e45645c321a52e4e68c90a370"
+      },
+      "os": "linux",
+      "user": "65532:65532"
+    },
+    "secs": {
+      "architecture": "amd64",
+      "created": "2026-11-13T10:55:57.807109727+03:00",
+      "id": "sha256:783470ab055e970e6468e3aa9d58da209c7a0555dd721f511b5e4bc8a0580f22",
+      "labels": {
+        "io.secs-repro.packages.input-id": "be934aadf4376c9b9c17762e448a7846df75233068b943df282dc0237a7e84e3",
+        "io.secs-repro.packages.variant": "cpu",
+        "io.secs-repro.worker.device-contract": "explicit-v1",
+        "io.secs-repro.worker.mock-index": "1"
+      },
+      "os": "linux",
+      "source_comparison": {
+        "input_adapter": {
+          "checkout_sha256": "92b49e13bcda69dc93ceb3a878d2642ed3a7990d6764f05329dfa07aa6fe35cd",
+          "equal": true,
+          "installed_sha256": "92b49e13bcda69dc93ceb3a878d2642ed3a7990d6764f05329dfa07aa6fe35cd"
+        },
+        "source_access": {
+          "checkout_sha256": "f5c791af5dc339ccece3fd51aeaad72ba3d820d6be6f52e7416ca5e590ff7485",
+          "equal": true,
+          "installed_sha256": "f5c791af5dc339ccece3fd51aeaad72ba3d820d6be6f52e7416ca5e590ff7485"
+        },
+        "worker_model": {
+          "checkout_sha256": "ebc1545a77c55d1f0a04fd14c30a875f42bdcde5166487da5d9779715c967fc9",
+          "equal": true,
+          "installed_sha256": "ebc1545a77c55d1f0a04fd14c30a875f42bdcde5166487da5d9779715c967fc9"
+        }
+      },
+      "user": "65532:65532"
+    }
+  },
+  "method": "docker --context science image inspect <immutable image ID>; observed after measurements",
+  "observation_utc": "2026-11-23T20:48:27.064744+00:00"
+}

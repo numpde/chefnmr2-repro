@@ -1,0 +1,479 @@
+{
+  "admission": {
+    "VmHWM": 510267392,
+    "VmRSS": 510267392,
+    "rss_before_bytes": 509882368,
+    "seconds": 0.000565183931030333
+  },
+  "admitted_tensor_facts": {
+    "atom_inventory": {
+      "atom_formal_charge": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 24,
+        "sha256": "9d908ecfb6b256def8b49a7c504e6c889c4b0e41fe6ce3e01863dd7b61a20aa0",
+        "shape": [
+          3
+        ]
+      },
+      "atom_isotope": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 24,
+        "sha256": "9d908ecfb6b256def8b49a7c504e6c889c4b0e41fe6ce3e01863dd7b61a20aa0",
+        "shape": [
+          3
+        ]
+      },
+      "atom_z": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 24,
+        "sha256": "69086f09e078f4be1792f9eb68360a1027ae067452a8640c2521360d6d744f37",
+        "shape": [
+          3
+        ]
+      },
+      "batch": {
+        "device": "cpu",
+        "dtype": "torch.int64",
+        "nbytes": 24,
+        "sha256": "9d908ecfb6b256def8b49a7c504e6c889c4b0e41fe6ce3e01863dd7b61a20aa0",
+        "shape": [
+          3
+        ]
+      }
+    },
+    "nmr": {
+      "integral": {
+        "device": "cpu",
+        "dtype": "torch.float16",
+        "nbytes": 4,
+        "sha256": "42a2794dcc8eb49ad6946d3887e26f4969438ebc4fb35ed55efb44e5908f494e",
+        "shape": [
+          1,
+          2,
+          1
+        ]
+      },
+      "integral_status": {
+        "device": "cpu",
+        "dtype": "torch.uint8",
+        "nbytes": 2,
+        "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2",
+        "shape": [
+          1,
+          2
+        ]
+      },
+      "j_status": {
+        "device": "cpu",
+        "dtype": "torch.uint8",
+        "nbytes": 16,
+        "sha256": "374708fff7719dd5979ec875d56cd2286f6d3cf7ec317a3b25632aab28ec37bb",
+        "shape": [
+          1,
+          2,
+          8
+        ]
+      },
+      "j_vals": {
+        "device": "cpu",
+        "dtype": "torch.float16",
+        "nbytes": 32,
+        "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925",
+        "shape": [
+          1,
+          2,
+          8
+        ]
+      },
+      "mhz": {
+        "device": "cpu",
+        "dtype": "torch.float16",
+        "nbytes": 4,
+        "sha256": "d06a12002b486440a83abbd829fda4a1e537d1a9a566af794d73ee7c01a50c50",
+        "shape": [
+          1,
+          2,
+          1
+        ]
+      },
+      "mhz_status": {
+        "device": "cpu",
+        "dtype": "torch.uint8",
+        "nbytes": 2,
+        "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2",
+        "shape": [
+          1,
+          2
+        ]
+      },
+      "mult_ids": {
+        "device": "cpu",
+        "dtype": "torch.int32",
+        "nbytes": 8,
+        "sha256": "fcb5ce3b49ae097a649ad8bb5a049c4dac407d44a5ede739f71fc99ae815bdc3",
+        "shape": [
+          1,
+          2
+        ]
+      },
+      "nuc_ids": {
+        "device": "cpu",
+        "dtype": "torch.int32",
+        "nbytes": 8,
+        "sha256": "01acecb507abfe1a354aa8064f4af5d3f1acd019e37db3c11c97523b71c76e9d",
+        "shape": [
+          1,
+          2
+        ]
+      },
+      "shift_hi": {
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "nbytes": 8,
+        "sha256": "e741cc0b5858ffa72cabceb77c966b09fd7f608ce9a7c1409f63148292a71c7c",
+        "shape": [
+          1,
+          2,
+          1
+        ]
+      },
+      "shift_lo": {
+        "device": "cpu",
+        "dtype": "torch.float32",
+        "nbytes": 8,
+        "sha256": "e741cc0b5858ffa72cabceb77c966b09fd7f608ce9a7c1409f63148292a71c7c",
+        "shape": [
+          1,
+          2,
+          1
+        ]
+      },
+      "shift_status": {
+        "device": "cpu",
+        "dtype": "torch.uint8",
+        "nbytes": 2,
+        "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2",
+        "shape": [
+          1,
+          2
+        ]
+      },
+      "solvent_ids": {
+        "device": "cpu",
+        "dtype": "torch.int32",
+        "nbytes": 8,
+        "sha256": "28625f27a2f3d7f965ec406e885f2f1050684660b9941c56e95d96c46bcb42f9",
+        "shape": [
+          1,
+          2
+        ]
+      }
+    },
+    "nmr_mask": {
+      "device": "cpu",
+      "dtype": "torch.bool",
+      "nbytes": 2,
+      "sha256": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2",
+      "shape": [
+        1,
+        2
+      ]
+    }
+  },
+  "attempt": "batch2-fixture",
+  "checkpoint_sha256": "8abce717213ffc658db60e5da5c591237c0ca238d0b52904cd162c555e7fc375",
+  "config_sha256": "f4b0e7fa8a15306d910b00f72d747caf6dcbf925dbf5b578f5d569c543877bf1",
+  "container_command": [
+    "docker",
+    "--context",
+    "science",
+    "run",
+    "--rm",
+    "--pull",
+    "never",
+    "--init",
+    "--cidfile",
+    "/tmp/preparation-probe-f99ivpdf/container",
+    "--network",
+    "none",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges:true",
+    "--pids-limit",
+    "256",
+    "--cpus",
+    "4",
+    "--memory",
+    "8g",
+    "--memory-swap",
+    "8g",
+    "--shm-size",
+    "256m",
+    "--tmpfs",
+    "/tmp:rw,noexec,nosuid,nodev,size=512m,mode=1777",
+    "--env",
+    "OMP_NUM_THREADS=4",
+    "--env",
+    "MKL_NUM_THREADS=4",
+    "--mount",
+    "type=bind,src=/home/ra/repos/chefnmr2-repro/notes/evidence/batch2/magnet_preparation.py,dst=/probe.py,readonly",
+    "--entrypoint",
+    "python",
+    "sha256:c93c8e7dd4b948b146131c7bcd14c93d29585f0410674cb7702b0d90dd575c5b",
+    "-P",
+    "-B",
+    "/probe.py",
+    "e02"
+  ],
+  "decode_policy": {
+    "do_sample": true,
+    "max_new_tokens": 96,
+    "min_new_tokens": 1,
+    "num_beams": 1,
+    "num_return_sequences": 100,
+    "temperature": 0.9,
+    "top_k": null,
+    "top_p": 0.9,
+    "use_cache": true
+  },
+  "encoded_input": {
+    "atom_inventory": [
+      {
+        "atomic_number": 6,
+        "count": 2,
+        "formal_charge": 0,
+        "isotope": 0
+      },
+      {
+        "atomic_number": 8,
+        "count": 1,
+        "formal_charge": 0,
+        "isotope": 0
+      }
+    ],
+    "nmr": {
+      "13C": {
+        "mhz": "100",
+        "peaks": [
+          {
+            "integral": "1",
+            "j_vals": [],
+            "multiplicity": "s",
+            "shift_hi": "50",
+            "shift_lo": "50"
+          }
+        ],
+        "solvent": "CDCl3"
+      },
+      "1H": {
+        "mhz": "400",
+        "peaks": [
+          {
+            "integral": "1",
+            "j_vals": [],
+            "multiplicity": "s",
+            "shift_hi": "1",
+            "shift_lo": "1"
+          }
+        ],
+        "solvent": "CDCl3"
+      }
+    }
+  },
+  "family": "e02",
+  "generation": {
+    "VmHWM": 545959936,
+    "VmRSS": 540950528,
+    "candidate_count": 100,
+    "rss_before_bytes": 510402560,
+    "seconds": 0.1716497529996559
+  },
+  "generation_conversion_seconds": 0.00021052593365311623,
+  "generation_tensor_identity": true,
+  "input_json_bytes": 401,
+  "installed_worker_sha256": "40c3185d05f414ab20313fa09fa1e94a051a8403440a1c4b6a67c896505c6089",
+  "load": {
+    "VmHWM": 509816832,
+    "VmRSS": 509816832,
+    "rss_before_bytes": 474775552,
+    "seconds": 0.20594367291778326
+  },
+  "memory_method": "Per-phase Linux clear_refs=5 VmHWM; includes resident checkpoint; generation includes tensor-witness overhead",
+  "preparation_median_seconds": 0.00020561751443892717,
+  "preparations": [
+    {
+      "VmHWM": 510267392,
+      "VmRSS": 510267392,
+      "rss_before_bytes": 510267392,
+      "seconds": 0.0002471059560775757
+    },
+    {
+      "VmHWM": 510398464,
+      "VmRSS": 510398464,
+      "rss_before_bytes": 510398464,
+      "seconds": 0.00022277003154158592
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510398464,
+      "seconds": 0.00027215294539928436
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.0002258550375699997
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.0002302039647474885
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00020778202451765537
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00020494603086262941
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00020349398255348206
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00019850395619869232
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00021199905313551426
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00019620009697973728
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00019735097885131836
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00020628899801522493
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00020056706853210926
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.000207260949537158
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00019582896493375301
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.0002018599770963192
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00020008697174489498
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00019864400383085012
+    },
+    {
+      "VmHWM": 510402560,
+      "VmRSS": 510402560,
+      "rss_before_bytes": 510402560,
+      "seconds": 0.00020939402747899294
+    }
+  ],
+  "probe_sha256": "665d88457b1416a02c10cb2a1e081fa62fc83b4fb4d58db3e89ccede95b916c2",
+  "python": "3.12.12",
+  "seed": 4297464002990521821,
+  "semantic_input": {
+    "atom_inventory": [
+      {
+        "atomic_number": 6,
+        "count": 2,
+        "formal_charge": 0,
+        "isotope": 0
+      },
+      {
+        "atomic_number": 8,
+        "count": 1,
+        "formal_charge": 0,
+        "isotope": 0
+      }
+    ],
+    "nmr": {
+      "13C": {
+        "mhz": 100.0,
+        "peaks": [
+          {
+            "integral": 1.0,
+            "j_vals": [],
+            "multiplicity": "s",
+            "shift_hi": 50.0,
+            "shift_lo": 50.0
+          }
+        ],
+        "solvent": "CDCl3"
+      },
+      "1H": {
+        "mhz": 400.0,
+        "peaks": [
+          {
+            "integral": 1.0,
+            "j_vals": [],
+            "multiplicity": "s",
+            "shift_hi": 1.0,
+            "shift_lo": 1.0
+          }
+        ],
+        "solvent": "CDCl3"
+      }
+    }
+  },
+  "threads": 4,
+  "torch": "2.12.0+cpu"
+}

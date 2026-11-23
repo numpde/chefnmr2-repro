@@ -1,0 +1,483 @@
+{
+  "bounded_search": {
+    "VmHWM": 1176911872,
+    "VmRSS": 1176911872,
+    "formula": "C2H6O",
+    "generation_limit": 1,
+    "generations": 1,
+    "initial_candidates": [
+      "CCO",
+      "COC",
+      "CC",
+      "CCC",
+      "CCN",
+      "CC=O",
+      "C=C",
+      "CO"
+    ],
+    "offspring": 8,
+    "population": 8,
+    "rss_before_bytes": 1162190848,
+    "seconds": 0.9264998009894043,
+    "seed": 42
+  },
+  "cases": [
+    {
+      "candidate_transfer_json_bytes": 53583,
+      "case": "jcamp",
+      "changed_source_rejected": "Cannot execute this selection: the representation source bytes changed after inspection",
+      "embedding_median_seconds": 0.1264492489863187,
+      "inspection": {
+        "VmHWM": 426708992,
+        "VmRSS": 426708992,
+        "rss_before_bytes": 426201088,
+        "seconds": 0.03768221999052912
+      },
+      "metadata": {
+        "dtype": "float32",
+        "formula": "C7H8ClN",
+        "from_fid": false,
+        "magnitude": false,
+        "representation_id": "secs-input-v1.gjxwlVdLPEjKBub2hcwvp_ez5r9Ar2pyH0lEEGXNj8I",
+        "shape": [
+          10000
+        ],
+        "sources": [
+          {
+            "member": null,
+            "upload_ref": "upload:fixture"
+          }
+        ]
+      },
+      "ordinary_json_body_bytes": 202415,
+      "ordinary_json_transfer": [
+        {
+          "decode": {
+            "VmHWM": 428208128,
+            "VmRSS": 428208128,
+            "rss_before_bytes": 427896832,
+            "seconds": 0.0025809600483626127
+          },
+          "encode": {
+            "VmHWM": 427896832,
+            "VmRSS": 427896832,
+            "rss_before_bytes": 427896832,
+            "seconds": 0.00452670396771282
+          },
+          "restore_float32": {
+            "VmHWM": 428208128,
+            "VmRSS": 428208128,
+            "rss_before_bytes": 428208128,
+            "seconds": 0.00031349004711955786
+          }
+        },
+        {
+          "decode": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.002370674046687782
+          },
+          "encode": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.004611413925886154
+          },
+          "restore_float32": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.00031459296587854624
+          }
+        },
+        {
+          "decode": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.0031328690238296986
+          },
+          "encode": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.004736579954624176
+          },
+          "restore_float32": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.0003279369557276368
+          }
+        },
+        {
+          "decode": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.0023805530508980155
+          },
+          "encode": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.004459707997739315
+          },
+          "restore_float32": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.00031859998125582933
+          }
+        },
+        {
+          "decode": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.0024939069990068674
+          },
+          "encode": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.004540110006928444
+          },
+          "restore_float32": {
+            "VmHWM": 428445696,
+            "VmRSS": 428445696,
+            "rss_before_bytes": 428445696,
+            "seconds": 0.00035426707472652197
+          }
+        }
+      ],
+      "ordinary_json_values_bit_exact": true,
+      "preparation_median_seconds": 0.03483569901436567,
+      "preparations": [
+        {
+          "VmHWM": 427724800,
+          "VmRSS": 427724800,
+          "rss_before_bytes": 426708992,
+          "seconds": 0.037489187088795006
+        },
+        {
+          "VmHWM": 427851776,
+          "VmRSS": 427851776,
+          "rss_before_bytes": 427851776,
+          "seconds": 0.03539058391470462
+        },
+        {
+          "VmHWM": 427851776,
+          "VmRSS": 427851776,
+          "rss_before_bytes": 427851776,
+          "seconds": 0.03441550803836435
+        },
+        {
+          "VmHWM": 427896832,
+          "VmRSS": 427896832,
+          "rss_before_bytes": 427851776,
+          "seconds": 0.03448486898560077
+        },
+        {
+          "VmHWM": 427896832,
+          "VmRSS": 427896832,
+          "rss_before_bytes": 427896832,
+          "seconds": 0.03483569901436567
+        }
+      ],
+      "raw_array_bytes": 40000,
+      "real_checkpoint_embeddings": [
+        {
+          "VmHWM": 1162190848,
+          "VmRSS": 1162190848,
+          "rss_before_bytes": 1146998784,
+          "seconds": 0.17823701002635062
+        },
+        {
+          "VmHWM": 1162190848,
+          "VmRSS": 1162190848,
+          "rss_before_bytes": 1162190848,
+          "seconds": 0.1264492489863187
+        },
+        {
+          "VmHWM": 1162190848,
+          "VmRSS": 1162190848,
+          "rss_before_bytes": 1162190848,
+          "seconds": 0.12428095506038517
+        }
+      ],
+      "source_bytes": 35589,
+      "source_sha256": "9852cd6b851f83ab0c7e372ec9d800b72b0cd5aa54bec32e4e91fc92efcd11ff",
+      "values_sha256": "6f6963c70613494fe449b00d6f65e9aa9a4238ec2639467c6c107833f67d44fb"
+    },
+    {
+      "candidate_transfer_json_bytes": 53648,
+      "case": "bruker_processed",
+      "changed_source_rejected": "Cannot execute this selection: the representation is unavailable in the current Attempt",
+      "embedding_median_seconds": 0.14007201103959233,
+      "inspection": {
+        "VmHWM": 431382528,
+        "VmRSS": 431382528,
+        "rss_before_bytes": 428445696,
+        "seconds": 0.004955000011250377
+      },
+      "metadata": {
+        "dtype": "float32",
+        "formula": "C7H8ClN",
+        "from_fid": false,
+        "magnitude": false,
+        "representation_id": "secs-input-v1.KRSoeXQCwXNoRlxJ2cEy3Hn-jotvU2sFVgddV--AzAI",
+        "shape": [
+          10000
+        ],
+        "sources": [
+          {
+            "member": "pdata/1/1r",
+            "upload_ref": "upload:fixture"
+          },
+          {
+            "member": "pdata/1/procs",
+            "upload_ref": "upload:fixture"
+          }
+        ]
+      },
+      "ordinary_json_body_bytes": 213437,
+      "ordinary_json_transfer": [
+        {
+          "decode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429510656,
+            "seconds": 0.002601698972284794
+          },
+          "encode": {
+            "VmHWM": 429510656,
+            "VmRSS": 429510656,
+            "rss_before_bytes": 429510656,
+            "seconds": 0.004778918926604092
+          },
+          "restore_float32": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.00033914903178811073
+          }
+        },
+        {
+          "decode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.002589566051028669
+          },
+          "encode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.004724637023173273
+          },
+          "restore_float32": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.00037344300653785467
+          }
+        },
+        {
+          "decode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.002907444955781102
+          },
+          "encode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.004794689011760056
+          },
+          "restore_float32": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.0003605990204960108
+          }
+        },
+        {
+          "decode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.0025693679926916957
+          },
+          "encode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.004992792033590376
+          },
+          "restore_float32": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.00033782701939344406
+          }
+        },
+        {
+          "decode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.0026550190523266792
+          },
+          "encode": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.004940905026160181
+          },
+          "restore_float32": {
+            "VmHWM": 429522944,
+            "VmRSS": 429522944,
+            "rss_before_bytes": 429522944,
+            "seconds": 0.00032112502958625555
+          }
+        }
+      ],
+      "ordinary_json_values_bit_exact": true,
+      "preparation_median_seconds": 0.008461314020678401,
+      "preparations": [
+        {
+          "VmHWM": 440078336,
+          "VmRSS": 429436928,
+          "rss_before_bytes": 431382528,
+          "seconds": 0.009741945075802505
+        },
+        {
+          "VmHWM": 439586816,
+          "VmRSS": 429506560,
+          "rss_before_bytes": 429436928,
+          "seconds": 0.008813666994683444
+        },
+        {
+          "VmHWM": 439656448,
+          "VmRSS": 429506560,
+          "rss_before_bytes": 429506560,
+          "seconds": 0.008403273997828364
+        },
+        {
+          "VmHWM": 439656448,
+          "VmRSS": 429506560,
+          "rss_before_bytes": 429506560,
+          "seconds": 0.008331369026564062
+        },
+        {
+          "VmHWM": 439656448,
+          "VmRSS": 429506560,
+          "rss_before_bytes": 429506560,
+          "seconds": 0.008461314020678401
+        }
+      ],
+      "raw_array_bytes": 40000,
+      "real_checkpoint_embeddings": [
+        {
+          "VmHWM": 1162190848,
+          "VmRSS": 1162190848,
+          "rss_before_bytes": 1162190848,
+          "seconds": 0.11454417009372264
+        },
+        {
+          "VmHWM": 1162190848,
+          "VmRSS": 1162190848,
+          "rss_before_bytes": 1162190848,
+          "seconds": 0.14007201103959233
+        },
+        {
+          "VmHWM": 1162190848,
+          "VmRSS": 1162190848,
+          "rss_before_bytes": 1162190848,
+          "seconds": 0.1580732500879094
+        }
+      ],
+      "source_bytes": 526670,
+      "source_sha256": "109557e807680bab59ac227c1755ba066d969c75525fcdc72c876d20032820f3",
+      "values_sha256": "907b93d0caa016b2eb36af7533359faa021eef2d20c680e76dadbffd7831db77"
+    }
+  ],
+  "checkpoint_manifest_sha256": "4d0998eede26990b6d15c1addf23999435dadb6f32e83ac2598e0c94317507d6",
+  "container_command": [
+    "docker",
+    "--context",
+    "science",
+    "run",
+    "--rm",
+    "--pull",
+    "never",
+    "--init",
+    "--cidfile",
+    "/tmp/preparation-probe-ivplag13/container",
+    "--network",
+    "none",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges:true",
+    "--pids-limit",
+    "256",
+    "--cpus",
+    "4",
+    "--memory",
+    "8g",
+    "--memory-swap",
+    "8g",
+    "--shm-size",
+    "256m",
+    "--tmpfs",
+    "/tmp:rw,noexec,nosuid,nodev,size=512m,mode=1777",
+    "--env",
+    "OMP_NUM_THREADS=4",
+    "--env",
+    "MKL_NUM_THREADS=4",
+    "--mount",
+    "type=bind,src=/home/ra/repos/chefnmr2-repro/notes/evidence/batch2/secs_preparation.py,dst=/probe.py,readonly",
+    "--mount",
+    "type=bind,src=/home/ra/repos/secs-repro/cache/molformer,dst=/cache,readonly",
+    "--mount",
+    "type=bind,src=/home/ra/repos/secs-repro/checkpoints/residual_augment_resolution_physics_finetune_20250708_1747,dst=/checkpoint,readonly",
+    "--mount",
+    "type=bind,src=/home/ra/repos/secs-repro/molformer.lock.toml,dst=/input/molformer.lock.toml,readonly",
+    "--mount",
+    "type=bind,src=/home/ra/repos/secs-repro/tests/fixtures,dst=/fixtures,readonly",
+    "--mount",
+    "type=bind,src=/home/ra/repos/secs-repro/tools/materialize_molformer_cache.py,dst=/verify_cache.py,readonly",
+    "--tmpfs",
+    "/modules:rw,noexec,nosuid,nodev,size=32m,mode=1777",
+    "--env",
+    "HF_HUB_CACHE=/cache/hub",
+    "--env",
+    "HF_MODULES_CACHE=/modules",
+    "--env",
+    "TRANSFORMERS_OFFLINE=1",
+    "--entrypoint",
+    "python",
+    "sha256:783470ab055e970e6468e3aa9d58da209c7a0555dd721f511b5e4bc8a0580f22",
+    "-P",
+    "-B",
+    "/probe.py"
+  ],
+  "load": {
+    "VmHWM": 1535299584,
+    "VmRSS": 1146998784,
+    "rss_before_bytes": 429522944,
+    "seconds": 2.162894756067544
+  },
+  "memory_method": "Linux clear_refs=5 per phase; process VmHWM includes loaded components, not allocation size",
+  "molformer_lock_sha256": "78adf3aa107147e55d90d3fa97f5dbd941de9d2901e0320d8c44946ddd198cd2",
+  "probe_sha256": "85a844480769ceaa478ae738c84649cc3cc2596f96c7b65e37bff4110ec6c353",
+  "production_index_present": false,
+  "python": "3.12.16",
+  "threads": 4,
+  "torch": "2.10.0+cpu"
+}

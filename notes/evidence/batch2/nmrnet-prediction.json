@@ -1,0 +1,1023 @@
+{
+  "cases": [
+    {
+      "captured_requests_base64": [
+        "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkgiXSwiY29vcmRpbmF0ZXMiOltbMCwwLDBdXX0="
+      ],
+      "case": "one_atom",
+      "geometries": [
+        [
+          {
+            "element": "H",
+            "selected_atom_indices": [
+              0
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "6e384b20006c687fe6183a443d7f15691a4d81be5fe39d8acb8d9ef7a8238117",
+                "shape": [
+                  1,
+                  8
+                ]
+              },
+              "src_coord": {
+                "bytes": 96,
+                "dtype": "torch.float32",
+                "sha256": "2ea9ab9198d1638007400cd2c3bef1cc745b864b76011a0e1bc52180ac6452d4",
+                "shape": [
+                  1,
+                  8,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 256,
+                "dtype": "torch.float32",
+                "sha256": "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 512,
+                "dtype": "torch.int64",
+                "sha256": "50960bea16409b70b4d109e4bc789a1a4e7176ea21067ac4ca1494470ac74bb0",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_tokens": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "8cebfef28b7bb6825cdaebabd57fbdad048a559456a2497d20f6b2b3ae4dedec",
+                "shape": [
+                  1,
+                  8
+                ]
+              }
+            }
+          }
+        ]
+      ],
+      "geometry_count": 1,
+      "prediction_including_head_loads": {
+        "VmHWM": 1705254912,
+        "VmRSS": 424439808,
+        "geometry_count": 1,
+        "rss_before_bytes": 295841792,
+        "seconds": 2.6898067420115694
+      },
+      "preparation": {
+        "VmHWM": 295698432,
+        "VmRSS": 295698432,
+        "rss_before_bytes": 222535680,
+        "seconds": 1.6519160650204867
+      },
+      "replacement_preparation": {
+        "VmHWM": 295837696,
+        "VmRSS": 295837696,
+        "rss_before_bytes": 295837696,
+        "seconds": 0.0006771949119865894
+      },
+      "request_bytes": 68,
+      "request_sha256": [
+        "05287af65c4c3cca3d3107d4b09cf060a76067cc2ec4df68c796d095a82ecaac"
+      ],
+      "tensor_bytes": 992,
+      "wire_bytes": 142
+    },
+    {
+      "captured_requests_base64": [
+        "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiXSwiY29vcmRpbmF0ZXMiOltbMCwwLDBdLFsxLDEsM10sWzIsNCw2XSxbMywyLDldLFs0LDIsMV0sWzUsNCw0XSxbNiwxLDddLFs3LDAsMTBdLFs4LDEsMl0sWzksNCw1XSxbMTAsMiw4XSxbMTEsMiwwXSxbMTIsNCwzXSxbMTMsMSw2XSxbMTQsMCw5XSxbMTUsMSwxXV19"
+      ],
+      "case": "sixteen_atoms",
+      "geometries": [
+        [
+          {
+            "element": "H",
+            "selected_atom_indices": [
+              1,
+              3,
+              5,
+              7,
+              9,
+              11,
+              13,
+              15
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 192,
+                "dtype": "torch.int64",
+                "sha256": "51cc4088e0f6200a7b88120f41b0b5d6b16897c75debc953fbe9f2f275f43161",
+                "shape": [
+                  1,
+                  24
+                ]
+              },
+              "src_coord": {
+                "bytes": 288,
+                "dtype": "torch.float32",
+                "sha256": "8ec59722e11442114ad61b018574a4cf2364f7f13d3a16435409bba2f4c81e4f",
+                "shape": [
+                  1,
+                  24,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 2304,
+                "dtype": "torch.float32",
+                "sha256": "5037d963c20faa3164f3b5138611961cf48a79a212a533a587058258ddeef19d",
+                "shape": [
+                  1,
+                  24,
+                  24
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 4608,
+                "dtype": "torch.int64",
+                "sha256": "5f97f743e774f284f5197efd0a089dc187cb660cbe367c57778ab9aadd62321e",
+                "shape": [
+                  1,
+                  24,
+                  24
+                ]
+              },
+              "src_tokens": {
+                "bytes": 192,
+                "dtype": "torch.int64",
+                "sha256": "5eb4a1379967e329f96388367fcfc0969d1dbc17333eac8e9c8c256b453c6e67",
+                "shape": [
+                  1,
+                  24
+                ]
+              }
+            }
+          },
+          {
+            "element": "C",
+            "selected_atom_indices": [
+              0,
+              2,
+              4,
+              6,
+              8,
+              10,
+              12,
+              14
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 192,
+                "dtype": "torch.int64",
+                "sha256": "062aefecdb8b823f2c610d089430dc3317e9d65cedb2f457e32597d3d3781843",
+                "shape": [
+                  1,
+                  24
+                ]
+              },
+              "src_coord": {
+                "bytes": 288,
+                "dtype": "torch.float32",
+                "sha256": "8ec59722e11442114ad61b018574a4cf2364f7f13d3a16435409bba2f4c81e4f",
+                "shape": [
+                  1,
+                  24,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 2304,
+                "dtype": "torch.float32",
+                "sha256": "5037d963c20faa3164f3b5138611961cf48a79a212a533a587058258ddeef19d",
+                "shape": [
+                  1,
+                  24,
+                  24
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 4608,
+                "dtype": "torch.int64",
+                "sha256": "5f97f743e774f284f5197efd0a089dc187cb660cbe367c57778ab9aadd62321e",
+                "shape": [
+                  1,
+                  24,
+                  24
+                ]
+              },
+              "src_tokens": {
+                "bytes": 192,
+                "dtype": "torch.int64",
+                "sha256": "5eb4a1379967e329f96388367fcfc0969d1dbc17333eac8e9c8c256b453c6e67",
+                "shape": [
+                  1,
+                  24
+                ]
+              }
+            }
+          }
+        ]
+      ],
+      "geometry_count": 1,
+      "prediction_including_head_loads": {
+        "VmHWM": 1928679424,
+        "VmRSS": 828604416,
+        "geometry_count": 1,
+        "rss_before_bytes": 424484864,
+        "seconds": 3.1405029359739274
+      },
+      "preparation": {
+        "VmHWM": 424480768,
+        "VmRSS": 424480768,
+        "rss_before_bytes": 424439808,
+        "seconds": 0.0007882039062678814
+      },
+      "replacement_preparation": {
+        "VmHWM": 424484864,
+        "VmRSS": 424484864,
+        "rss_before_bytes": 424480768,
+        "seconds": 0.0005110419588163495
+      },
+      "request_bytes": 255,
+      "request_sha256": [
+        "ddc4a6194d892125de7a1deb82c4fb76fecd175f768c695d993d2ff8f9fe4dd0"
+      ],
+      "tensor_bytes": 15168,
+      "wire_bytes": 390
+    },
+    {
+      "captured_requests_base64": [
+        "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkYiLCJDIiwiQ2wiLCJCciIsIkgiXSwiY29vcmRpbmF0ZXMiOltbLTAuMTM1NDM1NjM3MDE3MzMwMzYsMS4yMDAwMTUwMzA1OTYzODc3LDAuNzM2MzA2MjQ2NDUxNDAyXSxbLTAuMDU4NjM5ODc4NTg4MTcyNDYsMC4wNzMyMjU3NTM5OTIxMzQ1MywtMC4wNzY1NjczNTQyMTM2ODIzXSxbLTEuMzY2MjkwMjk4MDIwNjc0OCwtMS4wNDM2MTIxNDgwNTUzMzA2LDAuMjc5MTI1Njg1ODA0MjUzNF0sWzEuNzAxMjQ4MjY4OTI3NDM2NCwtMC42OTIzMTE4OTA5ODU1MTE3LDAuMTgyMjc5MDQ3NzM2OTIxMzNdLFstMC4xNDA4ODI0NTUzMDEyNjI0OCwwLjQ2MjY4MzI1NDQ1MjMxODg0LC0xLjEyMTE0MzYyNTc3ODg4OTZdXX0=",
+        "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkYiLCJDIiwiQ2wiLCJCciIsIkgiXSwiY29vcmRpbmF0ZXMiOltbLTAuMTY4OTcyNDU5MDExMzY1NTQsMS4xNTc1MjIzMTkzNzM1MDc4LDAuNzkwMjgyMjUwNzI3MDI1Nl0sWy0wLjA1NTU1MjIwODI1MjExNTIzLDAuMTA0OTM4MDE0MjA1NDc5NzEsLTAuMDkzODg0MTYyNDgxMTczMDddLFstMS40MDEyMDA2Mjc0NjI3Mjk2LC0wLjk5NTk1NjE4NTIzNDQ0MDMsMC4yMzI1NDk1ODYyNjE5NDM4Nl0sWzEuNjY3MjQxODE5NDU3NTk4LC0wLjcyOTkxMzg2Njk0NzcxNjIsMC4yMTE2MzY3MTgzNjc3N10sWy0wLjA0MTUxNjUyNDczMTM5MDc4LDAuNDYzNDA5NzE4NjAzMTczNiwtMS4xNDA1ODQzOTI4NzU1NjEyXV19"
+      ],
+      "case": "generated_once",
+      "geometries": [
+        [
+          {
+            "element": "H",
+            "selected_atom_indices": [
+              4
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "1919c892cf10178dde4a38102271b31bd490ec4b40f35edb9fd80e8e1671b0f1",
+                "shape": [
+                  1,
+                  8
+                ]
+              },
+              "src_coord": {
+                "bytes": 96,
+                "dtype": "torch.float32",
+                "sha256": "c77959c94d8f82a500dc915c877ab9977df1f3dacfb7402ebc4c1fd414b082ce",
+                "shape": [
+                  1,
+                  8,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 256,
+                "dtype": "torch.float32",
+                "sha256": "ba270f6d41f4382704080f651f0b332eebdc340dfc3c2a2b4853855df69a2a17",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 512,
+                "dtype": "torch.int64",
+                "sha256": "9d02c5b0e558adaa8906c206e69369e37c965fe6c3618c37e07cddabfda0d6f5",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_tokens": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "8f594875a6fb041fc9231648dce64f3036d66d3f56ac01b3092c2e5f24d40e8a",
+                "shape": [
+                  1,
+                  8
+                ]
+              }
+            }
+          },
+          {
+            "element": "C",
+            "selected_atom_indices": [
+              1
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "752c03ce3316ba05ca4c9256a56f20287ffa5ca9de120c54083422ff0aa39484",
+                "shape": [
+                  1,
+                  8
+                ]
+              },
+              "src_coord": {
+                "bytes": 96,
+                "dtype": "torch.float32",
+                "sha256": "c77959c94d8f82a500dc915c877ab9977df1f3dacfb7402ebc4c1fd414b082ce",
+                "shape": [
+                  1,
+                  8,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 256,
+                "dtype": "torch.float32",
+                "sha256": "ba270f6d41f4382704080f651f0b332eebdc340dfc3c2a2b4853855df69a2a17",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 512,
+                "dtype": "torch.int64",
+                "sha256": "9d02c5b0e558adaa8906c206e69369e37c965fe6c3618c37e07cddabfda0d6f5",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_tokens": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "8f594875a6fb041fc9231648dce64f3036d66d3f56ac01b3092c2e5f24d40e8a",
+                "shape": [
+                  1,
+                  8
+                ]
+              }
+            }
+          }
+        ],
+        [
+          {
+            "element": "H",
+            "selected_atom_indices": [
+              4
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "1919c892cf10178dde4a38102271b31bd490ec4b40f35edb9fd80e8e1671b0f1",
+                "shape": [
+                  1,
+                  8
+                ]
+              },
+              "src_coord": {
+                "bytes": 96,
+                "dtype": "torch.float32",
+                "sha256": "d433cc242eb9d747764c4ae99bf2f7fcb2a2fa7b1cf4b25409a488cc7c0ab11e",
+                "shape": [
+                  1,
+                  8,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 256,
+                "dtype": "torch.float32",
+                "sha256": "3eb2ec48983f05dc543868c90b528a0056ab236b4fb7bb8787dd6f184c991749",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 512,
+                "dtype": "torch.int64",
+                "sha256": "9d02c5b0e558adaa8906c206e69369e37c965fe6c3618c37e07cddabfda0d6f5",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_tokens": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "8f594875a6fb041fc9231648dce64f3036d66d3f56ac01b3092c2e5f24d40e8a",
+                "shape": [
+                  1,
+                  8
+                ]
+              }
+            }
+          },
+          {
+            "element": "C",
+            "selected_atom_indices": [
+              1
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "752c03ce3316ba05ca4c9256a56f20287ffa5ca9de120c54083422ff0aa39484",
+                "shape": [
+                  1,
+                  8
+                ]
+              },
+              "src_coord": {
+                "bytes": 96,
+                "dtype": "torch.float32",
+                "sha256": "d433cc242eb9d747764c4ae99bf2f7fcb2a2fa7b1cf4b25409a488cc7c0ab11e",
+                "shape": [
+                  1,
+                  8,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 256,
+                "dtype": "torch.float32",
+                "sha256": "3eb2ec48983f05dc543868c90b528a0056ab236b4fb7bb8787dd6f184c991749",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 512,
+                "dtype": "torch.int64",
+                "sha256": "9d02c5b0e558adaa8906c206e69369e37c965fe6c3618c37e07cddabfda0d6f5",
+                "shape": [
+                  1,
+                  8,
+                  8
+                ]
+              },
+              "src_tokens": {
+                "bytes": 64,
+                "dtype": "torch.int64",
+                "sha256": "8f594875a6fb041fc9231648dce64f3036d66d3f56ac01b3092c2e5f24d40e8a",
+                "shape": [
+                  1,
+                  8
+                ]
+              }
+            }
+          }
+        ]
+      ],
+      "geometry_count": 2,
+      "prediction_including_head_loads": {
+        "VmHWM": 1928065024,
+        "VmRSS": 822403072,
+        "geometry_count": 2,
+        "rss_before_bytes": 786796544,
+        "seconds": 5.800872683990747
+      },
+      "preparation": {
+        "VmHWM": 827363328,
+        "VmRSS": 786796544,
+        "rss_before_bytes": 828604416,
+        "seconds": 0.003542581107467413
+      },
+      "replacement_preparation": {
+        "VmHWM": 786796544,
+        "VmRSS": 786796544,
+        "rss_before_bytes": 786796544,
+        "seconds": 0.0008305339142680168
+      },
+      "request_bytes": 770,
+      "request_sha256": [
+        "50387f093ff19e37bed1863bffd08b903cd3e6accb046ffaba8d48aab07d89c1",
+        "08dc1dfb3dc42e2c6620d1ee7e324c3047c2203a84734e865fd49f1d8c46af7e"
+      ],
+      "tensor_bytes": 3968,
+      "wire_bytes": 1081
+    },
+    {
+      "captured_requests_base64": [
+        "eyJjb29yZGluYXRlX3VuaXQiOiJhbmdzdHJvbSIsImF0b21zIjpbIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIiwiQyIsIkgiLCJDIiwiSCIsIkMiLCJIIl0sImNvb3JkaW5hdGVzIjpbWzAsMCwwXSxbMSwxLDddLFsyLDQsMTRdLFszLDksMjFdLFs0LDE2LDI4XSxbNSwyNSwzNV0sWzYsMzYsNDJdLFs3LDQ5LDQ5XSxbOCw2NCw1Nl0sWzksODEsNjNdLFsxMCwzLDcwXSxbMTEsMjQsNzddLFsxMiw0Nyw4NF0sWzEzLDcyLDJdLFsxNCwyLDldLFsxNSwzMSwxNl0sWzE2LDYyLDIzXSxbMTcsOTUsMzBdLFsxOCwzMywzN10sWzE5LDcwLDQ0XSxbMjAsMTIsNTFdLFsyMSw1Myw1OF0sWzIyLDk2LDY1XSxbMjMsNDQsNzJdLFsyNCw5MSw3OV0sWzI1LDQzLDg2XSxbMjYsOTQsNF0sWzI3LDUwLDExXSxbMjgsOCwxOF0sWzI5LDY1LDI1XSxbMzAsMjcsMzJdLFszMSw4OCwzOV0sWzMyLDU0LDQ2XSxbMzMsMjIsNTNdLFszNCw4OSw2MF0sWzM1LDYxLDY3XSxbMzYsMzUsNzRdLFszNywxMSw4MV0sWzM4LDg2LDg4XSxbMzksNjYsNl0sWzQwLDQ4LDEzXSxbNDEsMzIsMjBdLFs0MiwxOCwyN10sWzQzLDYsMzRdLFs0NCw5Myw0MV0sWzQ1LDg1LDQ4XSxbNDYsNzksNTVdLFs0Nyw3NSw2Ml0sWzQ4LDczLDY5XSxbNDksNzMsNzZdLFs1MCw3NSw4M10sWzUxLDc5LDFdLFs1Miw4NSw4XSxbNTMsOTMsMTVdLFs1NCw2LDIyXSxbNTUsMTgsMjldLFs1NiwzMiwzNl0sWzU3LDQ4LDQzXSxbNTgsNjYsNTBdLFs1OSw4Niw1N10sWzYwLDExLDY0XSxbNjEsMzUsNzFdLFs2Miw2MSw3OF0sWzYzLDg5LDg1XSxbNjQsMjIsM10sWzY1LDU0LDEwXSxbNjYsODgsMTddLFs2NywyNywyNF0sWzY4LDY1LDMxXSxbNjksOCwzOF0sWzcwLDUwLDQ1XSxbNzEsOTQsNTJdLFs3Miw0Myw1OV0sWzczLDkxLDY2XSxbNzQsNDQsNzNdLFs3NSw5Niw4MF0sWzc2LDUzLDg3XSxbNzcsMTIsNV0sWzc4LDcwLDEyXSxbNzksMzMsMTldLFs4MCw5NSwyNl0sWzgxLDYyLDMzXSxbODIsMzEsNDBdLFs4MywyLDQ3XSxbODQsNzIsNTRdLFs4NSw0Nyw2MV0sWzg2LDI0LDY4XSxbODcsMyw3NV0sWzg4LDgxLDgyXSxbODksNjQsMF0sWzkwLDQ5LDddLFs5MSwzNiwxNF0sWzkyLDI1LDIxXSxbOTMsMTYsMjhdLFs5NCw5LDM1XSxbOTUsNCw0Ml0sWzk2LDEsNDldLFs5NywwLDU2XSxbOTgsMSw2M10sWzk5LDQsNzBdLFsxMDAsOSw3N10sWzEwMSwxNiw4NF0sWzEwMiwyNSwyXSxbMTAzLDM2LDldLFsxMDQsNDksMTZdLFsxMDUsNjQsMjNdLFsxMDYsODEsMzBdLFsxMDcsMywzN10sWzEwOCwyNCw0NF0sWzEwOSw0Nyw1MV0sWzExMCw3Miw1OF0sWzExMSwyLDY1XSxbMTEyLDMxLDcyXSxbMTEzLDYyLDc5XSxbMTE0LDk1LDg2XSxbMTE1LDMzLDRdLFsxMTYsNzAsMTFdLFsxMTcsMTIsMThdLFsxMTgsNTMsMjVdLFsxMTksOTYsMzJdLFsxMjAsNDQsMzldLFsxMjEsOTEsNDZdLFsxMjIsNDMsNTNdLFsxMjMsOTQsNjBdLFsxMjQsNTAsNjddLFsxMjUsOCw3NF0sWzEyNiw2NSw4MV0sWzEyNywyNyw4OF1dfQ=="
+      ],
+      "case": "maximum_count_and_atoms",
+      "geometries": [
+        [
+          {
+            "element": "H",
+            "selected_atom_indices": [
+              1,
+              3,
+              5,
+              7,
+              9,
+              11,
+              13,
+              15,
+              17,
+              19,
+              21,
+              23,
+              25,
+              27,
+              29,
+              31,
+              33,
+              35,
+              37,
+              39,
+              41,
+              43,
+              45,
+              47,
+              49,
+              51,
+              53,
+              55,
+              57,
+              59,
+              61,
+              63,
+              65,
+              67,
+              69,
+              71,
+              73,
+              75,
+              77,
+              79,
+              81,
+              83,
+              85,
+              87,
+              89,
+              91,
+              93,
+              95,
+              97,
+              99,
+              101,
+              103,
+              105,
+              107,
+              109,
+              111,
+              113,
+              115,
+              117,
+              119,
+              121,
+              123,
+              125,
+              127
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 1088,
+                "dtype": "torch.int64",
+                "sha256": "5df931dd49c1e3d7f794c4c194d2812d373a9f09ed6799bcc9157c9ac5edf102",
+                "shape": [
+                  1,
+                  136
+                ]
+              },
+              "src_coord": {
+                "bytes": 1632,
+                "dtype": "torch.float32",
+                "sha256": "4855c5a5c428f286a1d0871c050bad917bfee3c75ff4f3a3d826dae4e1aeea18",
+                "shape": [
+                  1,
+                  136,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 73984,
+                "dtype": "torch.float32",
+                "sha256": "17ccdaf90bd33d3c9009c3eea83696140ddeab5b86459ee4203995f9bf057060",
+                "shape": [
+                  1,
+                  136,
+                  136
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 147968,
+                "dtype": "torch.int64",
+                "sha256": "6d1ab46404babad3d1085707561a4d1f4b86a8f832e209b7fe56b5d547113f54",
+                "shape": [
+                  1,
+                  136,
+                  136
+                ]
+              },
+              "src_tokens": {
+                "bytes": 1088,
+                "dtype": "torch.int64",
+                "sha256": "34f75b9eed0a5a7c5256e710c2a65064f3249578543c869a61e28b3a2ad6c10b",
+                "shape": [
+                  1,
+                  136
+                ]
+              }
+            }
+          },
+          {
+            "element": "C",
+            "selected_atom_indices": [
+              0,
+              2,
+              4,
+              6,
+              8,
+              10,
+              12,
+              14,
+              16,
+              18,
+              20,
+              22,
+              24,
+              26,
+              28,
+              30,
+              32,
+              34,
+              36,
+              38,
+              40,
+              42,
+              44,
+              46,
+              48,
+              50,
+              52,
+              54,
+              56,
+              58,
+              60,
+              62,
+              64,
+              66,
+              68,
+              70,
+              72,
+              74,
+              76,
+              78,
+              80,
+              82,
+              84,
+              86,
+              88,
+              90,
+              92,
+              94,
+              96,
+              98,
+              100,
+              102,
+              104,
+              106,
+              108,
+              110,
+              112,
+              114,
+              116,
+              118,
+              120,
+              122,
+              124,
+              126
+            ],
+            "tensors": {
+              "select_atom": {
+                "bytes": 1088,
+                "dtype": "torch.int64",
+                "sha256": "6f8ac13a1eae1f4725355947f359fe347c6e40eedeb24c0876c38be052e98c68",
+                "shape": [
+                  1,
+                  136
+                ]
+              },
+              "src_coord": {
+                "bytes": 1632,
+                "dtype": "torch.float32",
+                "sha256": "4855c5a5c428f286a1d0871c050bad917bfee3c75ff4f3a3d826dae4e1aeea18",
+                "shape": [
+                  1,
+                  136,
+                  3
+                ]
+              },
+              "src_distance": {
+                "bytes": 73984,
+                "dtype": "torch.float32",
+                "sha256": "17ccdaf90bd33d3c9009c3eea83696140ddeab5b86459ee4203995f9bf057060",
+                "shape": [
+                  1,
+                  136,
+                  136
+                ]
+              },
+              "src_edge_type": {
+                "bytes": 147968,
+                "dtype": "torch.int64",
+                "sha256": "6d1ab46404babad3d1085707561a4d1f4b86a8f832e209b7fe56b5d547113f54",
+                "shape": [
+                  1,
+                  136,
+                  136
+                ]
+              },
+              "src_tokens": {
+                "bytes": 1088,
+                "dtype": "torch.int64",
+                "sha256": "34f75b9eed0a5a7c5256e710c2a65064f3249578543c869a61e28b3a2ad6c10b",
+                "shape": [
+                  1,
+                  136
+                ]
+              }
+            }
+          }
+        ]
+      ],
+      "geometry_count": 128,
+      "identical_geometry_count": 128,
+      "prediction_including_head_loads": null,
+      "preparation": {
+        "VmHWM": 790355968,
+        "VmRSS": 790355968,
+        "rss_before_bytes": 786882560,
+        "seconds": 0.3356446480611339
+      },
+      "replacement_preparation": {
+        "VmHWM": 791232512,
+        "VmRSS": 791232512,
+        "rss_before_bytes": 790364160,
+        "seconds": 0.2254968429915607
+      },
+      "request_bytes": 250496,
+      "request_sha256": [
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4",
+        "313f2e1e14c884fd02048b4e28f92633cfadda97836330b91b6b3c0bb9780aa4"
+      ],
+      "tensor_bytes": 57794560,
+      "wire_bytes": 334767
+    }
+  ],
+  "container_command": [
+    "docker",
+    "--context",
+    "science",
+    "run",
+    "--rm",
+    "--pull",
+    "never",
+    "--init",
+    "--cidfile",
+    "/tmp/preparation-probe-zaecgtif/container",
+    "--network",
+    "none",
+    "--read-only",
+    "--cap-drop",
+    "ALL",
+    "--security-opt",
+    "no-new-privileges:true",
+    "--pids-limit",
+    "256",
+    "--cpus",
+    "4",
+    "--memory",
+    "8g",
+    "--memory-swap",
+    "8g",
+    "--shm-size",
+    "256m",
+    "--tmpfs",
+    "/tmp:rw,noexec,nosuid,nodev,size=512m,mode=1777",
+    "--env",
+    "OMP_NUM_THREADS=4",
+    "--env",
+    "MKL_NUM_THREADS=4",
+    "--mount",
+    "type=bind,src=/home/ra/repos/chefnmr2-repro/notes/evidence/batch2/nmrnet_preparation.py,dst=/probe.py,readonly",
+    "--user",
+    "1000:1000",
+    "--mount",
+    "type=bind,src=/home/ra/repos/nmrnet-repro/.work/prepared/weight,dst=/weight,readonly",
+    "--mount",
+    "type=bind,src=/home/ra/repos/nmrnet-repro/.work/prepared/checkpoints,dst=/checkpoints,readonly",
+    "--mount",
+    "type=bind,src=/home/ra/repos/nmrnet-repro/secrets/deployments/nmr-localhost/bundles/generation-UQyiNtDR/prediction-models.json,dst=/input/prediction-models.json,readonly",
+    "--mount",
+    "type=bind,src=/home/ra/repos/chefnmr2-repro/notes/evidence/batch2/nmrnet-smiles.json,dst=/generated.json,readonly",
+    "--entrypoint",
+    "/usr/local/bin/python",
+    "sha256:6ad9aee418867a3dba64ef66b69d395bfb05c8ba31232610c9f5a51daa97c706",
+    "-I",
+    "-B",
+    "/probe.py",
+    "prediction"
+  ],
+  "declaration_sha256": "cc377fb90d760f512553139695fb1576f9e0f4f522ea765f2aab28fe20e600dc",
+  "generated_input_sha256": "4e81bbec88792bf4b8a31030948c49a5c643311c150d7e3484d0b169443bb87a",
+  "installed_source_sha256": {
+    "nmrnet_inference.model": "902b590322e6f2511f718f0dbbfb54f26d0612c452779e2d8e2c015a3826d8da",
+    "nmrnet_inference.predict": "9f14e4451f0a9bc2ad6b416d705d3c7693d4f3395324172d56ef4b6eace50889",
+    "nmrnet_inference.release": "ff3e30c60b151d168bb6f626a1c8f1b3f18761bd3c2e22aa0694cafdee501d0c"
+  },
+  "kernel": "7.0.0-43-generic",
+  "memory_method": "Linux per-phase clear_refs=5 VmHWM, includes imported modules and model/head loads",
+  "observed_artifacts": {
+    "dictionary": {
+      "archive_sha256": "380d67a8fee3d6a4794d9b2942152a7171976dac70b3d0a72f1b5ba2ec3e4dfb",
+      "member": "weight/dict.txt",
+      "sha256": "f4fafdbc445449c8f8ef613fee36c8ee7610e3c7c2766666635edc8d962ba134",
+      "size": 91
+    },
+    "elements": {
+      "C": {
+        "checkpoint": {
+          "archive_sha256": "aba477d82049470366dd14088ec0fe03b2e9015c833c98d2dfa191d6aecfee2c",
+          "member": "checkpoints/scratch_C_pretraining_molecular_unimol_large_atom_regloss_mae_lr_0.0004_bs1_4_bs2_16_wu_0.03_ep_10_wgt_16_T__ratio_4_16_20251004_182236/cv_seed_42_fold_0/checkpoint_last.pt",
+          "sha256": "888c2fdcdd0379ded4c6de7322414fcf98658f4092adf8687a54329643c0376a",
+          "size": 571201518
+        },
+        "scaler": {
+          "archive_sha256": "aba477d82049470366dd14088ec0fe03b2e9015c833c98d2dfa191d6aecfee2c",
+          "member": "checkpoints/scratch_C_pretraining_molecular_unimol_large_atom_regloss_mae_lr_0.0004_bs1_4_bs2_16_wu_0.03_ep_10_wgt_16_T__ratio_4_16_20251004_182236/target_scaler.ss",
+          "sha256": "8d9af306251634c2c064e4a61ba0f71344d8569573c7d517b25b4cf42678a39b",
+          "size": 623
+        }
+      },
+      "H": {
+        "checkpoint": {
+          "archive_sha256": "aba477d82049470366dd14088ec0fe03b2e9015c833c98d2dfa191d6aecfee2c",
+          "member": "checkpoints/scratch_H_pretraining_molecular_unimol_large_atom_regloss_mae_lr_0.0004_bs1_4_bs2_16_wu_0.03_ep_10_wgt_16_T__ratio_4_16_20250930_033837/cv_seed_42_fold_0/checkpoint_last.pt",
+          "sha256": "bc12977a19ddad7057c8c4d190203cdae8130b52e54f3ddbf37d875663de04e9",
+          "size": 571201518
+        },
+        "scaler": {
+          "archive_sha256": "aba477d82049470366dd14088ec0fe03b2e9015c833c98d2dfa191d6aecfee2c",
+          "member": "checkpoints/scratch_H_pretraining_molecular_unimol_large_atom_regloss_mae_lr_0.0004_bs1_4_bs2_16_wu_0.03_ep_10_wgt_16_T__ratio_4_16_20250930_033837/target_scaler.ss",
+          "sha256": "dfd9201d59b0beadc11b4e9b98c4ac8e3dbf0724ccd3408e77488b62f718cc41",
+          "size": 623
+        }
+      }
+    }
+  },
+  "phase": "prediction",
+  "probe_sha256": "e7edb532c06a4365d68c6afe84efca7495c6d972c3a288eeb3917cf8b8799200",
+  "python": "3.12.12",
+  "torch": "2.13.0+cpu"
+}
