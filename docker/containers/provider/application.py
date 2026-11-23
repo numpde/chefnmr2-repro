@@ -1,13 +1,11 @@
 """Translate a verified NMR API job into ChefNMR2 input and a public result."""
 
-import asyncio
 from dataclasses import dataclass
 from hashlib import sha256
 import logging
 
 from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, AnalysisSuccess, PreparedAnalysis
 from provider_core.attempt_record import ProtectedEvidence
-from provider_core.hosting import settle_cleanup
 from provider_core.interpreter import InterpretationFailed, InterpretationInputRejected
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
 
@@ -41,7 +39,6 @@ class ElucidationSession:
         self.codec = JsonDataclassCodec(format="chefnmr2.job_input.v1", value_type=JobInput)
         self.prepared = None
         self.elucidation_input = None
-        self.calculation = None
 
     async def prepare(self, acknowledged, instructions, *, report_condition):
         """Route JSON directly; interpret prose before allocating scientific work."""
@@ -103,20 +100,17 @@ class ElucidationSession:
     async def execute(self, prepared, *, report_condition):
         """Call the loaded model once; the SDK rechecks permission before retries."""
 
-        if (prepared is not self.prepared) or (self.calculation is not None):
-            raise ValueError(f"{prepared is self.prepared=}, {self.calculation=} should identify this session's unused input")
+        if (prepared is None) or (prepared is not self.prepared):
+            raise ValueError(f"{prepared=} should be this session's unused prepared input")
 
         self.prepared = None
 
-        self.calculation = asyncio.create_task(
-            self.provider.inference(
+        try:
+            batch_result = await self.provider.inference(
                 scientific_input=ElucidationBatch(requests=[self.elucidation_input]),
                 require_execution=report_condition.require_execution,
-            ),
-        )
+            )
 
-        try:
-            batch_result = await asyncio.shield(self.calculation)
             (elucidation_result,) = batch_result.replies
         except Exception as error:
             # An arbitrary worker/transport exception does not establish a public
@@ -139,21 +133,8 @@ class ElucidationSession:
         return AnalysisSuccess(result_codec.format, content, evidence)
 
     async def retire(self):
-        """Join the original call; withdraw the model after interrupted or failed work."""
+        """Retire interpretation; the SDK owns scientific call and host cleanup."""
         self.prepared = None
 
         if self.interpreter is not None:
             await self.interpreter.retire()
-
-        if self.calculation is None:
-            return
-
-        if not self.calculation.done():
-            self.calculation.cancel()
-
-        await asyncio.wait({self.calculation})
-
-        if self.calculation.cancelled() or (self.calculation.exception() is not None):
-            # A completed Python task alone cannot prove cleanup after a failed
-            # call. Retire the original host before this Attempt releases its work
-            await settle_cleanup(control=self.provider.inference.host.retire())

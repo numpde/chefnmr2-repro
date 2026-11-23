@@ -120,10 +120,17 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
 
    [x] Review and finish the existing Chef batch change separately from SDK
        simplification, preserving unrelated working-tree changes.
-   [ ] Use reference-match and Chef as the first consumers. Trace Chef's
+   [x] Use reference-match and Chef as the first consumers. Trace Chef's
        create_task/shield/cancel/join/host-retirement sequence against existing
        ScientificCall and Attempt-controller guarantees. Delete duplicate
        ownership; add SDK behavior only for a demonstrated missing obligation.
+       Chef now directly awaits ScientificCall on SDK 0.7.2. The SDK settles
+       analysis cleanup; the service's enclosing host context owns worker/model
+       retirement. Removed Chef's extra task and scientific retirement block.
+       Model-free provider tests cover cancellation settlement without replay,
+       subsequent model reuse, and unresolved failure through host-context exit.
+       SDK scientific-call and process-lifecycle suites pass on the released
+       SDK in the provider image. This source change has not been deployed.
    [ ] Read Chef deployment configuration once and pass the parsed document to
        scientific setup. Keep the manual batch client using the same setup.
    [ ] Separately evaluate spectrum as the concrete consumer of an SDK-owned

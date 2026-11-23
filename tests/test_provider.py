@@ -5,15 +5,19 @@ from copy import deepcopy
 from dataclasses import asdict
 import json
 import sys
+from threading import Event
 import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, AnalysisSuccess
 from provider_core.chat_errors import ChatFailed
-from provider_core.hosting import CleanupObservation
+from provider_core.embedded_host import InProcessExecutionHost
+from provider_core.hosting import OperationPolicy
 from provider_core.interpreter import Interpreter
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
+from provider_core.scientific import Analysis, Contribution, operation
+from provider_core.scientific_call import ErrorPolicy, ScientificCall
 
 from application import ElucidationSession, ElucidationReport
 from binding import Inference
@@ -35,16 +39,12 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
             params={},
         )
 
-        cleanup = SimpleNamespace(observe=AsyncMock(return_value=CleanupObservation(1, True, False, ())))
-        self.host = SimpleNamespace(retire=Mock(return_value=cleanup))
         self.result_codec = JsonDataclassCodec(format="test.result.v1", value_type=ElucidationResult)
 
         self.provider = SimpleNamespace(
             offering={"n_samples": 8, "seed": 0},
             inference=AsyncMock(return_value=ElucidationBatchResult(replies=[self.scientific_result])),
         )
-
-        self.provider.inference.host = self.host
 
         self.new_interpreter = Mock(side_effect=AssertionError("Structured input should not call an interpreter"))
         self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
@@ -74,8 +74,6 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIs(self.condition.require_execution, invocation.kwargs["require_execution"])
 
         await self.session.retire()
-
-        self.host.retire.assert_not_called()
 
     async def test_job_cannot_override_the_deployment_sample_budget(self):
         outcome = await self.prepare_input({"formula": "CH4", "peaks": {}, "n_samples": 1000000})
@@ -199,21 +197,6 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertTrue(endpoint.retirement_confirmed)
         self.provider.inference.assert_not_called()
-        self.host.retire.assert_not_called()
-
-    async def test_unknown_scientific_failure_keeps_its_cause_and_retires_the_host(self):
-        failure = OSError("Scientific connection failed")
-        self.provider.inference.side_effect = failure
-        prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
-
-        with self.assertRaises(AnalysisOutcomeUnresolved) as raised:
-            await self.session.execute(prepared, report_condition=self.condition)
-
-        self.assertIs(failure, raised.exception.__cause__)
-
-        await self.session.retire()
-
-        self.host.retire.assert_called_once()
 
     async def test_model_diagnostic_is_a_failure_for_its_job(self):
         self.provider.inference.return_value = ElucidationBatchResult(replies=[ModelFailure("ValueError", "private diagnostic")])
@@ -225,8 +208,6 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertNotIn("private diagnostic", outcome.message)
 
         await self.session.retire()
-
-        self.host.retire.assert_not_called()
 
     async def test_missing_batch_reply_is_unresolved_not_a_success(self):
         self.provider.inference.return_value = ElucidationBatchResult(replies=[])
@@ -272,34 +253,126 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(PayloadRejected):
             request_codec.decode(b'{"formula":"CH4","peaks":{}}')
 
-    async def test_cancelling_the_observer_leaves_original_science_for_retirement(self):
-        started = asyncio.Event()
-        retired = asyncio.Event()
+    def use_scientific_call(self):
+        host = InProcessExecutionHost(
+            input_bytes=8192,
+            result_bytes=65536,
+            state_values=1,
+            progress_records=1,
+            initialization_seconds=5,
+            retirement_seconds=5,
+        )
 
-        async def held_science(*args, **kwargs):
-            started.set()
+        science = ControlledInference(self.scientific_result)
+        hosted = host.adopt(contribution=science, requirements=frozenset())
+
+        self.provider.inference = ScientificCall(
+            host=host,
+            allocation=hosted.allocation,
+            binding=hosted.call(method=ControlledInference.elucidate_batch),
+            operation_policy=OperationPolicy(5, 5, 5, 8192, 65536),
+            error_policy=ErrorPolicy(max_attempts=3),
+        )
+
+        return (host, science)
+
+    async def test_cancellation_settles_original_science_and_keeps_model_reusable(self):
+        (host, science) = self.use_scientific_call()
+
+        science.release.clear()
+        prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
+
+        async with host:
+            execution = asyncio.create_task(self.session.execute(prepared, report_condition=self.condition))
 
             try:
-                await asyncio.Event().wait()
+                self.assertTrue(await asyncio.to_thread(science.entered.wait, timeout=2))
+                execution.cancel()
+                await asyncio.sleep(0)
+
+                self.assertFalse(execution.done())
             finally:
-                retired.set()
+                science.release.set()
+                await asyncio.wait_for(asyncio.gather(execution, return_exceptions=True), timeout=5)
 
-        self.provider.inference.side_effect = held_science
+            with self.assertRaises(asyncio.CancelledError):
+                execution.result()
+
+            await self.session.retire()
+
+            self.assertEqual((1, 1), (science.calls, science.closed_analyses))
+            self.assertEqual({}, host.analyses)
+            self.assertFalse(science.closed)
+
+            self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
+
+            prepared = await self.prepare_input({"formula": "C2H6", "peaks": {}})
+            outcome = await self.session.execute(prepared, report_condition=self.condition)
+
+            self.assertIsInstance(outcome, AnalysisSuccess)
+            self.assertEqual((2, 2), (science.calls, science.closed_analyses))
+
+        self.assertTrue(science.closed)
+
+    async def test_failed_call_is_unresolved_and_outer_context_retires_model(self):
+        (host, science) = self.use_scientific_call()
+        failure = OSError("Scientific call failed")
+        science.failure = failure
         prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
-        observer = asyncio.create_task(self.session.execute(prepared, report_condition=self.condition))
 
-        await asyncio.wait_for(started.wait(), timeout=2)
-        observer.cancel()
+        with self.assertRaises(AnalysisOutcomeUnresolved) as raised:
+            async with host:
+                try:
+                    await self.session.execute(prepared, report_condition=self.condition)
+                finally:
+                    await self.session.retire()
 
-        with self.assertRaises(asyncio.CancelledError):
-            await observer
+                    self.assertEqual((1, 1), (science.calls, science.closed_analyses))
+                    self.assertFalse(science.closed)
 
-        self.assertFalse(retired.is_set())
+        self.assertIs(failure, raised.exception.__cause__)
+        self.assertTrue(science.closed)
 
-        await asyncio.wait_for(self.session.retire(), timeout=2)
 
-        self.assertTrue(retired.is_set())
-        self.host.retire.assert_called_once()
+class ControlledAnalysis(Analysis):
+    def close(self) -> None:
+        self.contribution.closed_analyses += 1
+
+
+class ControlledInference(Contribution):
+    """Use real SDK execution and cleanup with a controllable model substitute."""
+
+    analysis_type = ControlledAnalysis
+
+    def __init__(self, elucidation_result):
+        super().__init__()
+
+        self.elucidation_result = elucidation_result
+        self.entered = Event()
+        self.release = Event()
+
+        self.release.set()
+        self.failure = None
+        self.calls = 0
+        self.closed_analyses = 0
+        self.closed = False
+
+    @operation()
+    def elucidate_batch(self, *, batch: ElucidationBatch) -> ElucidationBatchResult:
+        self.calls += 1
+
+        self.entered.set()
+
+        if not self.release.wait(timeout=(wait_seconds := 5)):
+            raise TimeoutError(f"{self.release.is_set()=} after {wait_seconds=}")
+
+        if self.failure is not None:
+            raise self.failure
+
+        return ElucidationBatchResult(replies=[self.elucidation_result for elucidation in batch.requests])
+
+    def close(self) -> None:
+        self.closed = True
 
 
 class ScriptedEndpoint:
