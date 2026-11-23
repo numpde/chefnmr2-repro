@@ -101,7 +101,7 @@ class RankedCandidate(CandidateVotes):
 
 
 @dataclass
-class ElucidateResult:
+class ElucidationResult:
     """Wire representation of the result dictionary from ChefNMR2.elucidate().
 
     Result dictionary:
@@ -125,3 +125,11 @@ class ElucidateResult:
     ensemble: dict[str, object]
     params: dict[str, object]
     adaptive: dict[str, object] | None = None
+
+
+@dataclass
+class ModelFailure:
+    """Diagnostic returned when ChefNMR2.elucidate() raises an exception."""
+
+    exception_type: str
+    message: str

@@ -7,6 +7,7 @@ import os
 import socket
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
+from dataclasses import asdict
 from functools import wraps
 from multiprocessing.connection import Connection
 from pathlib import Path
@@ -15,9 +16,9 @@ from typing import TYPE_CHECKING
 log = logging.getLogger(__name__)
 
 if __package__:
-    from .wire import ElucidationRequest
+    from .wire import ElucidationResult, ElucidationRequest, ModelFailure
 else:
-    from wire import ElucidationRequest
+    from wire import ElucidationResult, ElucidationRequest, ModelFailure
 
 if TYPE_CHECKING:
     from chefnmr2.infer import ChefNMR2
@@ -73,7 +74,7 @@ def load_model(
 
 
 @swallow_any(Exception)
-def receive_message(frames: Connection) -> ElucidationRequest | None:
+def receive_message(connection: Connection) -> ElucidationRequest | None:
     """Read one inference request from a connected client and return an ElucidationRequest or None.
 
     This call blocks until the client sends a complete request or closes its
@@ -81,7 +82,7 @@ def receive_message(frames: Connection) -> ElucidationRequest | None:
     initial socket check fails, log the error and return None to end the session.
 
     If a byte is available, the initial check leaves it in place so
-    frames.recv_bytes() can read the length header and the complete message.
+    connection.recv_bytes() can read the length header and the complete message.
 
     If the client closes after sending part of the header or part of the
     payload, recv_bytes() raises OSError. If it sends the complete header
@@ -111,7 +112,7 @@ def receive_message(frames: Connection) -> ElucidationRequest | None:
     try:
         # Peek without consuming the first byte of the next frame. EOF here is clean.
         # Once a byte is present, EOF before recv_bytes() finishes that frame means truncation.
-        with socket.fromfd(frames.fileno(), socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+        with socket.fromfd(connection.fileno(), socket.AF_UNIX, socket.SOCK_STREAM) as sock:
             if not sock.recv(1, socket.MSG_PEEK):
                 return None
     except OSError as error:
@@ -119,7 +120,7 @@ def receive_message(frames: Connection) -> ElucidationRequest | None:
         return None
 
     try:
-        request_frame = frames.recv_bytes()
+        request_frame = connection.recv_bytes()
     except EOFError:
         log.warning("Client closed before sending the complete request frame")
         return None
@@ -136,20 +137,34 @@ def receive_message(frames: Connection) -> ElucidationRequest | None:
     return ElucidationRequest.from_json_or_none(obj)
 
 
-def send_message(connection: socket.socket, message: dict[str, object]) -> None:
-    ...
+def process_request(model: ChefNMR2, request: ElucidationRequest) -> ElucidationResult | ModelFailure:
+    """Run one elucidation on the loaded model and return the typed result."""
+
+    from chefnmr2.infer import Peaks
+
+    assert type(model) == ChefNMR2
+    assert type(request) == ElucidationRequest
+
+    try:
+        result = model.elucidate(
+            Peaks(c=request.peaks.c, h=request.peaks.h),
+            formula=request.formula,
+            n_samples=request.n_samples,
+            seed=request.seed,
+        )
+    except Exception as error:
+        return ModelFailure(exception_type=type(error).__name__, message=str(error))
+
+    return ElucidationResult(**result)
 
 
-def process_request(model: ChefNMR2, request: ElucidationRequest) -> dict[str, object]:
-    ...
+@swallow_any(Exception)
+def serve_connection(connection: Connection, model: ChefNMR2) -> None:
+    while (request := receive_message(connection)) is not None:
+        response = process_request(model, request)
 
-
-def serve_connection(connection: socket.socket, model: ChefNMR2) -> None:
-    # Read-only multiprocessing.connection.Connection named `frames` for the same connected Unix socket
-    with Connection(os.dup(connection.fileno()), writable=False) as frames:
-        while (request := receive_message(frames)) is not None:
-            response = process_request(model, request)
-            send_message(connection, response)
+        msg_bytes = json.dumps(asdict(response), allow_nan=False).encode("utf-8")
+        connection.send_bytes(msg_bytes)
 
 
 def serve_to(listener: socket.socket, **kw) -> None:
@@ -161,9 +176,11 @@ def serve_to(listener: socket.socket, **kw) -> None:
         while True:
             # Blocks until a client connects.
             # Returns a separate socket for talking to it.
-            (connection, _) = listener.accept()
+            (client_socket, _) = listener.accept()
 
-            with connection:
+            # `detach` leaves the descriptor open and relinquishes it (client_socket can no longer close it).
+            # `Connection` takes ownership and uses it for recv_bytes() and send_bytes().
+            with Connection(client_socket.detach()) as connection:
                 serve_connection(connection, model=model)
 
 
