@@ -6,3 +6,9 @@
 !main.py
 !application.py
 !job_input.py
+!prompts/
+!prompts/interpreter.md
+!prompts/tools.toml
+!about/
+!about/provider.md
+!about/hello.md

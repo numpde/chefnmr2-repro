@@ -1,0 +1,2 @@
+submit_input = "Submit the source-faithful formula and NMR peaks."
+report_interpretation_problem = "Report why the supplied text does not establish one complete input."

@@ -32,6 +32,10 @@ async def serve(*, config: pathlib.Path) -> None:
     """Keep the model loaded while the SDK job service consumes API work."""
     configuration = config.read_bytes()
     deployment = tomllib.loads(configuration.decode())
+    about = pathlib.Path(__file__).with_name("about")
+    provider_description = (about / "provider.md").read_text(encoding="utf-8").strip()
+    offering_description = (about / "hello.md").read_text(encoding="utf-8").strip().format_map(deployment["offering"])
+    generation = sha256(configuration + b"\0" + provider_description.encode() + b"\0" + offering_description.encode()).hexdigest()
     (settings, provider_ref, publication) = api_settings_with_material(deployment["api"], read_startup_file)
     grants = SharedGrants(**deployment["shared"])
     settings = replace(settings, http=replace(settings.http, proxy_socket=str(grants.proxy_socket)))
@@ -60,10 +64,10 @@ async def serve(*, config: pathlib.Path) -> None:
             service = JobService(
                 provider_ref=provider_ref,
                 consumer_id="chefnmr2",
-                generation=sha256(configuration).hexdigest(),
-                offering=AnalysisOffering(provider.offering["analysis_kind"], provider.offering["description"]),
+                generation=generation,
+                offering=AnalysisOffering(provider.offering["analysis_kind"], offering_description),
                 display_name="ChefNMR2",
-                description="Molecular structure candidates from a formula and unassigned proton/carbon NMR peaks. https://github.com/numpde/chefnmr2-repro",
+                description=provider_description,
                 host=provider.inference.host,
                 policy=JobServicePolicy(**deployment["service"]["policy"]),
                 new_session=lambda: ElucidationSession(provider, new_interpreter=new_interpreter),

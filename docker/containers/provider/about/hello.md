@@ -1,0 +1,1 @@
+Structure inference from a molecular formula and NMR peaks supplied as prose or formula/peaks JSON. Text only; attachments are not read. Uses {n_samples} samples and seed {seed}. Reports the interpreted input alongside the model result.

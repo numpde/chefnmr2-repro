@@ -35,6 +35,9 @@ RUN install -d -m 700 -o 65532 -g 65532 /run/chefnmr2-provider /run/chefnmr2-cre
 # and operation identity. The provider adapter connects API jobs to that contract.
 COPY --from=shared binding.py wire.py ./
 COPY provider.py application.py job_input.py main.py manual.py ./
+# Keep interpreter instructions and public descriptions beside their loaders.
+COPY prompts/ ./prompts/
+COPY about/ ./about/
 
 # Match the worker's UID so the provider can connect to its private runner socket.
 USER 65532:65532
