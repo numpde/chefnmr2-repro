@@ -83,10 +83,10 @@ def serve_to(listener: socket.socket, **kw) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--socket-path", required=True, type=Path)
-    parser.add_argument("--max-pending-connections", type=int, default=socket.SOMAXCONN)
     parser.add_argument("--ckpt-dir", required=True, type=Path, action="append")  # collects repeated args
     parser.add_argument("--device", required=True)
     parser.add_argument("--recon-workers", type=int)
+    parser.add_argument("--max-pending-connections", type=int, default=socket.SOMAXCONN)
     return parser.parse_args()
 
 
