@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import argparse
+import fcntl
 import json
 import logging
 import os
 import socket
+import stat
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
 from dataclasses import asdict
@@ -59,6 +61,24 @@ def load_model(
     try:
         yield model
     finally:
+
+        # If `python worker.py` is killed with SIGKILL, the finally block never runs.
+        # If Compose service uses `init: true` then `docker-init` is PID 1 inside the container.
+        # When its main child worker.py dies, docker-init exits.
+        # Linux then kills any pool processes still running in that PID namespace.
+
+        # `init: true` tells Docker to start a small program called docker-init first.
+        # Linux assigns that first process PID 1 inside the container. docker-init then starts python worker.py as its child. The process tree looks like this:
+        #
+        # docker-init                 PID 1
+        # └── python worker.py        serves inference requests
+        #     └── ReconPool processes reconstruct molecules
+        #
+        # When Docker sends SIGTERM to stop the container, docker-init forwards it to worker.py.
+        # If worker.py dies while a reconstruction process is still running,
+        # `docker-init` exits when it sees that its main child has died.
+        # Linux then kills any processes left in the container’s PID namespace.
+
         if model.recon_pool is None:
             # This can happen in two cases:
             #
@@ -193,6 +213,7 @@ def serve_to(listener: socket.socket, **kw) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--socket-path", required=True, type=Path)
+    parser.add_argument("--lock-path", required=True, type=Path)
     parser.add_argument("--ckpt-dir", required=True, type=Path, action="append")  # collects repeated args
     parser.add_argument("--device", required=True)
     parser.add_argument("--recon-workers", type=int)
@@ -200,8 +221,47 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+@contextmanager
+def worker_lock(lock_path: Path) -> Iterator[None]:
+    with lock_path.open("a") as lock:
+        # `python worker.py` holds this lock. ChefNMR2's ReconPool forks CPU processes
+        # to turn sampled atom features into SMILES. They inherit the open descriptor
+        # but not the lock. When `python worker.py` exits or is killed, Linux releases
+        # its lock even if those CPU processes keep running.
+
+        # This raises if the lock is held by another process
+        fcntl.lockf(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+
+
+@contextmanager
+def worker_listener(socket_path: Path) -> Iterator[socket.socket]:
+    """Bind the socket while the caller holds worker_lock and release its pathname on exit."""
+    with socket.socket(socket.AF_UNIX) as listener:
+
+        # Remove a stale socket. Leave every other entry in place for bind() to reject.
+        with suppress(FileNotFoundError):
+            if stat.S_ISSOCK(socket_path.lstat().st_mode):
+                socket_path.unlink()
+
+        # Creates a Unix socket entry at socket_path and assigns that address to listener
+        listener.bind(str(socket_path))
+
+        # During cleanup below, os.path.samestat() compares the saved device and inode numbers
+        # with those currently at socket_path (bound_entry). If they match, unlink the path.
+        # The check and unlink are separate operations, so a replacement between them is still possible.
+        bound_entry = socket_path.lstat()
+
+        try:
+            yield listener
+        finally:
+            with suppress(FileNotFoundError):
+                if os.path.samestat(bound_entry, socket_path.lstat()):
+                    socket_path.unlink()
+
+
 def main() -> None:
-    args = vars(parse_args())
+    args = vars(parse_args()).copy()
     logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s %(message)s")
     log.setLevel(logging.INFO)
 
@@ -211,23 +271,9 @@ def main() -> None:
         for ckpt_dir in args.pop('ckpt_dir')
     ]
 
-    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as listener:
-        socket_path: Path = args.pop('socket_path')
-
-        # Creates a Unix socket entry at socket_path and assigns that address to listener
-        listener.bind(os.fspath(socket_path))
-
-        # During cleanup below, os.path.samestat() compares the saved device and inode numbers
-        # with those currently at socket_path (bound_entry). If they match, unlink the path.
-        # The check and unlink are separate operations, so a replacement between them is still possible.
-        bound_entry = socket_path.lstat()
-
-        try:
+    with worker_lock(args.pop("lock_path")):
+        with worker_listener(args.pop('socket_path')) as listener:
             serve_to(listener, checkpoints=checkpoints, **args)
-        finally:
-            with suppress(FileNotFoundError):
-                if os.path.samestat(bound_entry, socket_path.lstat()):
-                    socket_path.unlink()
 
 
 if __name__ == "__main__":

@@ -13,6 +13,8 @@ services:
       - /checkpoints/chefnmr2-epoch949
       - --socket-path
       - /run/chefnmr2/worker.sock
+      - --lock-path
+      - /run/chefnmr2/worker.lock
       - --recon-workers
       - "2"
     logging:
