@@ -59,15 +59,12 @@ class ElucidationSession:
 
                 log.info("Interpreting the job specification")
 
-                try:
-                    supplied = await interpret(
-                        self.interpreter,
-                        source,
-                        codec=self.codec,
-                        require_execution=report_condition.require_execution,
-                    )
-                finally:
-                    await self.interpreter.retire()
+                supplied = await interpret(
+                    self.interpreter,
+                    source,
+                    codec=self.codec,
+                    require_execution=report_condition.require_execution,
+                )
 
                 log.info("Job interpretation accepted")
         except (PayloadRejected, UnicodeDecodeError):

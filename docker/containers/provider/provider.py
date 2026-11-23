@@ -5,19 +5,17 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
 from provider_core.execution_setup import ExecutionSettings
-from provider_core.scientific_call import ScientificCall
+from provider_core.process_call import ProcessCall
 
 if __package__:
     from .._shared.binding import Inference, construct
-    from .._shared.wire import ElucidationBatch, ElucidationBatchResult
 else:
     from binding import Inference, construct
-    from wire import ElucidationBatch, ElucidationBatchResult
 
 
 @dataclass
 class Provider:
-    inference: ScientificCall[ElucidationBatch, ElucidationBatchResult]
+    inference: ProcessCall
     offering: dict
 
 

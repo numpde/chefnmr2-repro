@@ -1,4 +1,4 @@
-# Generated from provider-core 0.7.2 api release lock with wheelhouse-tool.
+# Generated from provider-core 0.7.3 API release lock with wheelhouse-tool.
 # Target: CPython 3.13, Linux/amd64 (python:3.13.18-slim-bookworm).
 annotated-types @ https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl \
     --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
@@ -32,5 +32,5 @@ tomli-w @ https://files.pythonhosted.org/packages/c7/18/c86eb8e0202e32dd3df50d43
     --hash=sha256:188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90
 typing-inspection @ https://files.pythonhosted.org/packages/de/0c/ea2544850a7c135e15033a5c7a8e7211136184b7ae63e2239d557c2b3019/typing_inspection-0.4.5-py3-none-any.whl \
     --hash=sha256:bc210535442b39e1bf2805e0c7a17dfd6a4ace760c84c7f7d16245d23a6b1c39
-provider-core @ https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.2/provider_core-0.7.2-py3-none-any.whl \
-    --hash=sha256:954a49dd08c69f1dddfe1ab8e5532ed1683892a1401dbd7ae2abd76776b8ef5f
+provider-core @ https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.3/provider_core-0.7.3-py3-none-any.whl \
+    --hash=sha256:dcd279f290d94dffed0a55a7c59d9b6ca8f77fa121a415bfd265e183fe29d33d

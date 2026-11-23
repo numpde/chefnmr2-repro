@@ -9,6 +9,7 @@ import pathlib
 import signal
 import tomllib
 
+from provider_core.interpreter_settings import InterpreterSettings
 from provider_core.api import ProviderAPI
 from provider_core.api_config import api_settings_with_material
 from provider_core.job_service import JobService, JobServicePolicy
@@ -21,11 +22,9 @@ from provider_core.validation.upstream.nmr.v1.hello import AnalysisOffering
 if __package__:
     from .application import ElucidationSession
     from .provider import open_provider
-    from .job_input import configure_interpreter
 else:
     from application import ElucidationSession
     from provider import open_provider
-    from job_input import configure_interpreter
 
 
 async def serve(*, config: pathlib.Path) -> None:
@@ -39,7 +38,7 @@ async def serve(*, config: pathlib.Path) -> None:
     (settings, provider_ref, publication) = api_settings_with_material(deployment["api"], read_startup_file)
     grants = SharedGrants(**deployment["shared"])
     settings = replace(settings, http=replace(settings.http, proxy_socket=str(grants.proxy_socket)))
-    new_interpreter = configure_interpreter(deployment["interpreter"])
+    new_interpreter = InterpreterSettings.from_config(deployment["interpreter"]).new_interpreter
     stopping = asyncio.Event()
     loop = asyncio.get_running_loop()
 

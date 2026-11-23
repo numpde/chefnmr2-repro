@@ -2,18 +2,14 @@
 
 import asyncio
 from dataclasses import dataclass
-from functools import partial
 import json
 import pathlib
 import tomllib
 
 from provider_core.adapters.chat_completions.tools import function_tool
-from provider_core.api_config import https_trust
-from provider_core.chat import ChatEndpointFactory, ChatEndpointSpec
 from provider_core.conversation import ToolFinished, ToolRejected
-from provider_core.interpreter import Interpreter, ModelReportedInterpretationProblem, ModelWindowExpired, ProseService
+from provider_core.interpreter import ModelReportedInterpretationProblem, ModelWindowExpired
 from provider_core.payload import PayloadRejected
-from provider_core.startup_file import read_startup_file
 
 if __package__:
     from .._shared.wire import Peaks
@@ -27,31 +23,6 @@ class JobInput:
 
     formula: str
     peaks: Peaks
-
-
-def configure_interpreter(configuration):
-    """Capture endpoint credentials once and share SDK retry delays across jobs."""
-    services = []
-    secrets = []
-
-    for endpoint in configuration["endpoints"]:
-        endpoint = dict(endpoint)
-        key = read_startup_file(endpoint.pop("key_file"), maximum_bytes=16384, secret=True).decode("ascii").rstrip("\r\n")
-        ca = None
-
-        if "ca_file" in endpoint:
-            ca = read_startup_file(endpoint.pop("ca_file"), maximum_bytes=1048576)
-
-        factory = ChatEndpointFactory(
-            spec=ChatEndpointSpec(**endpoint, api_key=key),
-            trust=https_trust(ca, label="interpreter"),
-            **configuration["transport"],
-        )
-
-        services.append(ProseService(factory))
-        secrets.append(key)
-
-    return partial(Interpreter, tuple(services), secrets=tuple(secrets), **configuration["policy"])
 
 
 async def interpret(interpreter, source, *, codec, require_execution):

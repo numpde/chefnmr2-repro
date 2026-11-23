@@ -14,7 +14,7 @@ from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, A
 from provider_core.chat_errors import ChatFailed
 from provider_core.embedded_host import InProcessExecutionHost
 from provider_core.hosting import OperationPolicy
-from provider_core.interpreter import Interpreter
+from provider_core.interpreter_settings import ManagedInterpreter
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
 from provider_core.scientific import Analysis, Contribution, operation
 from provider_core.scientific_call import ErrorPolicy, ScientificCall
@@ -93,7 +93,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
     def use_interpreter(self, proposals):
         endpoint = ScriptedEndpoint(proposals)
 
-        self.session.new_interpreter = lambda: Interpreter(
+        self.session.new_interpreter = lambda: ManagedInterpreter(
             (endpoint,),
             interpretation_budget_seconds=5,
             reject_combined_messages_and_tools_over_bytes=32768,
