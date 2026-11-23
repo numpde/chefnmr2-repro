@@ -3,7 +3,7 @@ name: chefnmr2-inference
 services:
   worker:
     build:
-      context: ../containers/inference
+      context: ../containers/worker
       additional_contexts:
         shared: ../containers/_shared
         upstream: ../../chefnmr2-upstream
