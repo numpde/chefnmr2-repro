@@ -636,6 +636,105 @@ revisions. The panel found no implementation defect requiring a repair. This
 assessment does not qualify batches 2-6, publish an SDK version, or establish
 real-model/live API deployment behavior.
 
+Batch 1 improvements and independent reassessment — 2026-11-23
+-------------------------------------------------------------
+
+The user requested improvements after round 1. Changes address concrete evidence
+limits without adding production abstractions or widening the batch's contract:
+- A test-only worker runs installed SDK/science code in the real runner child.
+  It records the complete corrected spectrum at producer encoding and at the
+  separate peak worker's method entry, including process identities. Distinct
+  positions and negative corrected intensities make lossy transfer observable.
+- The same worker can raise OSError from the actual producer result encoder.
+  Qualification enables scientific retries but verifies one baseline call, no
+  peak analysis, the same retained exception on repeated observation/settlement,
+  and continued independent usability of the peak host.
+- The existing consumer shutdown test now interrupts one closer twice while
+  either stage is held, joins a second closer, checks both cancellation causes
+  and one analysis close request, and proves no later stage starts on shutdown.
+- Qualification logs now record repository revision, tree hash, command, times,
+  and clean-tree checks before/after the run. The local capture script rejects
+  dirty source or a changed snapshot. No new SDK logging layer was introduced.
+
+SDK commits: 48fe1446 (process boundary witnesses) and c77bc053 (repeated shutdown
+interruption). Production code and Chef's released SDK pin are unchanged.
+An independent read-only audit approved both slices and their cleanup ownership.
+
+Round 2 used four new gpt-6-luna / medium reviewers with fresh contexts and the
+same frozen criteria/anchors. Each had one primary criterion, owning source and
+raw logs; no earlier ratings, target scores or review narrative were supplied.
+Reviewed source: SDK d6b5a9a3ed9d6e27265a980fbf6cdc19124a77dd;
+Chef d925f0d24797ae9aaeb2e43008e6d014890c5cb3, both clean during qualification.
+Final SDK c77bc05349257ac5b54ef9722353f9e72697879c differs from that reviewed tree
+only by two test parentheses required by repository checks. AST comparison and
+independent audit confirmed identical semantics; corrections were folded into
+the owning unpublished commit. The changed process lane was rerun afterward.
+
+Criterion  Primary reviewer       Score  Mandatory gate
+Q1.1       panel2_ownership        8/10   Pass
+Q1.2       panel2_interface        9/10   Pass
+Q1.3       panel2_interruption     9/10   Pass
+Q1.4       panel2_failure          8/10   Pass
+
+Findings and adjudication:
+- Q1.1: clear SDK call/result ownership, enclosing model-host ownership and
+  controller-owned API execution/publication. No duplicate provider lifecycle.
+  Reviewer withheld credit for the lack of a live service run. This is a scope
+  limit: the frozen local batch assessment explicitly excludes live deployment,
+  so it does not warrant extra implementation or a new test here. Retain the
+  independent score; do not recast it as evidence of a new ownership defect.
+- Q1.2: exact positions/intensities are now observed across real worker processes;
+  Chef's mixed-success batch preserves order/cardinality/budgets/seeds. Config
+  parsing occurs once per startup. The reviewer noted coordinated edits to the
+  explicit two-stage inventory when adding a stage. That inventory is deliberate
+  and permitted by the criteria; a generic stage registry is not justified.
+- Q1.3: consumer proof now covers repeated closer cancellation directly. The
+  remaining deduction concerns process behavior being established through
+  lower-level process tests plus the thread-backed consumer scenario. Accepted
+  as an evidence limit, not an unproved ownership link or reason to duplicate
+  every scenario. Source establishes inner settlement before host-context exit.
+- Q1.4: process encoder failure is now injected end to end, with retries enabled
+  and no replay/downstream dispatch. SDK recovery tests establish API delivery
+  retry without another execution; Chef delegates to that controller. Reviewer
+  retained a deduction for lacking one combined provider/controller/API failure
+  test. Preserve the limitation; the frozen criteria allow this composition,
+  and a larger harness solely to improve the grade is not warranted.
+No reviewer found a runtime defect or missing decisive mandatory proof. Round 1
+scores remain above; fresh panel scores are not a monotonic progress measure.
+
+Execution evidence:
+- SDK native: scientific_invocation (7), scientific_call (18).
+- SDK integration: spectrum_process (8), spectrum_workflow (8), spectrum_binding (4).
+- SDK unit: controller_recovery (7); Chef provider (13).
+All 65 distinct tests passed at the clean reviewed revisions. The final process
+rerun passes the same 8 tests at c77bc053; it is not eight additional distinct tests.
+SDK commands used make tests/<lane>/provider-core with DOCKER_CONTEXT=science,
+WHEELHOUSE=/home/ra/Downloads/wheelhouse, PRIVACY_TESTS=0 and the exact test filename.
+Chef used its existing provider image, source mounted read-only, no network,
+read-only root and explicit resource limits; the image's pinned SDK is unchanged.
+
+Raw local logs: /tmp/batch1-qualified-{scientific_invocation,scientific_call,
+spectrum_process,spectrum_workflow,spectrum_binding,controller_recovery}.log;
+/tmp/batch1-qualified-chef-provider.log; /tmp/batch1-final-spectrum_process.log.
+The start/finish records identify exact sources and commands. These temporary
+logs are local evidence, not durable release artifacts. Initial failed iterations
+remain separate: the first process test wrongly expected RemoteScienceError;
+process_wire intentionally restores known built-in OSError. That assertion was
+corrected. Full repository checks then required two parentheses, now corrected.
+
+Repository report: ../nmr-provider-tools/notes/092_repo_checks_status.html was
+regenerated at c77bc053 using make tests/repository/quality/report with
+DOCKER_CONTEXT=science PRIVACY_TESTS=0. Results: 428 passed, 24 failed, 9 skipped.
+Every structured check outcome and finding count matches the prior report;
+there are no added findings. This remains a non-green global baseline.
+Raw generation output: /tmp/batch1-final-report.{html,log}.
+Scoped checks cover all new formatting findings; the generic-name check still
+flags two pre-existing fixture contract names, BrokenCodec.encode(value) and run.
+
+Acceptance: all four mandatory gates pass. The changes strengthen Batch 1's
+boundary evidence without altering science or lifecycle behavior. This does not
+complete batches 2-6, release/push the SDK, or qualify a live deployment.
+
 Initial batch retry and outcome rules
 ------------------------------------
 
