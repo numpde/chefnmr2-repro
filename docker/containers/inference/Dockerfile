@@ -23,7 +23,7 @@ PY
 # installs this verified wheel offline.
 FROM base AS supervisor
 RUN --mount=from=dependency-pins,source=provider-core.txt,target=/tmp/provider-core.txt \
-    --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,id=chefnmr2-repro-pip,target=/root/.cache/pip \
     python -m pip download --timeout 120 --no-index --no-deps --require-hashes \
     --dest /wheels -r /tmp/provider-core.txt
 
@@ -35,14 +35,14 @@ FROM base
 # Install its pinned version from PyTorch's CPU wheel index. Keep downloaded
 # packages in a build cache so subsequent builds can reuse them.
 RUN --mount=type=bind,from=requirements,source=/torch.txt,target=/tmp/torch.txt \
-    --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,id=chefnmr2-repro-pip,target=/root/.cache/pip \
     python -m pip install --timeout 120 --index-url https://download.pytorch.org/whl/cpu -r /tmp/torch.txt
 
 # Mount the remaining dependency list and install those packages from PyPI.
 # pip check then verifies that installed package versions satisfy their declared
 # dependencies. Each pip invocation allows 120 seconds of socket inactivity.
 RUN --mount=type=bind,from=requirements,source=/inference.txt,target=/tmp/inference.txt \
-    --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=cache,id=chefnmr2-repro-pip,target=/root/.cache/pip \
     python -m pip install --timeout 120 --index-url https://pypi.org/simple -r /tmp/inference.txt \
     && python -m pip check
 

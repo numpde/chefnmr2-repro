@@ -66,14 +66,14 @@ PYTHON
 # Allow idle network pauses during large downloads; this is a socket timeout.
 FROM python${PY_VERSION} AS torch_cpu
 COPY --from=dependency_inputs /requirements/torch.txt /opt/requirements/torch.txt
-RUN --mount=type=cache,target=/root/.cache/pip \
+RUN --mount=type=cache,id=chefnmr2-repro-pip,target=/root/.cache/pip \
     python -m pip install --timeout 120 --index-url https://download.pytorch.org/whl/cpu \
         -r /opt/requirements/torch.txt
 
 # Inherit Torch's installed environment; changing these packages reuses Torch.
 FROM torch_cpu AS science
 COPY --from=dependency_inputs /requirements/science.txt /opt/requirements/science.txt
-RUN --mount=type=cache,target=/root/.cache/pip \
+RUN --mount=type=cache,id=chefnmr2-repro-pip,target=/root/.cache/pip \
     python -m pip install --timeout 120 --index-url https://pypi.org/simple \
         -r /opt/requirements/science.txt \
     && python -m pip check
