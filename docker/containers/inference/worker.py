@@ -1,3 +1,10 @@
+"""Serve one client session on the inference socket inherited from the SDK runner.
+
+Load ChefNMR2 once, process successive requests sequentially, and send each reply
+on the same connection. The runner owns worker startup and retirement. This
+process retains the inherited lifetime lease until it exits.
+"""
+
 from __future__ import annotations
 
 import argparse
@@ -49,8 +56,10 @@ def load_model(
         device: str,
         recon_workers: int | None,
 ) -> Iterator[ChefNMR2]:
-    """Load the model once, keep it available while the worker serves requests,
-    and shut down any reconstruction workers when context exists.
+    """Load ChefNMR2 from the checkpoints on the requested device and yield it.
+
+    When the caller leaves the with block, request shutdown of the model's
+    reconstruction pool if it still exists, including when the block raises.
     """
 
     from chefnmr2.infer import ChefNMR2
@@ -101,8 +110,13 @@ def receive_message(connection: Connection, max_frame_length=2 ** 20) -> Elucida
     """Read one inference request from a connected client and return an ElucidationRequest or None.
 
     This call blocks until the client sends a complete request or closes its
-    sending side. If the client closes between requests, return None. If the
-    initial socket check fails, log the error and return None to end the session.
+    sending side. There is no read timeout.
+
+    Request frames are limited to max_frame_length bytes, which defaults to 1 MiB.
+
+    If the client closes between requests, return None.
+
+    If the initial socket check fails, log the error and return None to end the session.
 
     If a byte is available, the initial check leaves it in place so
     connection.recv_bytes() can read the length header and the complete message.
@@ -159,11 +173,18 @@ def receive_message(connection: Connection, max_frame_length=2 ** 20) -> Elucida
         log.warning(f"Could not decode the request frame as UTF-8 JSON; {error = }")
         return None
 
+    # Invalid request fields are logged by the constructor. Its None result
+    # tells the serving loop to end this session.
     return ElucidationRequest.from_json_or_none(obj)
 
 
 def process_request(model: ChefNMR2, request: ElucidationRequest) -> ElucidationResult | ModelFailure:
-    """Run one elucidation on the loaded model and return the typed result."""
+    """Run one request on the loaded model and return its typed result.
+
+    Convert our peaks into upstream's Peaks and call model.elucidate() with
+    the formula, sample count, and seed. An exception during inference or
+    result construction becomes a ModelFailure carrying its type and message.
+    """
 
     from chefnmr2.infer import Peaks, ChefNMR2
 
@@ -187,6 +208,14 @@ def process_request(model: ChefNMR2, request: ElucidationRequest) -> Elucidation
 
 @swallow_any(Exception)
 def serve_connection(connection: Connection, model: ChefNMR2) -> None:
+    """Read requests sequentially and send each JSON reply on the same connection.
+
+    A ModelFailure is a reply, so the client can submit another request after
+    receiving one. If receive_message() returns None because the client
+    disconnected, reading failed, or the request could not be decoded or
+    constructed, stop the loop and return. Unexpected exceptions are logged
+    by swallow_any and end the session, allowing main() to clean up.
+    """
     log.info("Starting the inference-request loop")
 
     while (request := receive_message(connection)) is not None:
@@ -202,6 +231,7 @@ def serve_connection(connection: Connection, model: ChefNMR2) -> None:
 
 
 def parse_args() -> argparse.Namespace:
+    """Read the runner's session arguments and Compose's model configuration."""
     parser = argparse.ArgumentParser()
 
     # The SDK supervisor (nmr-provider-tools) supplies these when it launches worker.py,
@@ -223,10 +253,19 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+    """Prepare checkpoints, load the model, and serve the inherited connection.
+
+    After the request loop ends, leaving load_model() requests pool shutdown
+    and leaving Connection closes the inference descriptor. The worker then
+    exits, allowing the SDK runner to observe its exit and reap it.
+    """
+
     args = vars(parse_args())
+
     logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s pid=%(process)d %(message)s")
     log.setLevel(logging.INFO)
 
+    # ChefNMR2 takes each checkpoint's name, weights path, and configuration path.
     checkpoints = [
         # E.g., /weights/chefnmr2-epoch1399/{model.pt, config.yaml}
         (ckpt_dir.name, ckpt_dir / "model.pt", ckpt_dir / "config.yaml")
