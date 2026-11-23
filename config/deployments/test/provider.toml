@@ -1,0 +1,42 @@
+# ChefNMR2 provider configuration for the 'test' deployment.
+
+[offering]
+analysis_kind = "mol_from_1h_13c_formula"
+n_samples = 8
+seed = 0
+
+[runner]
+role = "chefnmr2"
+# Match the runner's --socket in docker/compose/inference.yaml and the lease file
+# created by docker/containers/inference/Dockerfile, both on the runner volume.
+socket = "/run/chefnmr2/runner.sock"
+lease_file = "/run/chefnmr2/.owner-session.lock"
+# Connection/greeting allowance. Model loading happens after worker launch.
+startup_seconds = 30
+retirement_seconds = 30
+
+[execution]
+backend = "thread"
+
+[execution.host]
+input_bytes = 8192
+result_bytes = 65536
+state_values = 1
+progress_records = 1
+initialization_seconds = 120
+retirement_seconds = 30
+
+[execution.operation_policy]
+queue_stop_request_seconds = 5
+execution_stop_request_seconds = 60
+cleanup_overdue_flag_seconds = 30
+reject_encoded_input_over_bytes = 8192
+reject_encoded_result_over_bytes = 65536
+
+# SDK resource accounting for the companion's socket operation.
+[[execution.resource_requirement]]
+kind = "cpu"
+amount = 1
+unit = "thread"
+selector = "generic"
+exclusive = false
