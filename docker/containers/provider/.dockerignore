@@ -1,0 +1,7 @@
+**
+!Dockerfile
+!.dockerignore
+!provider.py
+!manual.py
+!main.py
+!application.py

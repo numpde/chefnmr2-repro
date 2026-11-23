@@ -2,7 +2,7 @@
 
 import pathlib
 import tomllib
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
@@ -22,8 +22,13 @@ class Provider:
     inference: ScientificCall[ElucidationRequest, ElucidationResult]
     offering: dict
 
-    async def elucidate(self, elucidation: ElucidationRequest) -> ElucidationResult:
-        return await self.inference(scientific_input=elucidation)
+    async def elucidate(
+            self,
+            elucidation: ElucidationRequest,
+            *,
+            require_execution: Callable[[], None] | None = None,
+    ) -> ElucidationResult:
+        return await self.inference(scientific_input=elucidation, require_execution=require_execution)
 
 
 @asynccontextmanager

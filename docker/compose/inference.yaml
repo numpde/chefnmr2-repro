@@ -1,6 +1,41 @@
 name: chefnmr2-inference
 
 services:
+  manual:
+    profiles: [manual]
+    build:
+      context: ../containers/provider
+      additional_contexts:
+        shared: ../containers/_shared
+        dependency-pins: ../../requirements
+    command: [--config, /config/provider.toml]
+    entrypoint: [python, manual.py]
+    depends_on: [worker]
+    stdin_open: true
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3", compress: "true"}
+    init: true
+    stop_signal: SIGINT
+    stop_grace_period: 90s
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    cpus: 1
+    mem_limit: 512m
+    memswap_limit: 512m
+    pids_limit: 32
+    environment:
+      PROVIDER_CORE_IN_CONTAINER: "1"
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=64m
+    configs:
+      - source: test_provider
+        target: /config/provider.toml
+    volumes:
+      - runner:/run/chefnmr2:ro
+
   worker:
     build:
       context: ../containers/worker
@@ -55,6 +90,10 @@ services:
     volumes:
       - checkpoints:/checkpoints:ro
       - runner:/run/chefnmr2
+
+configs:
+  test_provider:
+    file: ../../config/deployments/test/provider.toml
 
 volumes:
   checkpoints:
