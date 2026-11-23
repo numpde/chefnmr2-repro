@@ -65,15 +65,12 @@ RUN install -d -m 700 -o 65532 -g 65532 /run/chefnmr2 \
     && install -m 600 -o 65532 -g 65532 /dev/null /run/chefnmr2/.owner-session.lock
 
 COPY --from=upstream chefnmr2/ ./chefnmr2/
-COPY worker.py ./
-COPY --from=shared wire.py ./
+COPY --from=shared binding.py wire.py ./
 
 USER 65532:65532
 
 # Compose supplies the socket path, working directories, shutdown budgets, and
-# child command, python /opt/inference/worker.py. When the provider adapter opens
-# a session, the runner launches that child and adds the connected socket
-# descriptor, lease descriptor, and operation identifier. The worker loads the
-# mounted checkpoints, handles requests on that connection, and exits when the
-# session ends.
+# child command, python -m provider_core.process_worker. The SDK worker loads
+# binding:construct with the deployment's model settings and owns the typed
+# operation protocol and contribution lifecycle.
 ENTRYPOINT ["python", "-m", "provider_core.runner"]

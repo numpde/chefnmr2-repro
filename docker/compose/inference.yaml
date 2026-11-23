@@ -28,13 +28,8 @@ services:
       - "10"
       - --
       - python
-      - /opt/inference/worker.py
-      - --device
-      - cpu
-      - --ckpt-dir
-      - /checkpoints/chefnmr2-epoch949
-      - --recon-workers
-      - "2"
+      - -m
+      - provider_core.process_worker
     logging:
       driver: local
       options: {max-size: "10m", max-file: "3", compress: "true"}
