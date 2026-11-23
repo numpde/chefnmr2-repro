@@ -5,8 +5,9 @@ import json
 import logging
 import os
 import socket
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager, suppress
+from functools import wraps
 from multiprocessing.connection import Connection
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -14,12 +15,29 @@ from typing import TYPE_CHECKING
 log = logging.getLogger(__name__)
 
 if __package__:
-    from .wire import ElucidationRequest, Peaks
+    from .wire import ElucidationRequest
 else:
-    from wire import ElucidationRequest, Peaks
+    from wire import ElucidationRequest
 
 if TYPE_CHECKING:
     from chefnmr2.infer import ChefNMR2
+
+
+def swallow_any[**P, R](*exceptions: type[Exception]) -> Callable[[Callable[P, R]], Callable[P, R | None]]:
+    """Log the traceback and return None when the function raises a matching exception."""
+
+    def decorate(function: Callable[P, R]) -> Callable[P, R | None]:
+        @wraps(function)
+        def wrapped(*args: P.args, **kwargs: P.kwargs) -> R | None:
+            try:
+                return function(*args, **kwargs)
+            except exceptions:
+                log.exception(f"{function.__qualname__} failed")
+                return None
+
+        return wrapped
+
+    return decorate
 
 
 @contextmanager
@@ -54,8 +72,7 @@ def load_model(
             model.recon_pool.shutdown()
 
 
-MAX_MESSAGE_BYTES = 2 * 1024 * 1024
-
+@swallow_any(Exception)
 def receive_message(frames: Connection) -> ElucidationRequest | None:
     """Read one inference request from a connected client and return an ElucidationRequest or None.
 
