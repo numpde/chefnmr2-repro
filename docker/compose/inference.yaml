@@ -1,0 +1,44 @@
+name: chefnmr2-inference
+
+services:
+  worker:
+    build:
+      context: ../containers/inference
+      additional_contexts:
+        upstream: ../../chefnmr2-upstream
+    command:
+      - --device
+      - cpu
+      - --ckpt-dir
+      - /checkpoints/chefnmr2-epoch949
+      - --socket-path
+      - /run/chefnmr2/worker.sock
+      - --recon-workers
+      - "2"
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3", compress: "true"}
+    init: true
+    stop_signal: SIGINT
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    cpus: 2
+    mem_limit: 8g
+    memswap_limit: 8g
+    pids_limit: 64
+    environment:
+      OMP_NUM_THREADS: "2"
+      MKL_NUM_THREADS: "2"
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,noexec,size=64m
+    volumes:
+      - checkpoints:/checkpoints:ro
+      - socket:/run/chefnmr2
+
+volumes:
+  checkpoints:
+    external: true
+    name: chefnmr2-weights_checkpoints
+  socket: {}
