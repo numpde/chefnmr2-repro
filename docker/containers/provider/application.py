@@ -12,10 +12,10 @@ from provider_core.interpreter import InterpretationFailed, InterpretationInputR
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
 
 if __package__:
-    from .._shared.wire import ElucidationRequest, ElucidationResult
+    from .._shared.wire import ElucidationBatch, ElucidationRequest, ElucidationResult, ModelFailure
     from .job_input import JobInput, interpret
 else:
-    from wire import ElucidationRequest, ElucidationResult
+    from wire import ElucidationBatch, ElucidationRequest, ElucidationResult, ModelFailure
     from job_input import JobInput, interpret
 
 
@@ -109,15 +109,28 @@ class ElucidationSession:
         self.prepared = None
 
         self.calculation = asyncio.create_task(
-            self.provider.elucidate(self.elucidation_input, require_execution=report_condition.require_execution),
+            self.provider.inference(
+                scientific_input=ElucidationBatch(requests=[self.elucidation_input]),
+                require_execution=report_condition.require_execution,
+            ),
         )
 
         try:
-            elucidation_result = await asyncio.shield(self.calculation)
+            batch_result = await asyncio.shield(self.calculation)
+            (elucidation_result,) = batch_result.replies
         except Exception as error:
             # An arbitrary worker/transport exception does not establish a public
             # scientific failure. The SDK retains the Attempt without inventing FAIL
             raise AnalysisOutcomeUnresolved("ChefNMR2 did not return a verified result") from error
+
+        if isinstance(elucidation_result, ModelFailure):
+            failure_codec = JsonDataclassCodec(format="chefnmr2.model_failure.v1", value_type=ModelFailure)
+
+            return AnalysisFailure(
+                "model_failed",
+                f"ChefNMR2 raised {elucidation_result.exception_type} while processing this input.",
+                ProtectedEvidence(failure_codec.format, failure_codec.encode(elucidation_result)),
+            )
 
         result_codec = JsonDataclassCodec(format="chefnmr2.elucidation_report.v1", value_type=ElucidationReport)
         content = result_codec.encode(ElucidationReport(input=self.supplied, elucidation=elucidation_result))

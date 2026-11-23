@@ -2,7 +2,7 @@
 
 import pathlib
 import tomllib
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 
@@ -11,24 +11,16 @@ from provider_core.scientific_call import ScientificCall
 
 if __package__:
     from .._shared.binding import Inference, construct
-    from .._shared.wire import ElucidationRequest, ElucidationResult
+    from .._shared.wire import ElucidationBatch, ElucidationBatchResult
 else:
     from binding import Inference, construct
-    from wire import ElucidationRequest, ElucidationResult
+    from wire import ElucidationBatch, ElucidationBatchResult
 
 
 @dataclass
 class Provider:
-    inference: ScientificCall[ElucidationRequest, ElucidationResult]
+    inference: ScientificCall[ElucidationBatch, ElucidationBatchResult]
     offering: dict
-
-    async def elucidate(
-            self,
-            elucidation: ElucidationRequest,
-            *,
-            require_execution: Callable[[], None] | None = None,
-    ) -> ElucidationResult:
-        return await self.inference(scientific_input=elucidation, require_execution=require_execution)
 
 
 @asynccontextmanager
@@ -45,6 +37,6 @@ async def open_provider(deployment_config_path: pathlib.Path) -> AsyncIterator[P
             contribution_type=Inference,
             constructor=construct,
             startup=deployment["model"],
-            method=Inference.elucidate,
+            method=Inference.elucidate_batch,
     ) as inference:
         yield Provider(inference=inference, offering=deployment["offering"])

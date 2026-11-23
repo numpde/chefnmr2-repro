@@ -7,9 +7,9 @@ from typing import TYPE_CHECKING
 import provider_core.scientific as sdk
 
 if __package__:
-    from .wire import ElucidationRequest, ElucidationResult
+    from .wire import ElucidationBatch, ElucidationBatchResult, ElucidationResult, ModelFailure
 else:
-    from wire import ElucidationRequest, ElucidationResult
+    from wire import ElucidationBatch, ElucidationBatchResult, ElucidationResult, ModelFailure
 
 if TYPE_CHECKING:
     from chefnmr2.infer import ChefNMR2
@@ -45,22 +45,33 @@ class Inference(sdk.Contribution):
         log.info("Model ready")
 
     @sdk.operation()
-    def elucidate(self, *, elucidation: ElucidationRequest) -> ElucidationResult:
-        """Sample and rank candidates; the SDK carries exceptions as failed operations."""
+    def elucidate_batch(self, *, batch: ElucidationBatch) -> ElucidationBatchResult:
+        """Run entries sequentially and retain each completed result or model exception."""
         from chefnmr2.infer import Peaks
 
-        log.info(f"Starting elucidation with {elucidation.n_samples=} and {elucidation.seed=}")
+        replies = []
 
-        elucidation_result = self.model.elucidate(
-            Peaks(c=elucidation.peaks.c, h=elucidation.peaks.h),
-            formula=elucidation.formula,
-            n_samples=elucidation.n_samples,
-            seed=elucidation.seed,
-        )
+        for (index, elucidation) in enumerate(batch.requests):
+            log.info(f"Starting batch entry {index=} with {elucidation.n_samples=} and {elucidation.seed=}")
 
-        log.info(f"Elucidation completed: {elucidation_result['n_valid']=}, {elucidation_result['n_samples']=}")
+            try:
+                elucidation_result = self.model.elucidate(
+                    Peaks(c=elucidation.peaks.c, h=elucidation.peaks.h),
+                    formula=elucidation.formula,
+                    n_samples=elucidation.n_samples,
+                    seed=elucidation.seed,
+                )
 
-        return ElucidationResult(**elucidation_result)
+                elucidation_reply = ElucidationResult(**elucidation_result)
+            except Exception as error:
+                log.exception(f"Batch entry failed; {index=}")
+                elucidation_reply = ModelFailure(exception_type=type(error).__name__, message=str(error))
+            else:
+                log.info(f"Batch entry completed: {index=}, {elucidation_reply.n_valid=}, {elucidation_reply.n_samples=}")
+
+            replies.append(elucidation_reply)
+
+        return ElucidationBatchResult(replies=replies)
 
     def close(self) -> None:
         """Join reconstruction workers before releasing the initialized model."""

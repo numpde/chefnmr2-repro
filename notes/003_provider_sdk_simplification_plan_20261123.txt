@@ -118,7 +118,7 @@ every provider migration is not a prerequisite for a first Chef/SDK release.
 
 1. Establish the baseline and simplify independent calls
 
-   [ ] Review and finish the existing Chef batch change separately from SDK
+   [x] Review and finish the existing Chef batch change separately from SDK
        simplification, preserving unrelated working-tree changes.
    [ ] Use reference-match and Chef as the first consumers. Trace Chef's
        create_task/shield/cancel/join/host-retirement sequence against existing

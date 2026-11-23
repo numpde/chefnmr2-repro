@@ -65,13 +65,21 @@ For manual model testing, use the separate client in the provider image:
 ```sh
 docker --context science compose -f docker/compose/inference.yaml --profile manual build worker manual
 docker --context science compose -f docker/compose/inference.yaml up -d --no-build worker
-printf '%s\n' '{"formula":"CH4","peaks":{"h":[[1.0,4,"s"]]}}' |
+printf '%s\n' '{"requests":[{"formula":"CH4","peaks":{"h":[[1.0,4,"s"]]}}]}' |
   docker --context science compose -f docker/compose/inference.yaml run --rm -T manual
 ```
 
 Stop the API provider before using the manual client: both use the same model
 runner. The manual client loads the model once for its input stream and writes
-one JSON result per line. Closing stdin retires its model session.
+one JSON batch reply per line. Closing stdin retires its model session.
+
+The worker accepts `{"requests": [...]}` and returns `{"replies": [...]}`. Entries
+run sequentially, and reply positions match request positions. A model exception
+produces an `exception_type`/`message` diagnostic for that entry; later entries
+still run. A lost worker or connection can lose the entire reply and does not
+authorize replay. SDK byte and execution limits apply to the whole batch. The API
+service still processes one job at a time, sending a one-entry batch; concurrent
+discovery and automatic batch assembly are not implemented.
 
 The SDK dependency files in `requirements/` are generated for CPython 3.13 on
 Linux/amd64. Each package has one selected wheel URL and hash. To update them,

@@ -2,19 +2,22 @@
 
 import asyncio
 from copy import deepcopy
+from dataclasses import asdict
 import json
+import sys
 import unittest
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, AnalysisSuccess
 from provider_core.chat_errors import ChatFailed
 from provider_core.hosting import CleanupObservation
 from provider_core.interpreter import Interpreter
-from provider_core.payload import JsonDataclassCodec
+from provider_core.payload import JsonDataclassCodec, PayloadRejected
 
 from application import ElucidationSession, ElucidationReport
-from wire import ElucidationResult
+from binding import Inference
+from wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ElucidationResult, ModelFailure, Peaks
 
 
 class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
@@ -38,9 +41,10 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
         self.provider = SimpleNamespace(
             offering={"n_samples": 8, "seed": 0},
-            elucidate=AsyncMock(return_value=self.scientific_result),
-            inference=SimpleNamespace(binding=SimpleNamespace(result_codec=self.result_codec), host=self.host),
+            inference=AsyncMock(return_value=ElucidationBatchResult(replies=[self.scientific_result])),
         )
+
+        self.provider.inference.host = self.host
 
         self.new_interpreter = Mock(side_effect=AssertionError("Structured input should not call an interpreter"))
         self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
@@ -63,8 +67,8 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual("CH4", report.input.formula)
         self.new_interpreter.assert_not_called()
 
-        invocation = self.provider.elucidate.call_args
-        elucidation = invocation.args[0]
+        invocation = self.provider.inference.call_args
+        (elucidation,) = invocation.kwargs["scientific_input"].requests
 
         self.assertEqual((8, 0, "CH4"), (elucidation.n_samples, elucidation.seed, elucidation.formula))
         self.assertIs(self.condition.require_execution, invocation.kwargs["require_execution"])
@@ -78,7 +82,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsInstance(outcome, AnalysisFailure)
         self.assertEqual("invalid_input", outcome.code)
-        self.provider.elucidate.assert_not_called()
+        self.provider.inference.assert_not_called()
 
     async def test_malformed_json_does_not_fall_back_to_prose(self):
         instructions = SimpleNamespace(identity="verified-input", specification_bytes=b'{"formula":')
@@ -86,7 +90,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertIsInstance(outcome, AnalysisFailure)
         self.new_interpreter.assert_not_called()
-        self.provider.elucidate.assert_not_called()
+        self.provider.inference.assert_not_called()
 
     def use_interpreter(self, proposals):
         endpoint = ScriptedEndpoint(proposals)
@@ -126,7 +130,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
         prepared = await self.prepare_prose()
 
-        self.provider.elucidate.assert_not_called()
+        self.provider.inference.assert_not_called()
         self.assertTrue(endpoint.retirement_confirmed)
 
         outcome = await self.session.execute(prepared, report_condition=self.condition)
@@ -135,8 +139,8 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual([10, 10], report.input.peaks.c)
         self.assertEqual([(1, 3, "s"), (2, 3, "s")], report.input.peaks.h)
         self.assertEqual(2, len(endpoint.requests))
-        self.assertEqual(8, self.provider.elucidate.call_args.args[0].n_samples)
-        self.provider.elucidate.assert_awaited_once()
+        self.assertEqual(8, self.provider.inference.call_args.kwargs["scientific_input"].requests[0].n_samples)
+        self.provider.inference.assert_awaited_once()
 
     async def test_model_problem_does_not_become_a_scientific_input_rejection(self):
         endpoint = self.use_interpreter([("report_interpretation_problem", {"explanation": "No molecular formula"})])
@@ -145,7 +149,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(outcome, AnalysisFailure)
         self.assertEqual("interpretation_failed", outcome.code)
         self.assertTrue(endpoint.retirement_confirmed)
-        self.provider.elucidate.assert_not_called()
+        self.provider.inference.assert_not_called()
 
     async def test_exhausted_endpoint_does_not_start_science_or_claim_invalid_input(self):
         endpoint = self.use_interpreter([])
@@ -155,7 +159,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(outcome, AnalysisFailure)
         self.assertEqual("interpretation_failed", outcome.code)
         self.assertTrue(endpoint.retirement_confirmed)
-        self.provider.elucidate.assert_not_called()
+        self.provider.inference.assert_not_called()
 
     async def test_revocation_during_interpretation_prevents_accepting_a_proposal(self):
         endpoint = self.use_interpreter([("submit_input", {"formula": "CH4", "peaks": {}})])
@@ -172,7 +176,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
             await self.prepare_prose()
 
         self.assertTrue(endpoint.retirement_confirmed)
-        self.provider.elucidate.assert_not_called()
+        self.provider.inference.assert_not_called()
 
     async def test_cancellation_retires_interpreter_without_starting_science(self):
         endpoint = self.use_interpreter([])
@@ -194,12 +198,12 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         await self.session.retire()
 
         self.assertTrue(endpoint.retirement_confirmed)
-        self.provider.elucidate.assert_not_called()
+        self.provider.inference.assert_not_called()
         self.host.retire.assert_not_called()
 
     async def test_unknown_scientific_failure_keeps_its_cause_and_retires_the_host(self):
         failure = OSError("Scientific connection failed")
-        self.provider.elucidate.side_effect = failure
+        self.provider.inference.side_effect = failure
         prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
 
         with self.assertRaises(AnalysisOutcomeUnresolved) as raised:
@@ -210,6 +214,63 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         await self.session.retire()
 
         self.host.retire.assert_called_once()
+
+    async def test_model_diagnostic_is_a_failure_for_its_job(self):
+        self.provider.inference.return_value = ElucidationBatchResult(replies=[ModelFailure("ValueError", "private diagnostic")])
+        prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
+        outcome = await self.session.execute(prepared, report_condition=self.condition)
+
+        self.assertIsInstance(outcome, AnalysisFailure)
+        self.assertEqual("model_failed", outcome.code)
+        self.assertNotIn("private diagnostic", outcome.message)
+
+        await self.session.retire()
+
+        self.host.retire.assert_not_called()
+
+    async def test_missing_batch_reply_is_unresolved_not_a_success(self):
+        self.provider.inference.return_value = ElucidationBatchResult(replies=[])
+        prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
+
+        with self.assertRaises(AnalysisOutcomeUnresolved):
+            await self.session.execute(prepared, report_condition=self.condition)
+
+    async def test_batch_wire_keeps_order_and_continues_after_model_failure(self):
+        first = deepcopy(self.scientific_result)
+        last = deepcopy(self.scientific_result)
+        first.params = {"seed": 11}
+        last.params = {"seed": 22}
+        worker = Inference(checkpoint_dirs=[], device="cpu", recon_workers=1)
+        worker.model = SimpleNamespace(elucidate=Mock(side_effect=[asdict(first), ValueError("bad formula"), asdict(last)]))
+        request_codec = JsonDataclassCodec(format="test.batch_input.v1", value_type=ElucidationBatch)
+        reply_codec = JsonDataclassCodec(format="test.batch_reply.v1", value_type=ElucidationBatchResult)
+
+        batch = ElucidationBatch(
+            requests=[
+                ElucidationRequest(formula="CH4", peaks=Peaks(), n_samples=8, seed=11),
+                ElucidationRequest(formula="invalid", peaks=Peaks(), n_samples=8, seed=0),
+                ElucidationRequest(formula="C2H6", peaks=Peaks(), n_samples=16, seed=22),
+            ],
+        )
+
+        with patch.dict(sys.modules, {"chefnmr2.infer": SimpleNamespace(Peaks=Peaks)}):
+            with self.assertLogs("binding", level="ERROR"):
+                replies = worker.elucidate_batch(batch=request_codec.decode(request_codec.encode(batch)))
+
+        decoded = reply_codec.decode(reply_codec.encode(replies))
+
+        self.assertEqual([first, ModelFailure("ValueError", "bad formula"), last], decoded.replies)
+
+        self.assertEqual(
+            [("CH4", 8, 11), ("invalid", 8, 0), ("C2H6", 16, 22)],
+            [
+                (call.kwargs["formula"], call.kwargs["n_samples"], call.kwargs["seed"])
+                for call in worker.model.elucidate.call_args_list
+            ],
+        )
+
+        with self.assertRaises(PayloadRejected):
+            request_codec.decode(b'{"formula":"CH4","peaks":{}}')
 
     async def test_cancelling_the_observer_leaves_original_science_for_retirement(self):
         started = asyncio.Event()
@@ -223,7 +284,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
             finally:
                 retired.set()
 
-        self.provider.elucidate.side_effect = held_science
+        self.provider.inference.side_effect = held_science
         prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
         observer = asyncio.create_task(self.session.execute(prepared, report_condition=self.condition))
 

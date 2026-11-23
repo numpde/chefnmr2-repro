@@ -1,4 +1,4 @@
-"""Request and result data for one ChefNMR2 elucidation.
+"""Batched worker requests and replies for ChefNMR2 elucidation.
 
 Only Peaks mirrors an upstream dataclass. ElucidationRequest groups the arguments
 to ChefNMR2.elucidate(). ElucidateResult describes its return dictionary, and
@@ -95,3 +95,29 @@ class ElucidationResult:
     ensemble: dict[str, JsonValue]
     params: dict[str, JsonValue]
     adaptive: dict[str, JsonValue] | None = None
+
+
+@dataclass
+class ModelFailure:
+    """A completed model call raised; its diagnostic belongs to this batch entry."""
+
+    exception_type: str
+    message: str
+
+
+@dataclass
+class ElucidationBatch:
+    """Requests processed sequentially in their supplied order."""
+
+    requests: list[ElucidationRequest]
+
+
+@dataclass
+class ElucidationBatchResult:
+    """One reply per request, in the same order; model failures do not stop later entries.
+
+    A process or transport failure can prevent the entire reply from arriving.
+    That does not authorize replaying a batch whose earlier entries may have run.
+    """
+
+    replies: list[ElucidationResult | ModelFailure]
