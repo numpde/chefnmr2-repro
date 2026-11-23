@@ -2,6 +2,7 @@
 # Only this service receives the signing credential and API socket grants.
 services:
   provider:
+    image: chefnmr2-inference-provider
     platform: linux/amd64
     build:
       context: ../containers/provider
@@ -9,7 +10,9 @@ services:
         shared: ../containers/_shared
         dependency-pins: ../../requirements
     command: [--config, /config/provider.toml]
-    depends_on: [worker]
+    depends_on:
+      worker: {condition: service_started}
+      interpreter-proxy: {condition: service_healthy}
     logging:
       driver: local
       options: {max-size: "10m", max-file: "3", compress: "true"}
@@ -38,6 +41,7 @@ services:
     volumes:
       - runner:/run/chefnmr2:ro
       - provider-lifetime:/run/chefnmr2-provider
+      - interpreter-socket:/run/chefnmr2-interpreter:ro
       - type: volume
         source: credentials
         target: /run/chefnmr2-credentials
@@ -54,14 +58,67 @@ services:
         read_only: true
         volume: {nocopy: true}
 
+  # Give only the SDK proxy external networking. Its CONNECT policy admits the
+  # interpreter authority; TLS and the interpreter credential stay in provider.
+  interpreter-proxy:
+    image: chefnmr2-inference-provider
+    platform: linux/amd64
+    entrypoint: [python, -m, provider_core.provider_proxy]
+    command:
+      - --mode
+      - external
+      - --interface
+      - eth0
+      - --authority
+      - api.openai.com:443
+      - --socket
+      - /run/chefnmr2-interpreter/proxy.sock
+      - --ready-file
+      - /run/chefnmr2-interpreter/ready
+      - --status-directory
+      - /run/status
+      - --log-level
+      - INFO
+    init: true
+    read_only: true
+    cap_drop: [ALL]
+    # The SDK binds outbound sockets to the selected interface.
+    cap_add: [NET_RAW]
+    security_opt: [no-new-privileges:true]
+    networks: [interpreter-egress]
+    configs:
+      - source: interpreter_dns
+        target: /etc/resolv.conf
+    cpus: 0.5
+    mem_limit: 128m
+    memswap_limit: 128m
+    pids_limit: 32
+    environment:
+      PROVIDER_CORE_IN_CONTAINER: "1"
+    tmpfs:
+      - /run/status:rw,nosuid,nodev,noexec,size=1m,uid=65532,gid=65532,mode=0700
+    volumes:
+      - interpreter-socket:/run/chefnmr2-interpreter
+    healthcheck:
+      test: [CMD, python, -c, "from pathlib import Path; assert Path('/run/chefnmr2-interpreter/ready').is_file()"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    logging:
+      driver: local
+      options: {max-size: "10m", max-file: "3", compress: "true"}
+
 configs:
   localhost_provider:
     file: ../../config/deployments/localhost/provider.toml
   localhost_api_ca:
     file: ${CHEFNMR2_API_CA:?Set CHEFNMR2_API_CA to the localhost API CA certificate}
+  interpreter_dns:
+    file: ${CHEFNMR2_DNS_CONFIG:?Set CHEFNMR2_DNS_CONFIG to the captured non-loopback DNS configuration}
 
 volumes:
   provider-lifetime: {}
+  interpreter-socket: {}
   credentials:
     external: true
     name: chefnmr2-inference_credentials
@@ -71,3 +128,6 @@ volumes:
   api-outbox:
     external: true
     name: nmr-api-delivery-outbox-socket
+
+networks:
+  interpreter-egress: {}

@@ -3,38 +3,48 @@
 import asyncio
 from dataclasses import dataclass
 from hashlib import sha256
+import logging
 
 from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, AnalysisSuccess, PreparedAnalysis
 from provider_core.attempt_record import ProtectedEvidence
 from provider_core.hosting import settle_cleanup
+from provider_core.interpreter import InterpretationFailed, InterpretationInputRejected
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
 
 if __package__:
-    from .._shared.wire import ElucidationRequest, Peaks
+    from .._shared.wire import ElucidationRequest, ElucidationResult
+    from .job_input import JobInput, interpret
 else:
-    from wire import ElucidationRequest, Peaks
+    from wire import ElucidationRequest, ElucidationResult
+    from job_input import JobInput, interpret
+
+
+log = logging.getLogger(__name__)
 
 
 @dataclass
-class JobInput:
-    """Scientific observations; the deployment owns sampling budget and seed."""
+class ElucidationReport:
+    """Expose the actual observations used, including after prose interpretation."""
 
-    formula: str
-    peaks: Peaks
+    input: JobInput
+    elucidation: ElucidationResult
 
 
 class ElucidationSession:
     """Own one Attempt's input and call while the provider retains the model."""
 
-    def __init__(self, provider):
+    def __init__(self, provider, *, new_interpreter):
         self.provider = provider
+        self.new_interpreter = new_interpreter
+        self.interpreter = None
+        self.supplied = None
         self.codec = JsonDataclassCodec(format="chefnmr2.job_input.v1", value_type=JobInput)
         self.prepared = None
         self.elucidation_input = None
         self.calculation = None
 
     async def prepare(self, acknowledged, instructions, *, report_condition):
-        """Decode the verified API input without allocating scientific work."""
+        """Route JSON directly; interpret prose before allocating scientific work."""
 
         if acknowledged.start.input != instructions.identity:
             raise ValueError(f"{acknowledged.start.input=} should match {instructions.identity=}")
@@ -42,13 +52,42 @@ class ElucidationSession:
         evidence = ProtectedEvidence("chefnmr2.input_digest.v1", sha256(instructions.specification_bytes).hexdigest().encode())
 
         try:
-            supplied = self.codec.decode(instructions.specification_bytes)
-        except PayloadRejected:
+            source = instructions.specification_bytes.decode("utf-8")
+
+            # Structured-looking input stays on the JSON path, even if malformed
+            if source.lstrip().startswith(("{", "[")):
+                supplied = self.codec.decode(instructions.specification_bytes)
+            else:
+                self.interpreter = self.new_interpreter()
+
+                log.info("Interpreting the job specification")
+
+                try:
+                    supplied = await interpret(
+                        self.interpreter,
+                        source,
+                        codec=self.codec,
+                        require_execution=report_condition.require_execution,
+                    )
+                finally:
+                    await self.interpreter.retire()
+
+                log.info("Job interpretation accepted")
+        except (PayloadRejected, UnicodeDecodeError):
             return AnalysisFailure(
                 "invalid_input",
-                'Expected JSON with "formula" and "peaks": carbon shifts in "c" and proton [ppm, integration, multiplicity] triples in "h". Sampling settings belong to the deployment.',
+                'Expected UTF-8 prose or JSON with "formula" and "peaks": carbon shifts in "c" and proton [ppm, integration, multiplicity] triples in "h". Sampling settings belong to the deployment.',
                 evidence,
             )
+        except (InterpretationFailed, InterpretationInputRejected):
+            return AnalysisFailure(
+                "interpretation_failed",
+                "The interpreter did not establish a complete formula and peak set. This does not establish that the scientific input is invalid; you can submit explicit formula/peaks JSON.",
+                evidence,
+            )
+
+        report_condition.require_execution()
+        self.supplied = supplied
 
         self.elucidation_input = ElucidationRequest(
             formula=supplied.formula,
@@ -80,14 +119,18 @@ class ElucidationSession:
             # scientific failure. The SDK retains the Attempt without inventing FAIL
             raise AnalysisOutcomeUnresolved("ChefNMR2 did not return a verified result") from error
 
-        content = self.provider.inference.binding.result_codec.encode(elucidation_result)
+        result_codec = JsonDataclassCodec(format="chefnmr2.elucidation_report.v1", value_type=ElucidationReport)
+        content = result_codec.encode(ElucidationReport(input=self.supplied, elucidation=elucidation_result))
         evidence = ProtectedEvidence("chefnmr2.result_digest.v1", sha256(content).hexdigest().encode())
 
-        return AnalysisSuccess("chefnmr2.elucidation_result.v1", content, evidence)
+        return AnalysisSuccess(result_codec.format, content, evidence)
 
     async def retire(self):
         """Join the original call; withdraw the model after interrupted or failed work."""
         self.prepared = None
+
+        if self.interpreter is not None:
+            await self.interpreter.retire()
 
         if self.calculation is None:
             return

@@ -2,7 +2,7 @@
 
 [offering]
 analysis_kind = "mol_from_1h_13c_formula"
-description = 'Test offering: JSON with "formula" and "peaks" (carbon shifts in "c", proton [ppm, integration, multiplicity] triples in "h"). Uses eight samples and seed 0.'
+description = 'Structure inference from a molecular formula and NMR peaks supplied as prose or formula/peaks JSON. Text only; attachments are not read. Uses eight samples and seed 0. Reports the interpreted input alongside the model result.'
 n_samples = 8
 seed = 0
 
@@ -80,3 +80,27 @@ observation_seconds = 1
 recovery_seconds = 90
 retry_max_seconds = 30
 settle_seconds = 10
+
+# Each job gets a fresh conversation; the SDK shares endpoint retry delays.
+[interpreter.policy]
+interpretation_budget_seconds = 120
+reject_combined_messages_and_tools_over_bytes = 32768
+end_model_visit_after_turns = 6
+end_model_visit_after_rejections = 3
+total_http_attempts_per_turn = 2
+connection_timeout_seconds = 10
+retain_history_up_to_bytes = 131072
+retain_history_up_to_records = 16
+
+[interpreter.transport]
+retirement_seconds = 10
+request_bytes = 65536
+response_bytes = 32768
+proxy_socket = "/run/chefnmr2-interpreter/proxy.sock"
+
+[[interpreter.endpoints]]
+configuration_id = "localhost-primary"
+url = "https://api.openai.com/v1/chat/completions"
+model = "gpt-5.6-luna"
+reasoning_effort = "none"
+key_file = "/run/chefnmr2-credentials/interpreter.key"

@@ -21,9 +21,11 @@ from provider_core.validation.upstream.nmr.v1.hello import AnalysisOffering
 if __package__:
     from .application import ElucidationSession
     from .provider import open_provider
+    from .job_input import configure_interpreter
 else:
     from application import ElucidationSession
     from provider import open_provider
+    from job_input import configure_interpreter
 
 
 async def serve(*, config: pathlib.Path) -> None:
@@ -33,6 +35,7 @@ async def serve(*, config: pathlib.Path) -> None:
     (settings, provider_ref, publication) = api_settings_with_material(deployment["api"], read_startup_file)
     grants = SharedGrants(**deployment["shared"])
     settings = replace(settings, http=replace(settings.http, proxy_socket=str(grants.proxy_socket)))
+    new_interpreter = configure_interpreter(deployment["interpreter"])
     stopping = asyncio.Event()
     loop = asyncio.get_running_loop()
 
@@ -63,7 +66,7 @@ async def serve(*, config: pathlib.Path) -> None:
                 description="Molecular structure candidates from a formula and unassigned proton/carbon NMR peaks. https://github.com/numpde/chefnmr2-repro",
                 host=provider.inference.host,
                 policy=JobServicePolicy(**deployment["service"]["policy"]),
-                new_session=lambda: ElucidationSession(provider),
+                new_session=lambda: ElucidationSession(provider, new_interpreter=new_interpreter),
                 new_api=new_api,
                 new_delivery=new_delivery,
                 stopping=stopping,
