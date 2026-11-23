@@ -2,7 +2,7 @@ Provider SDK simplification and batch execution plan
 ===================================================
 
 Date: 2026-11-23
-Status: steps 1-2 complete; steps 3-6 planned
+Status: steps 1-2 complete; step 3 in progress; steps 4-6 planned
 
 Purpose
 -------
@@ -802,6 +802,54 @@ Migration and verification
 [ ] Commit coherent verified slices with rationale and validation. Release a
     qualified SDK version, update immutable consumer pins/locks, rebuild, then
     qualify deployments. Local sibling checkouts must not become runtime inputs.
+
+Batch 3 recovery migration — started 2026-11-24
+----------------------------------------------
+
+First consumer: NMRNet. Restore its original test baseline, then move prediction
+acquisition, replacement and retirement to SDK ownership. Keep source selection,
+geometry generation, admitted scientific identities and result mapping local.
+The complete batch 3 checklist still includes the other selected consumers;
+NMRNet alone cannot close it.
+
+Priority clarification (2026-11-24): settle the SDK interface and capabilities
+pragmatically; NMRNet migration proceeds in parallel against that contract.
+Use focused proofs for actual ownership and replay risks, without expanding a
+validation matrix before consumers can use the interface.
+
+SDK commits so far: 3eeed6ad makes operation declarations authorize exact
+retryable failures; 41e0f0c6 adds one optional total_seconds invocation budget.
+78fef221 preserves NMRNet's existing 2 MiB payload support. e64c0db9 adds worker
+replacement through open_process_call, preserving one retry loop and moving
+worker acquisition/retirement out of provider code. The managed call serializes
+invocations, keeps the original encoded input across retry, confirms retirement
+before replacement, and compares optional scientific runtime evidence before
+redispatch. Interrupted replacement remains owned until context cleanup.
+
+Focused SDK lanes pass: scientific_call (22), process_lifecycle (20),
+process_wire (24), all through the installed container test lane. This settles
+the SDK interface for parallel NMRNet migration; it does not establish consumer
+migration completion, publication or deployment. A committed-source local
+candidate was built from e64c0db957526c8bad4925c0cbed51f4303a02f2 without
+overwriting published release artifacts. Its wheel SHA256 is
+398fa45eb7c853332268af9d471492ede583ccb4a3b105a3b67228fc84947002.
+It retains the development tree's 0.7.2 metadata and is not the published 0.7.2
+release; consumer qualification must select this candidate by its hash.
+
+The missing provider_core-0.6.19.tar.gz was found in the SDK's existing local
+release-artifacts/v0.6.19/requalified/artifacts directory. Its SHA256 equals the
+NMRNet release record (75d3b6914d1656d5ad7666ae2a8d27b6df293ae77c2bc9f02edc55ad3722c9db).
+Restored that exact archive to the selected offline pool, without changing pins.
+The original test/integration/provider-core/output lane now passes all 43 tests
+with DOCKER_CONTEXT=science WHEELHOUSE=/home/ra/Downloads/wheelhouse. This clears
+the missing-dependency gate recorded below; it is not migration qualification.
+
+Additional migration obligation: H prediction can complete before C fails for
+the same geometry, even when no whole geometry result has completed. Preserve
+those facts and do not replay the whole collection after a completed head.
+SDK retry eligibility must distinguish that failure from one before any head
+completed.
+
 
 Batch 2 preparation decisions — 2026-11-23
 -----------------------------------------
