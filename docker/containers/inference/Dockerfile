@@ -22,9 +22,10 @@ PY
 # Download the published SDK wheel and verify its checksum. The final stage
 # installs this verified wheel offline.
 FROM base AS supervisor
-ADD --checksum=sha256:d45e82d05786e727ddcdaec739f18e3a0f96ed679ffba413db435e6afdf825bf \
-    https://github.com/numpde/nmr-provider-tools/releases/download/v0.6.21/provider_core-0.6.21-py3-none-any.whl \
-    /wheels/
+RUN --mount=from=dependency-pins,source=provider-core.txt,target=/tmp/provider-core.txt \
+    --mount=type=cache,target=/root/.cache/pip \
+    python -m pip download --timeout 120 --no-index --no-deps --require-hashes \
+    --dest /wheels -r /tmp/provider-core.txt
 
 # Assemble the runtime filesystem. The temporary stages supply dependency lists
 # and the SDK wheel, while package installations share this stage's Python.

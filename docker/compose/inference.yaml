@@ -6,6 +6,7 @@ services:
       context: ../containers/inference
       additional_contexts:
         upstream: ../../chefnmr2-upstream
+        dependency-pins: ../../requirements
     command:
       - --role
       - chefnmr2

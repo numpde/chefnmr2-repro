@@ -1,0 +1,2 @@
+provider-core @ https://github.com/numpde/nmr-provider-tools/releases/download/v0.6.21/provider_core-0.6.21-py3-none-any.whl \
+    --hash=sha256:d45e82d05786e727ddcdaec739f18e3a0f96ed679ffba413db435e6afdf825bf
