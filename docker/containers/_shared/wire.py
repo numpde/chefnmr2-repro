@@ -5,11 +5,10 @@ to ChefNMR2.elucidate(). ElucidateResult describes its return dictionary, and
 CandidateVotes and RankedCandidate describe the candidate dictionaries inside it.
 """
 
-import logging
 from dataclasses import dataclass, field
-from typing import Literal, Self, TypedDict
-
-log = logging.getLogger(__name__)
+from typing import Literal
+from typing_extensions import TypedDict
+from pydantic import JsonValue
 
 
 @dataclass
@@ -48,35 +47,6 @@ class ElucidationRequest:
     n_samples: int | Literal["adaptive"] = 100
     seed: int | None = 0
 
-    @classmethod
-    def from_json_or_none(cls, obj: object) -> Self | None:
-        """Construct a request from decoded JSON, logging construction failures."""
-        if not isinstance(obj, dict):
-            log.warning(f"Expected a JSON object, got {type(obj)=}")
-            return None
-
-        message = obj.copy()
-
-        try:
-            peaks = Peaks(**message.pop("peaks"))
-        except KeyError:
-            log.warning(f"Missing field 'peaks' in {obj.keys()=}")
-            return None
-        except TypeError as error:
-            log.warning(f"Could not construct `Peaks` from the 'peaks' field; {error = }")
-            return None
-
-        try:
-            peaks.h = [(ppm, integration, multiplicity) for (ppm, integration, multiplicity) in peaks.h]
-        except (TypeError, ValueError) as error:
-            log.warning(f"Could not unpack `peaks.h` into (ppm, integration, multiplicity) triples; {error = }")
-            return None
-
-        try:
-            return cls(peaks=peaks, **message)
-        except TypeError as error:
-            log.warning(f"Could not construct {cls} from {obj.keys()=}; {error = }")
-            return None
 
 
 class CandidateVotes(TypedDict):
@@ -122,14 +92,6 @@ class ElucidationResult:
     validity: float
     status_counts: dict[str, int]
     timing_s: dict[str, float]
-    ensemble: dict[str, object]
-    params: dict[str, object]
-    adaptive: dict[str, object] | None = None
-
-
-@dataclass
-class ModelFailure:
-    """Diagnostic returned when ChefNMR2.elucidate() raises an exception."""
-
-    exception_type: str
-    message: str
+    ensemble: dict[str, JsonValue]
+    params: dict[str, JsonValue]
+    adaptive: dict[str, JsonValue] | None = None

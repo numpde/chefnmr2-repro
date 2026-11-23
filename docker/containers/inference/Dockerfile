@@ -65,7 +65,8 @@ RUN install -d -m 700 -o 65532 -g 65532 /run/chefnmr2 \
     && install -m 600 -o 65532 -g 65532 /dev/null /run/chefnmr2/.owner-session.lock
 
 COPY --from=upstream chefnmr2/ ./chefnmr2/
-COPY worker.py wire.py ./
+COPY worker.py ./
+COPY --from=shared wire.py ./
 
 USER 65532:65532
 

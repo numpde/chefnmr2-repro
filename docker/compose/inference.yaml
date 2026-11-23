@@ -5,6 +5,7 @@ services:
     build:
       context: ../containers/inference
       additional_contexts:
+        shared: ../containers/_shared
         upstream: ../../chefnmr2-upstream
         dependency-pins: ../../requirements
     command:

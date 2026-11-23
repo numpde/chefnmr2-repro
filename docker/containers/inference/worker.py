@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING
 log = logging.getLogger(__name__)
 
 if __package__:
-    from .wire import ElucidationResult, ElucidationRequest, ModelFailure
+    from .._shared.wire import ElucidationResult, ElucidationRequest, ModelFailure
 else:
     from wire import ElucidationResult, ElucidationRequest, ModelFailure
 

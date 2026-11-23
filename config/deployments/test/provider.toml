@@ -15,8 +15,13 @@ lease_file = "/run/chefnmr2/.owner-session.lock"
 startup_seconds = 30
 retirement_seconds = 30
 
+[model]
+checkpoint_dirs = ["/checkpoints/chefnmr2-epoch949"]
+device = "cpu"
+recon_workers = 2
+
 [execution]
-backend = "thread"
+backend = "process"
 
 [execution.host]
 input_bytes = 8192
@@ -33,7 +38,7 @@ cleanup_overdue_flag_seconds = 30
 reject_encoded_input_over_bytes = 8192
 reject_encoded_result_over_bytes = 65536
 
-# SDK resource accounting for the companion's socket operation.
+# SDK admission accounts for the model operation. Compose enforces container limits.
 [[execution.resource_requirement]]
 kind = "cpu"
 amount = 1
