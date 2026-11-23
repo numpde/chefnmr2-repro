@@ -2,7 +2,7 @@ Provider SDK simplification and batch execution plan
 ===================================================
 
 Date: 2026-11-23
-Status: step 1 complete; steps 2-6 planned
+Status: step 1 complete; step 2 in progress; steps 3-6 planned
 
 Purpose
 -------
@@ -214,6 +214,21 @@ separate gates from local implementation completion.
         cleanup wrapper without a distinct obligation leaves this batch open.
 
 2. Investigate preparation boundaries before changing their implementation
+
+   Decision rule (user clarification, 2026-11-23): existing behavior is evidence,
+   not automatically a compatibility requirement. Preserve behavior when it
+   serves scientific identity, an intentional product policy, or a concrete
+   ownership/recovery obligation. Treat opaque handles, repeated validation,
+   custom wire exchanges and provider lifecycle wrappers as replaceable means.
+   A model-required representation stays; an admission rule that accepts input
+   the model cannot consume is a defect, not a contract to reproduce.
+
+   For each provider, explicitly select what to keep, simplify or remove, with
+   the reason and the resulting acceptance cases. Compare the facts that matter,
+   not incidental object identity or every legacy intermediate. Measurements
+   should resolve a consequential choice; do not expand them merely to reproduce
+   every historical path. Changed intentional behavior must be documented, not
+   concealed by removing a test. Implement selected changes in later batches.
 
    [ ] Evaluate NMRPeak's validate/predict boundary using captured input bytes
        and the same pinned model, tokenizer, dictionary and encoding settings.
