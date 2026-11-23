@@ -1,18 +1,17 @@
 from __future__ import annotations
 
 import argparse
-import fcntl
 import json
 import logging
 import os
 import socket
-import stat
 from collections.abc import Callable, Iterator
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
 from dataclasses import asdict
 from functools import wraps
 from multiprocessing.connection import Connection
 from pathlib import Path
+from time import monotonic
 from typing import TYPE_CHECKING
 
 log = logging.getLogger(__name__)
@@ -53,9 +52,10 @@ def load_model(
     """Load the model once, keep it available while the worker serves requests,
     and shut down any reconstruction workers when context exists.
     """
+
     from chefnmr2.infer import ChefNMR2
 
-    log.info(f"Loading {len(checkpoints)} checkpoint(s) on {device}")
+    log.info(f"Loading {len(checkpoints)=} on {device=} with {recon_workers=}")
     model = ChefNMR2(checkpoints, device=device, recon_workers=recon_workers)
 
     try:
@@ -64,19 +64,20 @@ def load_model(
 
         # If `python worker.py` is killed with SIGKILL, the finally block never runs.
         # If Compose service uses `init: true` then `docker-init` is PID 1 inside the container.
-        # When its main child worker.py dies, docker-init exits.
+        # When its main child, the SDK supervisor, dies, docker-init exits.
         # Linux then kills any pool processes still running in that PID namespace.
 
         # `init: true` tells Docker to start a small program called docker-init first.
-        # Linux assigns that first process PID 1 inside the container. docker-init then starts python worker.py as its child. The process tree looks like this:
+        # Linux assigns that first process PID 1 inside the container. docker-init starts the SDK supervisor, which starts python worker.py. The process tree looks like this:
         #
         # docker-init                 PID 1
-        # └── python worker.py        serves inference requests
-        #     └── ReconPool processes reconstruct molecules
+        # └── SDK supervisor          owns the worker session
+        #     └── python worker.py    serves inference requests
+        #         └── ReconPool processes reconstruct molecules
         #
-        # When Docker sends SIGTERM to stop the container, docker-init forwards it to worker.py.
-        # If worker.py dies while a reconstruction process is still running,
-        # `docker-init` exits when it sees that its main child has died.
+        # Docker forwards the stop signal through docker-init to the SDK supervisor.
+        # The supervisor terminates and reaps worker.py during session retirement.
+        # docker-init exits when the supervisor exits.
         # Linux then kills any processes left in the container’s PID namespace.
 
         if model.recon_pool is None:
@@ -91,11 +92,12 @@ def load_model(
             #    https://github.com/numpde/fork-of-chefnmr2/blob/29374e57952684533d266832288413ba87c5d809/chefnmr2/infer/api.py#L541-L566
             pass
         else:
+            log.info("Shutting down reconstruction pool")
             model.recon_pool.shutdown()
 
 
 @swallow_any(Exception)
-def receive_message(connection: Connection) -> ElucidationRequest | None:
+def receive_message(connection: Connection, max_frame_length=2 ** 20) -> ElucidationRequest | None:
     """Read one inference request from a connected client and return an ElucidationRequest or None.
 
     This call blocks until the client sends a complete request or closes its
@@ -135,13 +137,15 @@ def receive_message(connection: Connection) -> ElucidationRequest | None:
         # Once a byte is present, EOF before recv_bytes() finishes that frame means truncation.
         with socket.fromfd(connection.fileno(), socket.AF_UNIX, socket.SOCK_STREAM) as sock:
             if not sock.recv(1, socket.MSG_PEEK):
+                log.info("Client closed its sending side between requests")
                 return None
     except OSError as error:
         log.warning(f"Could not check for the next request; {error = }")
         return None
 
     try:
-        request_frame = connection.recv_bytes()
+        request_frame = connection.recv_bytes(maxlength=max_frame_length)
+        log.info(f"Received request frame of {len(request_frame)} bytes")
     except EOFError:
         log.warning("Client closed before sending the complete request frame")
         return None
@@ -167,102 +171,60 @@ def process_request(model: ChefNMR2, request: ElucidationRequest) -> Elucidation
     assert type(request) == ElucidationRequest
 
     try:
+        log.info(f"Starting `model.elucidate` with {request.n_samples=} and {request.seed=}")
+
         result = model.elucidate(
             Peaks(c=request.peaks.c, h=request.peaks.h),
             formula=request.formula,
             n_samples=request.n_samples,
             seed=request.seed,
         )
+
+        return ElucidationResult(**result)
     except Exception as error:
         return ModelFailure(exception_type=type(error).__name__, message=str(error))
-
-    return ElucidationResult(**result)
 
 
 @swallow_any(Exception)
 def serve_connection(connection: Connection, model: ChefNMR2) -> None:
+    log.info("Starting the inference-request loop")
+
     while (request := receive_message(connection)) is not None:
+        started = monotonic()
+
         response = process_request(model, request)
+        log.info(f"Got {type(response)=} after {monotonic() - started:.2f} seconds")
 
         msg_bytes = json.dumps(asdict(response), allow_nan=False).encode("utf-8")
+
+        log.debug(f"Sending {len(msg_bytes)=} bytes")
         connection.send_bytes(msg_bytes)
-        if isinstance(response, ModelFailure):
-            log.warning(f"Sent model failure ({response.exception_type})")
-        else:
-            log.info(f"Sent inference result with {response.n_valid}/{response.n_samples} valid samples")
-
-
-def serve_to(listener: socket.socket, **kw) -> None:
-    # Start/re-start queuing incoming connections for the bound Unix socket.
-    # Non-blocking.
-    listener.listen(kw.pop("max_pending_connections"))
-
-    with load_model(**kw) as model:
-        log.info(f"Model loaded; accepting requests on {listener.getsockname()}")
-        while True:
-            # Blocks until a client connects.
-            # Returns a separate socket for talking to it.
-            (client_socket, _) = listener.accept()
-
-            # `detach` leaves the descriptor open and relinquishes it (client_socket can no longer close it).
-            # `Connection` takes ownership and uses it for recv_bytes() and send_bytes().
-            with Connection(client_socket.detach()) as connection:
-                serve_connection(connection, model=model)
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--socket-path", required=True, type=Path)
-    parser.add_argument("--lock-path", required=True, type=Path)
+
+    # The SDK supervisor (nmr-provider-tools) supplies these when it launches worker.py,
+    # passing both open descriptors through subprocess.Popen(pass_fds=...)
+
+    # Connected socket for receiving inference requests and sending replies.
+    parser.add_argument("--session-fd", required=True, type=int)
+    # Descriptor carrying the supervisor's session lock; keep open through process exit.
+    parser.add_argument("--lease-fd", required=True, type=int)
+
+    # Unique session identifier generated by the supervisor and included in the startup log.
+    parser.add_argument("--operation", required=True)
+
     parser.add_argument("--ckpt-dir", required=True, type=Path, action="append")  # collects repeated args
     parser.add_argument("--device", required=True)
     parser.add_argument("--recon-workers", type=int)
-    parser.add_argument("--max-pending-connections", type=int, default=socket.SOMAXCONN)
+
     return parser.parse_args()
 
 
-@contextmanager
-def worker_lock(lock_path: Path) -> Iterator[None]:
-    with lock_path.open("a") as lock:
-        # `python worker.py` holds this lock. ChefNMR2's ReconPool forks CPU processes
-        # to turn sampled atom features into SMILES. They inherit the open descriptor
-        # but not the lock. When `python worker.py` exits or is killed, Linux releases
-        # its lock even if those CPU processes keep running.
-
-        # This raises if the lock is held by another process
-        fcntl.lockf(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        yield
-
-
-@contextmanager
-def worker_listener(socket_path: Path) -> Iterator[socket.socket]:
-    """Bind the socket while the caller holds worker_lock and release its pathname on exit."""
-    with socket.socket(socket.AF_UNIX) as listener:
-
-        # Remove a stale socket. Leave every other entry in place for bind() to reject.
-        with suppress(FileNotFoundError):
-            if stat.S_ISSOCK(socket_path.lstat().st_mode):
-                socket_path.unlink()
-
-        # Creates a Unix socket entry at socket_path and assigns that address to listener
-        listener.bind(str(socket_path))
-
-        # During cleanup below, os.path.samestat() compares the saved device and inode numbers
-        # with those currently at socket_path (bound_entry). If they match, unlink the path.
-        # The check and unlink are separate operations, so a replacement between them is still possible.
-        bound_entry = socket_path.lstat()
-
-        try:
-            yield listener
-        finally:
-            with suppress(FileNotFoundError):
-                if os.path.samestat(bound_entry, socket_path.lstat()):
-                    socket_path.unlink()
-
-
 def main() -> None:
-    args = vars(parse_args()).copy()
-    logging.basicConfig(level=logging.WARNING, format="%(levelname)s %(name)s %(message)s")
+    args = vars(parse_args())
+    logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(levelname)s %(name)s pid=%(process)d %(message)s")
     log.setLevel(logging.INFO)
 
     checkpoints = [
@@ -271,9 +233,24 @@ def main() -> None:
         for ckpt_dir in args.pop('ckpt_dir')
     ]
 
-    with worker_lock(args.pop("lock_path")):
-        with worker_listener(args.pop('socket_path')) as listener:
-            serve_to(listener, checkpoints=checkpoints, **args)
+    # The SDK runner (provider_core.runner in nmr-provider-tools) creates a socket pair
+    # for inference requests and replies. It passes one end to this worker
+    # as --session-fd and transfers the other to the provider adapter as session.science.
+    # It also passes the session's lifetime lease as --lease-fd.
+    # We keep that descriptor open until process exit, including model cleanup.
+
+    # Check that the inherited lease descriptor is open. Discard the metadata.
+    # This raises OSError for an invalid descriptor. The lease stays open because
+    # the worker never closes it; fstat adds no lifetime management.
+    os.fstat(args.pop('lease_fd'))
+
+    log.info(f"Starting inference session with {args.pop('operation')=}")
+
+    with Connection(args.pop('session_fd')) as connection:
+        with load_model(checkpoints, **args) as model:
+            serve_connection(connection, model)
+
+    log.info("Inference worker session closed")
 
 
 if __name__ == "__main__":

@@ -7,14 +7,30 @@ services:
       additional_contexts:
         upstream: ../../chefnmr2-upstream
     command:
+      - --role
+      - chefnmr2
+      - --socket
+      - /run/chefnmr2/runner.sock
+      - --scratch
+      - /run/chefnmr2-scratch
+      - --status-directory
+      - /run/chefnmr2-status
+      - --owner-session-lifetime
+      - --startup-seconds
+      - "30"
+      - --terminate-seconds
+      - "10"
+      - --kill-seconds
+      - "5"
+      - --cleanup-seconds
+      - "10"
+      - --
+      - python
+      - /opt/inference/worker.py
       - --device
       - cpu
       - --ckpt-dir
       - /checkpoints/chefnmr2-epoch949
-      - --socket-path
-      - /run/chefnmr2/worker.sock
-      - --lock-path
-      - /run/chefnmr2/worker.lock
       - --recon-workers
       - "2"
     logging:
@@ -22,6 +38,7 @@ services:
       options: {max-size: "10m", max-file: "3", compress: "true"}
     init: true
     stop_signal: SIGINT
+    stop_grace_period: 30s
     network_mode: none
     read_only: true
     cap_drop: [ALL]
@@ -31,16 +48,19 @@ services:
     memswap_limit: 8g
     pids_limit: 64
     environment:
+      PROVIDER_CORE_IN_CONTAINER: "1"
       OMP_NUM_THREADS: "2"
       MKL_NUM_THREADS: "2"
     tmpfs:
       - /tmp:rw,nosuid,nodev,noexec,size=64m
+      - /run/chefnmr2-scratch:rw,nosuid,nodev,noexec,size=64m,uid=65532,gid=65532,mode=0700
+      - /run/chefnmr2-status:rw,nosuid,nodev,noexec,size=1m,uid=65532,gid=65532,mode=0700
     volumes:
       - checkpoints:/checkpoints:ro
-      - socket:/run/chefnmr2
+      - runner:/run/chefnmr2
 
 volumes:
   checkpoints:
     external: true
     name: chefnmr2-weights_checkpoints
-  socket: {}
+  runner: {}
