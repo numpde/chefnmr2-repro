@@ -2,6 +2,7 @@ name: chefnmr2-inference
 
 services:
   manual:
+    platform: linux/amd64
     profiles: [manual]
     build:
       context: ../containers/provider
@@ -37,6 +38,7 @@ services:
       - runner:/run/chefnmr2:ro
 
   worker:
+    platform: linux/amd64
     build:
       context: ../containers/worker
       additional_contexts:

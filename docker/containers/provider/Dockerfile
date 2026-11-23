@@ -3,15 +3,15 @@
 # receives the API credential and forwards scientific calls to the worker.
 FROM docker.io/library/python:3.13.18-slim-bookworm@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72 AS base
 
-# Download the SDK and its API dependencies from the pinned requirements,
+# Download the SDK and its API dependencies from the CPython 3.13 Linux/amd64 lock,
 # verifying each wheel's hash. The requirements mount is read-only; the named
 # pip cache belongs to this project's builds and stays outside the image.
 FROM base AS supervisor
-RUN --mount=from=dependency-pins,source=provider-api.txt,target=/tmp/provider-core.txt \
+RUN --mount=from=dependency-pins,source=provider-api.txt,target=/tmp/provider-api.txt \
     --mount=type=cache,id=chefnmr2-repro-pip,target=/root/.cache/pip \
     python -m pip download --timeout 120 --index-url https://pypi.org/simple \
     --only-binary=:all: --require-hashes \
-    --dest /wheels -r /tmp/provider-core.txt
+    --dest /wheels -r /tmp/provider-api.txt
 
 # Start a fresh runtime stage so downloaded wheels remain build inputs.
 FROM base
