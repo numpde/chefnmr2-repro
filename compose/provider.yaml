@@ -32,8 +32,6 @@ services:
     configs:
     - source: deployment_provider
       target: /config/provider.toml
-    - source: localhost_api_ca
-      target: /run/config/api-ca.pem
     volumes:
     - runner:/run/chefnmr2:ro
     - provider-lifetime:/run/chefnmr2-provider
@@ -90,9 +88,6 @@ services:
     - no-new-privileges:true
     networks:
     - interpreter-egress
-    configs:
-    - source: interpreter_dns
-      target: /etc/resolv.conf
     environment:
       PROVIDER_CORE_IN_CONTAINER: '1'
     tmpfs:

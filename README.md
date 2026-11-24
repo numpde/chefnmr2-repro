@@ -119,13 +119,19 @@ SDK batches, scientific validity and retirement. It prints an evidence directory
 under `tmp/qualification/`. A failed qualification must be resolved before API
 deployment; building an image alone does not qualify it.
 
-**GPU:** `worker-cuda` is a separate locked Python/CUDA environment using the same
-worker Dockerfile. `images/pull` includes its Python base; acquire and build that
-profile. Only the CPU `localhost` deployment is checked in. GPU use still requires
-a deployment selecting one GPU explicitly, `device = "cuda:0"`, the built image
-IDs, and successful qualification before API jobs are enabled.
+**GPU:** Build `worker-cuda` instead of `worker-cpu`; `images/pull` includes its
+Python base. `deployments/nmr-dapp32-com` selects one Ada GPU by UUID and uses
+`cuda:0` inside the worker. On another host, select its GPU explicitly. Update
+that deployment's `images.env` with the built IDs, then qualify it with
+`make qualify DEPLOYMENT=nmr-dapp32-com DOCKER_CONTEXT="$CONTEXT"` before enabling
+API jobs. Checked-in candidate IDs are not evidence of qualification.
 
 ## API deployment
+
+`nmr-dapp32-com` targets the public API as `provider:chefnmr2-pa-a`, using system
+CA trust and Docker's DNS. It requires the shared delivery volumes below and
+`chefnmr2-nmr-dapp32-com_credentials`, containing its dedicated `credential.json`
+and `interpreter.key` with the same ownership and permissions as localhost.
 
 `deployments/localhost/provider.toml` selects the API endpoint and identity,
 model settings, batching and execution limits. Before deployment, provide:
@@ -141,9 +147,12 @@ model settings, batching and execution limits. Before deployment, provide:
   servers for the interpreter proxy.
 
 Keep credentials outside Git. Manual operations load only the science overlay;
-API config additionally loads the credential, CA and DNS definitions.
+the API overlay adds credentials and delivery sockets. Localhost also supplies
+its private CA and resolver configuration.
 
 Set `QUALIFICATION` to the evidence directory printed by the successful run:
+
+Use `DEPLOYMENT=nmr-dapp32-com` instead for the production deployment.
 
 ```bash
 make config DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"

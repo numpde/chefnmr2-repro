@@ -1,5 +1,8 @@
 services:
   provider:
+    configs:
+    - source: localhost_api_ca
+      target: /run/config/api-ca.pem
     cpus: 1
     mem_limit: 512m
     memswap_limit: 512m
@@ -7,6 +10,9 @@ services:
     group_add:
     - '1000'
   interpreter-proxy:
+    configs:
+    - source: interpreter_dns
+      target: /etc/resolv.conf
     cpus: 0.5
     mem_limit: 128m
     memswap_limit: 128m

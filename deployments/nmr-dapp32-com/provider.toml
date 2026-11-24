@@ -1,0 +1,124 @@
+# Production NMR API provider on the explicitly selected Ada GPU.
+
+[offering]
+analysis_kind = "mol_from_1h_13c_formula"
+n_samples = 8
+seed = 0
+
+[runner]
+role = "chefnmr2"
+# Match the runner's --socket in compose/inference.yaml and the lease file
+# created by containers/worker/Dockerfile, both on the runner volume.
+socket = "/run/chefnmr2/runner.sock"
+lease_file = "/run/chefnmr2/.owner-session.lock"
+# Connection/greeting allowance. Model loading happens after worker launch.
+startup_seconds = 30
+retirement_seconds = 30
+
+[model]
+checkpoint_dirs = ["/checkpoints/chefnmr2-epoch949"]
+device = "cuda:0"
+recon_workers = 2
+
+# Collect at most four jobs for one sequential worker call, waiting up to 50 ms.
+# These bytes cover queued and running encoded entries; the host caps whole frames.
+[batch]
+maximum_entries = 4
+collection_seconds = 0.05
+maximum_queued_input_bytes = 32768
+maximum_entry_input_bytes = 8192
+
+[execution]
+backend = "process"
+
+[execution.host]
+input_bytes = 65536
+result_bytes = 262144
+state_values = 1
+progress_records = 1
+initialization_seconds = 120
+retirement_seconds = 30
+
+[execution.operation_policy]
+queue_stop_request_seconds = 5
+# The execution allowance covers initialization, decoding, the whole sequential
+# batch and result encoding. Grace starts at the first stop request, including
+# cancellation; expiry starts owned-worker retirement. Cleanup has its own budget.
+execution_stop_request_seconds = 60
+execution_stop_grace_seconds = 10
+cleanup_overdue_flag_seconds = 30
+reject_encoded_input_over_bytes = 65536
+reject_encoded_result_over_bytes = 262144
+
+# A shared batch is never replayed: its membership can change on cancellation.
+# Delivery retries retain the original result and do not rerun science.
+[execution.error_policy]
+max_attempts = 1
+backoff_initial_seconds = 0.1
+backoff_max_seconds = 1
+retry_admission_codes = ["capacity", "unavailable"]
+retry_scientific_failures = false
+
+# SDK admission accounts for the model operation. Compose enforces container limits.
+[[execution.resource_requirement]]
+kind = "cpu"
+amount = 1
+unit = "thread"
+selector = "generic"
+exclusive = false
+
+[api]
+origin = "https://nmr.dapp32.com"
+profile = "run"
+topology = "web"
+provider_ref = "provider:chefnmr2-pa-a"
+credential_file = "/run/chefnmr2-credentials/credential.json"
+exchange_seconds = 30
+retirement_seconds = 10
+
+[shared]
+project = "nmr-api-delivery"
+gid = 1000
+
+[service]
+lifetime_directory = "/run/chefnmr2-provider"
+maximum_preparations = 2
+
+# Reserve before START; slow science, retirement or delivery retains its claim.
+[service.limits]
+maximum_attempts = 4
+maximum_control_bytes = 524288
+maximum_pending_terminal_bytes = 524288
+maximum_input_bytes = 262144
+
+[service.policy]
+feed_seconds = 5
+hello_seconds = 3600
+observation_seconds = 1
+recovery_seconds = 90
+retry_max_seconds = 30
+settle_seconds = 10
+
+# Each job gets a fresh conversation; the SDK shares endpoint retry delays.
+[interpreter.policy]
+interpretation_budget_seconds = 120
+reject_combined_messages_and_tools_over_bytes = 32768
+end_model_visit_after_turns = 6
+end_model_visit_after_rejections = 3
+total_http_attempts_per_turn = 2
+connection_timeout_seconds = 10
+retain_history_up_to_bytes = 131072
+retain_history_up_to_records = 16
+
+[interpreter.transport]
+retirement_seconds = 10
+request_bytes = 65536
+response_bytes = 32768
+proxy_socket = "/run/chefnmr2-interpreter/proxy.sock"
+
+[[interpreter.endpoints]]
+configuration_id = "production-primary"
+url = "https://api.openai.com/v1/chat/completions"
+model = "gpt-5.6-luna"
+reasoning_effort = "none"
+key_file = "/run/chefnmr2-credentials/interpreter.key"
