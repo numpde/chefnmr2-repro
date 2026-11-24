@@ -1,0 +1,43 @@
+ProArt GPU qualification: investigation record
+==============================================
+
+2026-11-24. Read-only inspection; no GPU qualification ran. Host availability
+and cached artifacts below are observations from that date, not current guarantees.
+Use the README and checked-in builds/ profiles for current setup instructions.
+
+Useful findings
+---------------
+
+- Use ra's named rootless science engine. Other providers already run there;
+  do not stop or reconfigure them for ChefNMR2 qualification.
+- RTX PRO 4000 Blackwell: 24,467 MiB total, 20,612 MiB occupied at inspection;
+  UUID GPU-75078110-7bdd-beaa-2195-2ba33a555cd7.
+- RTX 2000 Ada: 16,380 MiB total, 2 MiB occupied;
+  UUID GPU-45b76e53-80bd-70cb-dd21-857e4b7f5347. SECS also selects this GPU:
+  low observed memory use is not an exclusive reservation.
+- /data/cache/wheelhouse held Python 3.12 Torch 2.10.0+cu130 and its direct
+  CUDA dependencies (about 2.81 GB). Reuse verified locked artifacts there;
+  the original inventory did not establish the full dependency closure.
+- A read-only probe in SECS's worker reported CUDA available and Torch support
+  for sm_120. This establishes environment availability, not ChefNMR2 compatibility.
+
+Remaining qualification
+-----------------------
+
+1. Recheck GPU availability and the exact profile's cached artifacts. Identify
+   missing inputs before acquisition. This inspection authorized no file transfers.
+2. Build the locked CUDA profile offline. Select one GPU explicitly, expose it
+   as cuda:0, and confirm actual CUDA execution, versions and model readiness.
+3. Start with epoch949, eight samples and seed 0. Record cold loading, first/warm
+   inference, peak GPU memory, valid candidates and reconstruction-pool shutdown.
+4. Run the C8H8O3 timing case, upstream morphine case, and SDK batch/retirement
+   qualification before API activation or larger budgets/ensembles.
+
+The earlier eight-sample CPU job reported 34.18 s sampling, 0.04 s reconstruction,
+34.28 s model total and 38.479 s API Attempt including interpretation/delivery.
+The CUDA profile changes Torch and other dependencies: a comparison measures
+both device and environment changes unless the same profile is also run on CPU.
+
+No packages/images were downloaded, files transferred, services started/stopped,
+or inference submitted during this investigation. Later implementation and
+qualification status belongs in notes/005_layout_build_deployment_refactor_20261124.txt.
