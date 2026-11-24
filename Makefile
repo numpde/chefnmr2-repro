@@ -128,6 +128,13 @@ weights/verify weights/sanitize:
 	@$(operator_inputs); select_docker; \
 	if [[ $@ == weights/verify ]]; then weights_run --pull never verify; else weights_run --pull never --name chefnmr2-weights-writer sanitize; fi
 
+.PHONY: weights/watch
+weights/watch: ## Watch checkpoint file sizes during a download; requires DOCKER_CONTEXT. Ctrl+C stops watching.
+	@$(operator_inputs); select_docker; \
+	writer=$$("$${docker[@]}" ps --filter 'name=^/chefnmr2-weights-writer$$' --format '{{.ID}}'); \
+	if [[ -z $$writer ]]; then printf '%s\n' 'Cannot watch checkpoints: no weights download is running on this engine.' >&2; exit 2; fi; \
+	watch --interval 2 --exec "$${docker[@]}" exec "$$writer" find /checkpoints -type f -exec ls -lh '{}' +
+
 .PHONY: test/unit test/unit/normative test/unit/adversarial
 test/unit: test/unit/normative test/unit/adversarial ## Run sanitizer and worker admission tests in their own images.
 test/unit/normative: ## Run normative checkpoint tests in the sanitizer and worker; requires DOCKER_CONTEXT.
