@@ -41,6 +41,12 @@ retirement_seconds = 30
 
 [execution.operation_policy]
 queue_stop_request_seconds = 5
+# As of 2026-11-24: provider-core 0.7.5; ChefNMR2 0.1.0@9922b6c57142; binding@2ab94d8e2631.
+# Seconds from SDK execution handoff through initialization, decoding, the
+# entire sequential batch and result encoding. Expiry marks the allowance
+# exceeded and requests cooperative stopping; it does not kill the worker.
+# A running ChefNMR2 batch does not check that signal, so the SDK keeps waiting
+# and can accept its eventual result. This setting cannot stop hung inference.
 execution_stop_request_seconds = 60
 cleanup_overdue_flag_seconds = 30
 reject_encoded_input_over_bytes = 65536
