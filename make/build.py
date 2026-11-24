@@ -53,7 +53,7 @@ class Build:
             raise
 
     def bake(self, target):
-        document = json.loads(self.run(self.docker + ['buildx', 'bake', '-f', 'docker-bake.hcl', '--print', target], capture_output=True, text=True).stdout)
+        document = json.loads(self.run(self.docker + ['buildx', 'bake', '-f', 'compose/images.yaml', '--print', target], capture_output=True, text=True).stdout)
         return document['target'][target]
 
     def require_image(self, image):
@@ -114,7 +114,7 @@ class Build:
         lock = self.bake('lock')
         self.require_image(base)
         self.require_image(lock['contexts']['uv'].removeprefix('docker-image://'))
-        self.run(self.docker + ['buildx', 'bake', '-f', 'docker-bake.hcl', 'lock', '--set', 'lock.args.PYTHON_BASE=' + base, '--load'])
+        self.run(self.docker + ['buildx', 'bake', '-f', 'compose/images.yaml', 'lock', '--set', 'lock.args.PYTHON_BASE=' + base, '--load'])
         return lock['tags'][0]
 
     def input_identity(self, profile, target):
@@ -222,7 +222,7 @@ class Build:
                     raise ValueError(f'Cannot build {filename}: only the declared antlr source dependency has an offline wheel build')
             for name, lines in (('install.txt', install), ('sources.txt', sources), ('build.txt', build)):
                 (stage / name).write_text(''.join(lines))
-            self.run(self.docker + ['buildx', 'bake', '-f', 'docker-bake.hcl', profile,
+            self.run(self.docker + ['buildx', 'bake', '-f', 'compose/images.yaml', profile,
                                    '--allow', 'fs.read=' + str(self.pool),
                                    '--allow', 'fs.read=' + str(stage),
                                    '--set', profile + '.contexts.wheels=' + str(self.pool),

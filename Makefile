@@ -30,6 +30,12 @@ upstream/init: ## Initialize the pinned upstream submodule with a shallow checko
 override operator_inputs := source "$(REPOSITORY_ROOT)/make/operator.sh"
 override weights_inputs := source "$(REPOSITORY_ROOT)/make/weights.sh"
 
+.PHONY: images/pull
+images/pull: ## Pull pinned Python bases and checkpoint downloader; requires DOCKER_CONTEXT.
+	@$(operator_inputs); select_docker; \
+	"$${docker[@]}" compose --project-directory "$(REPOSITORY_ROOT)" --env-file /dev/null \
+		-f "$(REPOSITORY_ROOT)/compose/images.yaml" pull --ignore-buildable
+
 .PHONY: sdk/acquire lock acquire build
 sdk/acquire: ## Verify or acquire pinned SDK tooling in WHEELHOUSE; requires DOCKER_CONTEXT.
 	@$(operator_inputs); pool=$$(choose WHEELHOUSE); proxy=$$(choose PROXY_URL); select_docker; \

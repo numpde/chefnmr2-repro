@@ -102,7 +102,7 @@ class Runtime:
         return json.loads(self.run(self.compose(api, project, qualification) + ['config', '--format', 'json'], capture_output=True, text=True).stdout)
 
     def check(self, category='all'):
-        definition = json.loads(self.run(self.docker + ['buildx', 'bake', '-f', 'docker-bake.hcl', '--print', 'provider'], capture_output=True, text=True).stdout)
+        definition = json.loads(self.run(self.docker + ['buildx', 'bake', '-f', 'compose/images.yaml', '--print', 'provider'], capture_output=True, text=True).stdout)
         image = definition['target']['provider']['tags'][0]
         command = self.docker + ['run', '--rm', '--pull=never', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '1', '--memory', '512m', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,size=64m', '-e', 'PROVIDER_CORE_IN_CONTAINER=1', '-e', 'PYTHONPATH=/tests/provider:/opt/provider', '--mount', f'type=bind,src={ROOT / "tests"},dst=/tests,readonly', '--entrypoint', 'python', image, '-B', '-m', 'unittest', 'discover']
         for scenario in (('normative', 'adversarial') if category == 'all' else (category,)):

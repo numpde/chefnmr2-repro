@@ -39,22 +39,14 @@ back to direct access. Pass Make inputs explicitly as below; omitted inputs
 prompt on a terminal, and environment variables alone do not select them.
 Docker contexts, build profiles and deployments are shown as numbered choices.
 
-**Build the CPU images.** First pull the pinned Python bases selected by Bake,
-then acquire SDK tooling and locked dependencies. The builds themselves run
-offline. Each subshell stops on failure.
+**Build the CPU images.** First pull the pinned external images, then acquire
+SDK tooling and locked dependencies. Builds run offline; each subshell stops on
+failure.
 
 ```bash
 (
   set -euo pipefail
-  docker --context "$CONTEXT" buildx bake \
-      --print provider worker-cpu weights-sanitize |
-    python3 -c 'import json,sys; print(*sorted({
-        t["args"]["PYTHON_BASE"]
-        for t in json.load(sys.stdin)["target"].values()
-    }), sep="\n")' |
-    while IFS= read -r image; do
-      docker --context "$CONTEXT" pull "$image"
-    done
+  make images/pull DOCKER_CONTEXT="$CONTEXT"
 
   make sdk/acquire DOCKER_CONTEXT="$CONTEXT" \
       WHEELHOUSE="$WHEELHOUSE" PROXY_URL="$PROXY_URL"
@@ -66,6 +58,12 @@ offline. Each subshell stops on failure.
   done
 )
 ```
+
+`compose/images.yaml` declares the pinned Python bases, curl downloader and local
+builds. Bake uses its build definitions; `images/pull` uses Compose to pull only
+the prebuilt inputs. It needs no wheelhouse or `PROXY_URL`; Docker uses its engine
+proxy. It does not build application images or acquire the uv tool used only for
+lock regeneration.
 
 A new checkout uses the checked-in locks; do not regenerate them for setup.
 Acquisition verifies artifact hashes, and builds fail on missing inputs or stale
@@ -119,7 +117,7 @@ under `tmp/qualification/`. A failed qualification must be resolved before API
 deployment; building an image alone does not qualify it.
 
 **GPU:** `worker-cuda` is a separate locked Python/CUDA environment using the same
-worker Dockerfile. Pull its Bake-selected Python base, then acquire and build that
+worker Dockerfile. `images/pull` includes its Python base; acquire and build that
 profile. Only the CPU `localhost` deployment is checked in. GPU use still requires
 a deployment selecting one GPU explicitly, `device = "cuda:0"`, the built image
 IDs, and successful qualification before API jobs are enabled.

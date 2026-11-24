@@ -7,6 +7,16 @@ from operator_fixtures import OperatorFixture, ROOT
 
 
 class MakefileNormativeTests(OperatorFixture):
+    def test_image_pull_uses_native_compose_without_building(self):
+        result = self.run_make('images/pull', 'DOCKER_CONTEXT=local', cwd='/tmp')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls()[-1], [
+            '--host', 'unix:///tmp/fake-docker.sock', 'compose', '--project-directory', str(ROOT),
+            '--env-file', '/dev/null', '-f', str(ROOT / 'compose/images.yaml'),
+            'pull', '--ignore-buildable',
+        ])
+        self.assertFalse(self.python_log.exists())
+
     def test_context_menu_selects_a_discovered_context_by_number(self):
         command = shlex.join(['make', '-f', str(ROOT / 'Makefile'), 'check'])
         result = subprocess.run(

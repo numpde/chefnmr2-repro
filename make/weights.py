@@ -27,7 +27,7 @@ def main():
     caller = {'services': {'worker-online': download},
               'volumes': {'checkpoints': {'external': True, 'name': volume['name']}}}
     bake = json.loads(subprocess.check_output(docker + [
-        'buildx', 'bake', '-f', str(ROOT / 'docker-bake.hcl'), '--print', 'provider'], text=True))
+        'buildx', 'bake', '-f', str(ROOT / 'compose/images.yaml'), '--print', 'provider'], text=True))
     image = bake['target']['provider']['args']['PYTHON_BASE']
     with tempfile.TemporaryDirectory(prefix='chefnmr2-weights-') as directory:
         overlay = Path(directory) / 'worker.json'
