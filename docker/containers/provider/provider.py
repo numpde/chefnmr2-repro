@@ -1,7 +1,7 @@
 """Run ChefNMR2 operations through the SDK's native scientific host."""
 
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import AbstractAsyncContextManager, asynccontextmanager
 from dataclasses import dataclass
 
 from provider_core.execution_setup import ExecutionSettings
@@ -19,17 +19,23 @@ class Provider:
     offering: dict
 
 
-@asynccontextmanager
-async def open_provider(deployment: dict) -> AsyncIterator[Provider]:
-    """Configure the ChefNMR2 offering for the selected deployment."""
+def open_provider(deployment: dict) -> AbstractAsyncContextManager[Provider]:
+    """Configure the offering now; entering the returned scope starts the model."""
 
     execution = ExecutionSettings(deployment["execution"])
 
-    async with execution.open_process_call(
+    inference = execution.open_process_call(
             runner=deployment["runner"],
             contribution_type=Inference,
             constructor=construct,
             startup=deployment["model"],
             method=Inference.elucidate_batch,
-    ) as inference:
-        yield Provider(inference=inference, offering=deployment["offering"])
+    )
+
+    return _started_provider(Provider(inference=inference, offering=deployment["offering"]))
+
+
+@asynccontextmanager
+async def _started_provider(provider: Provider) -> AsyncIterator[Provider]:
+    async with provider.inference:
+        yield provider

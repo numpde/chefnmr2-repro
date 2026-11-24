@@ -37,10 +37,11 @@ async def serve(*, config: pathlib.Path) -> None:
     stopping = asyncio.Event()
     policy = JobServicePolicy(**deployment["service"]["policy"])
     offering = AnalysisOffering(deployment["offering"]["analysis_kind"], offering_description)
+    configured_provider = open_provider(deployment)
 
     with termination_signals(stopping.set):
         lifetime = ProviderLifetime(pathlib.Path(deployment["service"]["lifetime_directory"])).open()
-        async with open_provider(deployment) as provider:
+        async with configured_provider as provider:
             service = JobService(
                 provider_ref=clients.provider_ref,
                 offerings=(JobOffering(

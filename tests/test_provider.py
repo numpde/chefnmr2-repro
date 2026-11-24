@@ -27,11 +27,12 @@ from application import ElucidationSession, ElucidationReport
 from binding import Inference
 from wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ElucidationResult, ModelFailure, Peaks
 import main as provider_main
+from provider import open_provider as configured_provider
 
 
 class ProviderLifetimeTests(unittest.IsolatedAsyncioTestCase):
     async def test_exclusion_remains_through_service_and_model_cleanup(self):
-        for failing_phase in (None, "policy", "service", "model_cleanup"):
+        for failing_phase in (None, "policy", "execution", "service", "model_cleanup"):
             with self.subTest(failing_phase=failing_phase), TemporaryDirectory() as directory:
                 root = Path(directory)
                 lifetime = ProviderLifetime(root)
@@ -46,12 +47,17 @@ class ProviderLifetimeTests(unittest.IsolatedAsyncioTestCase):
                         raise failure
 
                 @asynccontextmanager
-                async def open_provider(deployment):
+                async def started_provider(deployment):
                     observe_exclusion("model_start")
                     try:
                         yield SimpleNamespace(inference=SimpleNamespace(host=object()))
                     finally:
                         observe_exclusion("model_cleanup")
+
+                def open_provider(deployment):
+                    if failing_phase == "execution":
+                        return configured_provider(deployment)
+                    return started_provider(deployment)
 
                 async def serve():
                     observe_exclusion("service")
@@ -63,6 +69,8 @@ class ProviderLifetimeTests(unittest.IsolatedAsyncioTestCase):
 [shared]
 project = "test-delivery"
 gid = 1000
+[execution]
+backend = "invalid-fixture-backend"
 [offering]
 analysis_kind = "mol_from_1h_13c_formula"
 n_samples = 8
@@ -85,7 +93,7 @@ settle_seconds = 2
                             patch.object(provider_main, "ProviderLifetime", return_value=lifetime), \
                             patch.object(provider_main, "open_provider", open_provider), \
                             patch.object(provider_main, "JobService", return_value=SimpleNamespace(serve=serve)):
-                        if failing_phase == "policy":
+                        if failing_phase in ("policy", "execution"):
                             with self.assertRaises(ValueError):
                                 await provider_main.serve(config=config)
                         elif failing_phase is None:
@@ -95,9 +103,11 @@ settle_seconds = 2
                                 await provider_main.serve(config=config)
                             self.assertIs(caught.exception, failure)
 
-                    expected = [] if failing_phase == "policy" else ["model_start", "service", "model_cleanup"]
+                    expected = [] if failing_phase in ("policy", "execution") else ["model_start", "service", "model_cleanup"]
                     self.assertEqual(expected, phases)
-                    if failing_phase in (None, "policy"):
+                    if failing_phase in ("policy", "execution"):
+                        self.assertFalse((root / ".checkpoint-owner.lock").exists())
+                    if failing_phase in (None, "policy", "execution"):
                         ProviderLifetime(root).open().close()
                     else:
                         with self.assertRaises(BlockingIOError):
