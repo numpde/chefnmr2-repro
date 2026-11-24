@@ -1,0 +1,11 @@
+{
+  "batches": [
+    {"requests": [
+      {"formula": "CH4", "peaks": {"h": [[1.0, 4, "s"]]}},
+      {"formula": "C2H6", "peaks": {"c": [10.0], "h": [[1.0, 6, "s"]]}}
+    ]},
+    {"requests": [
+      {"formula": "CH4", "peaks": {"h": [[1.0, 4, "s"]]}}
+    ]}
+  ]
+}

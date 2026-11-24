@@ -207,7 +207,7 @@ Ordered implementation batches
     An isolated real CH4 request completed all eight draws and returned methane;
     its runner container and volume retired without touching the live API project.
 
-[ ] 4. Qualify the migrated CPU images and retire compatibility machinery.
+[x] 4. Qualify the migrated CPU images and retire compatibility machinery.
 
     Extract useful assertions from the compatibility Dockerfile into
     tests/model/qualify.py and exercised input cases. Run with the exact worker
@@ -227,6 +227,15 @@ Ordered implementation batches
     cleanup removes only the qualification project's containers/scratch, keeping
     checkpoints and explicitly retained evidence. Then remove the compatibility
     Dockerfile and unused operator-input helper in the owning commit.
+
+    Evidence: .work/qualification/20261124T082019Z-9c6f1652 contains exact
+    image/config/checkpoint identities, cold/warm ten-draw morphine observations
+    and two SDK batches containing three eight-draw methane/ethane entries.
+    Candidate readability/formulas, positional replies, reconstruction shutdown
+    and complete qualification-project retirement passed. Evidence binds the
+    checker and case bytes as well as deployment inputs. No API job was created.
+    Concurrent diagnostic edits in model/provider/tests were excluded from these
+    baseline images and remain owned by their separate workstream.
 
 [ ] 5. Add and qualify the CUDA profile and ProArt deployment.
 

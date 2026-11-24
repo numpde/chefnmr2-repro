@@ -17,6 +17,6 @@ check:
 	@python3 -B scripts/runtime.py check --context "$$CHEFNMR2_CONTEXT"
 
 export CHEFNMR2_DEPLOYMENT := $(value DEPLOYMENT)
-.PHONY: config manual/config status logs manual weights/download weights/verify
-config manual/config status logs manual weights/download weights/verify:
+.PHONY: qualify config manual/config status logs manual weights/download weights/verify
+qualify config manual/config status logs manual weights/download weights/verify:
 	@python3 -B scripts/runtime.py $@ --context "$$CHEFNMR2_CONTEXT" --deployment "$$CHEFNMR2_DEPLOYMENT"

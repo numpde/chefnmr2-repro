@@ -3,6 +3,7 @@
 import argparse
 from contextlib import contextmanager
 import json
+import hashlib
 import os
 from pathlib import Path
 import re
@@ -10,6 +11,7 @@ import shlex
 import subprocess
 import sys
 import uuid
+from datetime import datetime, timezone
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -79,6 +81,50 @@ class Runtime:
             self.run(command + ['up', '-d', '--no-build', '--pull', 'never', 'worker'])
             self.run(command + ['run', '--rm', '--no-deps', '-T', 'manual'])
 
+    def qualification_inputs(self):
+        science = self.config()
+        configuration = Path(science['configs']['deployment_provider']['file'])
+        return {
+            'science_compose_sha256': hashlib.sha256(json.dumps(science, sort_keys=True).encode()).hexdigest(),
+            'provider_toml_sha256': hashlib.sha256(configuration.read_bytes()).hexdigest(),
+            'checkpoint_manifest_sha256': hashlib.sha256((ROOT / 'model/checkpoints.sha256').read_bytes()).hexdigest(),
+            'checker_sha256': hashlib.sha256((ROOT / 'tests/model/qualify.py').read_bytes()).hexdigest(),
+            'case_sha256': {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted((ROOT / 'tests/model/cases').glob('*.json'))},
+        }
+
+    def qualify(self):
+        directory = ROOT / '.work/qualification' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ-') + uuid.uuid4().hex[:8])
+        directory.mkdir(parents=True)
+        directory.chmod(0o755)
+        self.environment['CHEFNMR2_QUALIFICATION_DIRECTORY'] = str(directory)
+        configuration = self.config(qualification=True)
+        (directory / 'compose.json').write_text(json.dumps(configuration, indent=2))
+        (directory / 'inputs.json').write_text(json.dumps(self.qualification_inputs(), indent=2))
+        worker = configuration['services']['worker']['image']
+        images = json.loads(self.run(self.docker + ['image', 'inspect', worker, configuration['services']['manual']['image']], capture_output=True, text=True).stdout)
+        (directory / 'images.json').write_text(json.dumps(images, indent=2))
+        upstream = self.run(['git', '-C', str(ROOT / 'model/upstream'), 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip()
+        batch_case = json.loads((ROOT / 'tests/model/cases/batch.json').read_text())
+        with self.isolated(qualification=True) as command:
+            common = command + ['run', '--rm', '--no-deps', '-T', '--entrypoint', 'python', 'worker', '-B', '/qualification/qualify.py', '--config', '/config/provider.toml', '--manifest', '/checks/checkpoints.sha256']
+            direct = command + ['run', '--rm', '--no-deps', '-T', '--env', 'CHEFNMR2_WORKER_IMAGE_ID=' + images[0]['Id'], '--env', 'CHEFNMR2_UPSTREAM_REVISION=' + upstream, '--entrypoint', 'python', 'worker', '-B', '/qualification/qualify.py', '--config', '/config/provider.toml', '--manifest', '/checks/checkpoints.sha256', '--case', '/qualification/cases/morphine.json']
+            print('Checking cold and warm upstream morphine inference in ' + images[0]['Id'], flush=True)
+            model = self.run(direct, capture_output=True, text=True)
+            (directory / 'model.json').write_text(model.stdout)
+            (directory / 'model.stderr').write_text(model.stderr)
+            self.run(command + ['up', '-d', '--no-build', '--pull', 'never', 'worker'])
+            print('Checking ordered SDK batches and retirement in the selected provider image', flush=True)
+            manual = self.run(command + ['run', '--rm', '--no-deps', '-T', 'manual'], input=''.join(json.dumps(batch) + '\n' for batch in batch_case['batches']), capture_output=True, text=True)
+            replies = [json.loads(line) for line in manual.stdout.splitlines()]
+            (directory / 'manual.json').write_text(json.dumps(replies, indent=2))
+            (directory / 'manual.stderr').write_text(manual.stderr)
+            validated = self.run(common + ['--case', '/qualification/cases/batch.json', '--batch-results', '/evidence/manual.json'], capture_output=True, text=True)
+            (directory / 'batch-validation.json').write_text(validated.stdout)
+            report = {'deployment': self.deployment, 'worker_image': images[0]['Id'], 'provider_image': images[1]['Id'], 'upstream_revision': upstream, 'model': json.loads(model.stdout), 'sdk_batches': json.loads(validated.stdout), 'sdk_session_retired': True}
+        report['qualification_project_retired'] = True
+        (directory / 'summary.json').write_text(json.dumps(report, indent=2))
+        print('Qualification passed; evidence: ' + str(directory), flush=True)
+
     def weights(self, download):
         command = self.docker + ['compose', '--project-directory', str(ROOT), '-f', str(ROOT / 'compose/weights.yaml')]
         for service in (('volume-init', 'download', 'verify') if download else ('verify',)):
@@ -87,13 +133,15 @@ class Runtime:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('check', 'config', 'manual/config', 'status', 'logs', 'manual', 'weights/download', 'weights/verify'))
+    parser.add_argument('action', choices=('check', 'qualify', 'config', 'manual/config', 'status', 'logs', 'manual', 'weights/download', 'weights/verify'))
     parser.add_argument('--context', required=True)
     parser.add_argument('--deployment', default='')
     args = parser.parse_args()
     runtime = Runtime(args.context, args.deployment)
     if args.action == 'check':
         runtime.check()
+    elif args.action == 'qualify':
+        runtime.qualify()
     elif args.action in ('config', 'manual/config'):
         print(json.dumps(runtime.config(api=args.action == 'config'), indent=2))
     elif args.action == 'status':

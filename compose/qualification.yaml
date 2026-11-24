@@ -1,0 +1,22 @@
+# Only the isolated qualification project receives public test inputs.
+services:
+  worker:
+    configs:
+      - source: deployment_provider
+        target: /config/provider.toml
+      - source: checkpoint_manifest
+        target: /checks/checkpoints.sha256
+    volumes:
+      - type: bind
+        source: ${CHEFNMR2_QUALIFICATION_DIRECTORY:?Select the owned qualification evidence directory}
+        target: /evidence
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: tests/model
+        target: /qualification
+        read_only: true
+        bind: {create_host_path: false}
+configs:
+  checkpoint_manifest:
+    file: model/checkpoints.sha256

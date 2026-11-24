@@ -136,3 +136,11 @@ Checkpoint acquisition and verification use `make weights/download` and
 `make weights/verify`, both with `DOCKER_CONTEXT=science`. Acquisition requires
 explicit `PROXY_URL=none` or a container-reachable proxy URL. The pinned curl
 image must already be present; verification never pulls or downloads anything.
+
+Qualify the exact selected artifacts with
+`make qualify DEPLOYMENT=localhost DOCKER_CONTEXT=science`. It checks checkpoint
+hashes, cold/warm ten-draw upstream morphine inference, scientific validity,
+ordered eight-draw SDK batches, and session/project retirement. The two budgets
+are reported separately. It records images, versions, configuration identity,
+checkpoint hashes and results under `.work/qualification/`. Qualification shares
+checkpoints read-only and needs neither API access nor credentials.
