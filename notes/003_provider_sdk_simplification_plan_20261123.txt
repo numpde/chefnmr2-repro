@@ -1295,3 +1295,292 @@ condition passes. Each criterion meets the requested 9.5/10 threshold without
 averaging. Earlier unfavorable scores and their dispositions remain above.
 All batch 4 checklist items are complete. Runtime/deployment limits remain as
 stated; this acceptance does not claim batch 5 or NMRNet completion.
+
+Batch 5 implementation in progress — service composition
+-------------------------------------------------------
+
+Work is isolated in /tmp/nmr-provider-tools-batch5 (codex/batch5-service),
+/tmp/nmrpeak-repro-batch5 and /tmp/magnet-deploy-batch5. Magnet's existing dirty
+main checkout is untouched. NMRNet remains delegated elsewhere. No live service
+restart or deployment is part of the current verification.
+
+Contract evidence and review adjudication:
+- nmr-api-v1/nmr_api/operations/provider_directory.py::ProviderHelloService
+  replaces the complete offering snapshot atomically for the authenticated
+  provider principal. Empty snapshots withdraw offerings without deleting the
+  directory identity; subsequent snapshots restore that same identity. The API
+  tests test_provider_directory.py and test_provider_hello.py cover this.
+- One aggregate publisher must therefore own each provider's Hello. Independent
+  worker publishers could erase siblings. Retries must read current inventory,
+  not replay the snapshot attached to the failed exchange.
+- Q5.2/Q5.3 apply readiness withdrawal to availability announcements. Magnet's
+  existing Hello intentionally advertises configured capabilities independently
+  of lane readiness, and catalog 404 degrades Hello while authorized lanes may
+  continue. Preserve that explicit policy: do not silently reinterpret its
+  catalog as a live readiness assertion. NMRPeak publishes its available subset.
+  Both still need truthful local readiness and per-host failure handling.
+- Independent ownership review found that signal installation/restoration and
+  client construction are common, but shutdown decisions are not uniform.
+  NMRPeak's credential-bound identity lock and startup cancellation, and Magnet's
+  bounded drain and retained cleanup, remain explicit. SDK setup must preserve
+  those policies rather than hiding them in a generic callback runner. Existing
+  Attempt/resource owners remain the authority for releasing exclusion.
+
+Meaningful slices so far (not whole-batch acceptance):
+- SDK 97060dab: ProviderClients captures settings/publication once, applies
+  shared proxy grants, and creates a distinct API/delivery exchange owner per
+  role. Independent audit found no defect; its proxy-propagation test gap was
+  addressed. Focused container unit test passes: /tmp/batch5-clients-test.log.
+  Chef integration is staged as source work and still requires the released pin.
+- SDK 1bf89e27: termination_signals restores prior handlers, including partial
+  setup and independent cleanup failures; delivery entrypoint is first consumer.
+  Independent audit found no blocker. Three container unit tests pass:
+  /tmp/batch5-signals-test.log. A queued stop callback can run after context exit;
+  it requests the existing idempotent stop policy and grants no cleanup authority.
+- SDK d7ad7bc5: aggregate HelloPublisher and JobService migration are audited.
+  Five focused tests pass (/tmp/batch5-hello-test-r3.log): fresh retry inventory,
+  replacement after an in-flight old snapshot, explicit retry-policy refusal,
+  stop during recovery, and retained withdrawal duty after lost acknowledgement.
+  Idle publishers do not retire twice during withdrawal; each service still
+  retires its publisher in the final cleanup phase. Six JobService tests pass.
+  This is publication evidence, not whole-batch composition acceptance.
+
+Q5.1 through Q5.4 remain ungraded and batch 5 remains incomplete. Full consumer
+integration, explicit startup policies, multi-host evidence, examples, ordinary
+locked builds, release pins and the independent final panel are still required.
+
+Batch 5 continuation — consumer and startup qualification
+--------------------------------------------------------
+
+- SDK 891e0349: the installed NMRPeak example validates all configured model
+  settings/paths and interpreter policy before acquiring any host. Settings owns
+  checkpoint digest syntax; actual file access and digest comparison remain
+  startup work. A malformed later model leaves both original sessions unopened.
+  Existing all-or-nothing load failure cleanup is preserved. Independent audit
+  found the malformed-digest gap, which was fixed at Settings. Empty/directory
+  paths remain resource-open failures, avoiding duplicated filesystem checks.
+  All 35 installed-example tests pass: /tmp/batch5-example-preflight-r2.log.
+- NMRPeak 40bbbbe: SDK clients and Hello publisher replace local machinery.
+  Review found client construction outside cleanup protection; moving it inside
+  the existing try restores signal handlers and releases unused identity on
+  setup failure. All 60 lifecycle tests pass: /tmp/batch5-nmrpeak-candidate-r4.log.
+- NMRPeak ac7191f: one lane declaration carries authenticated generation, runner
+  socket and public offering. Startup, available Hello, claims bounds and teardown
+  derive from it. Independent audit found no material defect. Existing partial
+  first-ready startup and separate HF/CHF checkpoint owners remain unchanged.
+  60 lifecycle tests plus 11 real startup/fatal-task/prose outage/shutdown tests
+  pass: /tmp/batch5-nmrpeak-inventory-r1.log and
+  /tmp/batch5-nmrpeak-composition-r1.log.
+- Chef fa51149: SDK clients/signals replace entrypoint setup. Policy validation
+  precedes model startup. Exclusion releases only after service and model cleanup
+  complete; exceptional cleanup retains the lock until process exit. Independent
+  audit requested an invalid-policy test; the added case verifies no model/service
+  phases occur and the lock stays available. All 14 provider tests pass against
+  the candidate wheel: /tmp/batch5-chef-candidate-r3.log. The first harness run
+  skipped installing same-version candidate bytes; later runs force installation.
+- Magnet migration remains uncommitted. The 77 startup/cleanup tests passed, but
+  broader SDK upgrade checks found obsolete Interpreter arguments, startup-file
+  label arguments, and wrong-type rejection assumptions. These were corrected;
+  explicit interpretation limits preserve the exact former v0.6.19 behavior.
+  All 786 unit tests pass with freshly installed candidate packages:
+  /tmp/batch5-magnet-candidate-broad-r3.log. The current integration run has one
+  delayed interpreter-child retirement failure plus three stale finalizer-call
+  signatures. The signatures are corrected; the ownership failure is under
+  investigation. No integration acceptance is claimed.
+
+Architecture adjudication: one native allocation is not one public offering.
+HostedContribution.call can bind different exported methods on the same loaded
+allocation. A real shared-host proof must exercise those methods and observe that
+host's exit; no multi-allocation protocol is required. Production NMRPeak HF/CHF
+checkpoint families remain independent. A generic callback lifecycle framework
+has not been adopted: existing providers have meaningfully different admission,
+readiness, catalog publication and drain policies. Shared owners must replace
+actual duplication without erasing those policies.
+
+These are isolated local slices. Consumer release pins and ordinary locked-image
+qualification are still pending; the candidate uses version 0.7.3 with different
+local bytes and is not a replacement for the published release. Batch 5 remains
+incomplete and Q5.1–Q5.4 remain ungraded. Multiple-offering/shared-host evidence,
+explicit startup-policy qualification, final release integration, and the final
+independent panel are still required.
+
+Batch 5 continuation — 2026-11-24
+
+  Local SDK commit 7fc0eea1 makes JobService consume JobOffering declarations
+  for shared or independent already-started hosts. HostFailurePolicy explicitly
+  chooses stop versus withdrawing every offering dependent on an exited or
+  scientifically unresolved host. Startup and native retirement remain owned by
+  the enclosing provider scope. This is still serial execution, not batch 6.
+
+  Proof: six service unit cases passed (/tmp/batch5-multi-job-service-r2.log).
+  Two real-worker integrations passed (/tmp/batch5-multi-host-integration-r5.log):
+  two methods share one allocation; killing that worker withdraws both while an
+  independent worker completes; shutdown retains its selected report until relay
+  intake acknowledgement, then surfaces the original held failure. Shared API
+  connect refusal pauses discovery across offerings and recovers without science
+  replay or invented failure. Scripted API/relay ports do not prove remote API
+  acceptance or model accuracy. Independent audit accepted the corrected retry
+  stimulus and explicit unresolved-host quarantine policy.
+
+  Magnet source migration committed ef658eb. Candidate qualification: 786 unit
+  cases passed, 173 integration cases passed in the full 174-case run, and the
+  corrected remaining case passed separately. The stale test expected a public
+  failure and next Job after ENDPOINTS_EXHAUSTED, contradicting owning commit
+  069a04f. The correction retains its original error/claim and no report/replay,
+  while preserving prior healthy-sibling progress. Independent diff audit found
+  no accidental policy change. Published pins and normal image proof remain open.
+
+  NMRPeak startup-policy work is not committed yet. Explicit partial preserves
+  first-ready admission; all waits for every configured model and publishes
+  nothing after a load failure. 38 targeted config, entrypoint and real-child
+  startup tests pass (/tmp/batch5-nmrpeak-startup-r1.log); audit remains pending.
+
+  SDK repository checks: /tmp/batch5-sdk-quality.html and matching .log record
+  461 cases, 26 failed categories and 9 skipped. New code has formatting findings
+  that must be corrected; no repository-wide clean result is claimed.
+
+  Critical panel round 1 — frozen SDK 7fc0eea1, NMRPeak ac7191f, Magnet ef658eb,
+  Chef fa51149 plus the direct JobOffering argument migration:
+    Q5.1 composition: 7/10, independent Luna-medium reviewer. Strength: SDK owns
+    clients, signals, aggregate publisher, tuple service; declarations derive
+    inventory. Deductions: NMRPeak/Magnet still retain service orchestration and
+    consumer release integration remains pending. Accepted: release qualification
+    is incomplete. Further adjudication requested: identify actually duplicated
+    ownership separately from intentional parallel lanes, catalog publication,
+    readiness and forced-drain policies; adoption of one class is not itself proof.
+    Q5.2–Q5.4 have not yet received ratings. Batch remains incomplete.
+
+  Panel round 1 continued:
+    Q5.3 failure scope: 9/10. Real-worker shared-host withdrawal and retained
+    Attempt proof is strong; reviewer notes scripted API/delivery ports and no
+    live deployment proof. Asked reviewer to identify any missing pinned-contract
+    behavior rather than infer that live deployment is mandatory for this batch.
+    Q5.4 shutdown: 7/10. Reviewer identified NMRPeak's blocked-settlement path:
+    _drain can retire clients and outer setup retires runners while an owner is
+    not shutdown_ready. Concrete retained-report reachability is being checked
+    against existing suppression-refusal and exhausted-budget tests. Do not
+    present ordinary passing ACK tests as proof of this branch.
+
+  Q5.1 follow-up narrowed the consolidation finding: NMRPeak's parallel lanes,
+  first-ready startup and per-generation readiness, and Magnet's forced drain
+  and catalog semantics are real provider policy. The specific repeated owner
+  proposed for migration is Magnet Hello publication. Pacing compatibility still
+  needs verification: its jittered nominal interval has a separately enforced
+  Retry-After floor, while the current SDK wait is fixed-interval.
+
+  Startup changes committed NMRPeak 7de5211 after audit-required v4 schema bump;
+  required startup_policy cannot silently alter the prior v3 contract. The r2
+  startup suite still passes 38. Chef declaration migration committed 7306ef1;
+  candidate r5 provider tests pass 14 with reviewed source ahead of image modules.
+
+  Q5.2 reviewer supplied product/seam grades instead of one system assessment:
+    NMRPeak 9/10; Chef 8/10; SDK 8/10; Magnet 7/10. No average taken.
+    Strengths: preflight, explicit NMRPeak modes, real load-failure isolation,
+    singleton Chef starts before publication, Magnet all-lane readiness status.
+    Deductions include release/pin qualification, no live proof, caller-owned SDK
+    startup, and Magnet lazy worker readiness with no policy selector. Adjudication
+    requested: distinguish the intentionally preserved catalog/readiness boundary
+    and caller-owned startup from concrete behavior gaps. Missing UI/config knobs
+    or one universal SDK launcher do not independently establish a defect.
+
+  Q5.4 investigation correction: ordinary retryable DeliveryFull/Unavailable
+  does not reach NMRPeak's bounded-settlement escape because original join waits
+  on the SDK's existing handoff. A nonretryable DeliveryRejected can finish that
+  driver with TerminalSelectedCheckpoint and exact body retained; the SDK's
+  adversarial controller recovery test proves this owner state. Composition
+  retention for that case remains the next regression proof. The earlier claim
+  about any prolonged ordinary relay outage was too broad and is withdrawn.
+
+  Batch 5 shutdown follow-through:
+    SDK c479d6ce adds drain_attempts: stop/join the actual controllers, retain
+    selected report duties without a deadline escape, defer cancellation until
+    owners permit shutdown, then propagate original failures. No science replay
+    or permanent-rejection resubmission. Three adversarial cases pass, including
+    an owned subprocess retaining TerminalSelectedCheckpoint/body and one claim
+    after DeliveryRejected; six service unit and two real-host cases pass.
+    Logs: /tmp/batch5-drain-attempts-r1.log, /tmp/batch5-drain-job-service.log,
+    /tmp/batch5-drain-hosts.log. Audit accepted propagation correction; rejected
+    suggestion to remove the interruption guard because it bounds repeated
+    cancellation evidence rather than merely retaining the first exception.
+
+    Magnet d260cfb replaces its copied disposition loop and waits for shared
+    drain before client/runtime closure and lifetime release. Revised integration
+    observes controller join while ACK is held, then proves runtime cleanup and
+    the real lifetime lock remain ordered. All 84 focused and 174 integration
+    cases pass: /tmp/batch5-magnet-drain-r5.log and
+    /tmp/batch5-magnet-integration-r5.log. Independent audit found and corrected
+    the stale test that previously required runtime cleanup before the held ACK.
+
+    NMRPeak 897ce30 removes the bounded shutdown escape and its obsolete setting,
+    delegates to the SDK owner, and preserves original controller failures at
+    exit. Tests require exact failure identities and reject extra cleanup errors.
+    58 service, 12 startup/prose, and three tightened disposition cases pass:
+    /tmp/batch5-nmrpeak-drain-r7.log, /tmp/batch5-nmrpeak-composition-r5.log,
+    /tmp/batch5-nmrpeak-disposition-r5.log. Initial candidate failure came from
+    missing direct_url.json after an incorrectly prepared temporary test lock;
+    the explicit candidate URL restored its provenance fixture. Subsequent
+    expected-failure assertions were corrected for the new propagation contract.
+
+    Candidate r5 wheel hash b880a24d8baaac3463e0e6ccf718403192c4a8c29e47a3da22a106693f1d96e0
+    is built from c479d6ce, private qualification only. Consumer release pins and
+    ordinary locked builds remain mandatory before integration/publication.
+
+  Q5.2 final round-1 adjudication: reviewer supplied system score 8/10 and
+  withdrew the Magnet policy-selector criticism. Its all-required readiness and
+  configured catalog are intentional. The concrete Chef preflight issue was
+  fixed in fe6c8bb: unstarted configuration is validated before lifetime locking;
+  14 tests pass (/tmp/batch5-chef-preflight-r1.log). This does not claim every
+  runtime/runner failure can be predicted before startup.
+
+  Q5.3 follow-up found no specific pinned API contract gap requiring a live API
+  test: Hello atomically replaces a complete or empty snapshot, while feed does
+  not confer START authority. No live deployment qualification is claimed.
+  Round-1 ratings remain recorded above; fixes await independent reassessment.
+
+  Remaining shared publication work: SDK retry waits expose nominal cadence and
+  server floor separately, and an explicit exchange owner preserves Magnet's
+  outer cleanup identity. Magnet retains catalog/status/heartbeat policy while
+  SDK owns fresh snapshots, failed-exchange retirement and retry. Audit caught
+  Retry-After: 0 incompatibility with positive-only pacing; correction preserves
+  zero as no added floor. Seven SDK publisher tests pass; candidate consumer
+  qualification and final diff commits are still pending.
+
+  Publication migration committed SDK db3317d7 and Magnet b8eda22. All 174
+  Magnet integrations pass against candidate r6, including Retry-After zero:
+  /tmp/batch5-magnet-hello-integration-r6.log. Formatting-only SDK bc58bad8 was
+  independently checked for AST equivalence. The complete installed SDK run
+  passes 1,156 unit cases (92 skipped with PRIVACY_TESTS=0) and 254 native cases:
+  /tmp/batch5-sdk-unit-full.log. Full integration and refreshed quality report
+  are running; no complete release acceptance is implied.
+
+  Critical panel round 2 — fresh independent Luna-medium reviewers, frozen
+  SDK db3317d7, NMRPeak 897ce30, Magnet b8eda22, Chef fe6c8bb:
+    Q5.1 composition: 6/10. Reviewer initially alleged duplicated Magnet Hello
+    retry and multiple independently synchronized inventories. Both allegations
+    were retracted after source substantiation: the SDK owns retries; each
+    provider has one lane declaration and derived projections. No remaining
+    duplicated generic mechanics were substantiated. Reviewer retains 6/10
+    solely for pending supported-release pins and normal locked builds.
+    Q5.2 startup: 8/10. No implementation defect found; deduction is pending
+    consumer release/pin and ordinary-build qualification.
+    Q5.3 failure scope: 9/10. Reviewer confirms dependent-host withdrawal,
+    preserved Attempts and shared API pause. Live API was initially described
+    as an evidence limitation, then explicitly judged unnecessary beyond pinned
+    response/recovery authority and snapshot contract. Rating remains unchanged.
+    Q5.4 shutdown: 9/10. Reviewer confirms all consumer controller collections
+    feed shared drain and no DeliveryRejected bypass exists. Per-consumer native
+    permanent-rejection proof was initially a limitation; follow-up classifies
+    an additional consumer case as optional depth, with no concrete clearing or
+    early-return branch found. Rating remains unchanged. No score is rounded or
+    averaged. Release qualification and fresh final assessment remain pending.
+
+  SDK a9a1dbe8 completes source/fixture readability corrections; production
+  equivalence was independently audited and the strengthened rejected-report
+  proof passes three cases (/tmp/batch5-drain-attempts-r2.log). The refreshed
+  repository report /tmp/batch5-sdk-quality-r4.html and .log records 461 cases,
+  24 failing categories and nine skips. It replaces notes/092_repo_checks_status.html
+  for the next release; this is an honest status artifact, not a clean-check claim.
+  Remaining findings include existing convention debt and positive state-dispatch
+  guards/API method names that need deliberate review rather than mechanical
+  distortion to satisfy a scanner. Release 0.7.4 metadata is under independent
+  audit; exact-artifact qualification, publication and consumer pins follow.
