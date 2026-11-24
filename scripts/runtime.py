@@ -42,7 +42,7 @@ class Runtime:
         if not api:
             command += ['--profile', 'manual']
         if api:
-            command += ['-f', str(ROOT / 'compose/provider.yaml'), '-f', str(self.directory / 'api.yaml')]
+            command += ['-f', str(ROOT / 'compose/provider.yaml'), '-f', str(self.directory / 'provider.yaml')]
         if qualification:
             command += ['-f', str(ROOT / 'compose/qualification.yaml')]
         if project:
