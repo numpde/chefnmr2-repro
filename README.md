@@ -154,8 +154,13 @@ is invoked with `-C` from another directory. The live project name remains
 
 Checkpoint preparation uses `make weights/download`, `make weights/sanitize`
 and `make weights/verify`, with `DOCKER_CONTEXT=science`. Acquisition requires
-explicit `PROXY_URL=none` or a container-reachable proxy URL. The pinned curl
-image is pulled when missing; verification and sanitization never pull images.
+explicit `PROXY_URL=<url>` or `PROXY_URL=none` for direct access; omitted values
+are prompted for. This setting controls checkpoint downloads, independently of
+the Docker daemon's image-pull proxy.
+Only the downloader uses host networking so it can reach a loopback proxy;
+rootless engines require Docker 29.5+ with RootlessKit's detached network namespace.
+The pinned curl image is pulled when missing. Verification and sanitization
+disable networking and never pull images.
 Build the independent sanitizer with `make build PROFILE=weights-sanitize
 DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`. Its locked CPU Torch environment
 uses cached wheels and needs neither the inference image nor a GPU.

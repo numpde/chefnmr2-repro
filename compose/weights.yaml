@@ -45,9 +45,6 @@ x-checksums: &checksums
   bind:
     create_host_path: false
 
-networks:
-  fetch-egress: {}
-
 volumes:
   checkpoints: {}
 
@@ -76,10 +73,10 @@ services:
     <<: *contained
     user: "curl_user:curl_group"
     environment:
-      # This endpoint must be reachable from the container, not just host loopback
       PROXY_URL: ${PROXY_URL:-}
-    networks:
-      - fetch-egress
+    # Host networking lets curl reach a proxy bound to host loopback.
+    # Rootless engines need Docker 29.5+ with RootlessKit's detached network namespace.
+    network_mode: host
     pids_limit: 64
     cpus: 1
     mem_limit: 256m
