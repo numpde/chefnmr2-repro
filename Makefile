@@ -7,11 +7,14 @@ export CHEFNMR2_POOL := $(value WHEELHOUSE)
 .PHONY: help sdk/acquire lock acquire build check
 help:
 	@echo 'make sdk/acquire DOCKER_CONTEXT=science WHEELHOUSE=/cache/pool'
-	@echo 'make lock|acquire|build PROFILE=provider|worker-cpu DOCKER_CONTEXT=science WHEELHOUSE=/cache/pool'
+	@echo 'make lock|acquire|build PROFILE=provider|worker-cpu|worker-cuda DOCKER_CONTEXT=science WHEELHOUSE=/cache/pool'
 	@echo 'make check DOCKER_CONTEXT=science'
+	@echo 'make config|manual/config|manual|status|logs DEPLOYMENT=localhost DOCKER_CONTEXT=science'
+	@echo 'make qualify DEPLOYMENT=localhost DOCKER_CONTEXT=science'
+	@echo 'make weights/download|weights/verify DOCKER_CONTEXT=science'
 
 sdk/acquire lock acquire build:
-	@python3 -B scripts/build.py $@ --profile "$$CHEFNMR2_PROFILE" --context "$$CHEFNMR2_CONTEXT" --pool "$$CHEFNMR2_POOL" $(if $(filter lock,$@),--offline,)
+	@python3 -B scripts/build.py $@ --profile "$$CHEFNMR2_PROFILE" --context "$$CHEFNMR2_CONTEXT" --pool "$$CHEFNMR2_POOL"
 
 check:
 	@python3 -B scripts/runtime.py check --context "$$CHEFNMR2_CONTEXT"

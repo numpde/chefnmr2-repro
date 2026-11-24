@@ -1,0 +1,409 @@
+lock-version = "1.0"
+created-by = "nmr-provider-tools metadata projection"
+
+[[packages]]
+name = "annotated-types"
+version = "0.8.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0"
+
+[[packages]]
+name = "antlr4-python3-runtime"
+version = "4.9.3"
+
+[packages.sdist]
+url = "https://files.pythonhosted.org/packages/3e/38/7859ff46355f76f8d19459005ca000b6e7012f2f1ca597746cbcd1fbfe5e/antlr4-python3-runtime-4.9.3.tar.gz"
+
+[packages.sdist.hashes]
+sha256 = "f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b"
+
+[[packages]]
+name = "cuda-bindings"
+version = "13.0.3"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/21/ac/6b34452a3836c9fbabcd360689a353409d15f500dd9d9ced7f837549e383/cuda_bindings-13.0.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "cf41d9e69019939aa15296fa66ea7d3fdb8d2c6383f729f4b1156c8b37808a06"
+
+[[packages]]
+name = "cuda-pathfinder"
+version = "1.6.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/fc/b4/d088047afe39827556df21118cac9ffd20cc3f968c99a7681494d1eb333c/cuda_pathfinder-1.6.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "1503af579d8379c24bdd65528379bc57039b0455be9f5f9686cf8e473a1fce51"
+
+[[packages]]
+name = "einops"
+version = "0.8.2"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/2a/09/f8d8f8f31e4483c10a906437b4ce31bdf3d6d417b73fe33f1a8b59e34228/einops-0.8.2-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193"
+
+[[packages]]
+name = "filelock"
+version = "4.1.1"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/d7/8b/f837f52905395ba4510fe61f753c24833fb0a9c76e21267bb9f828b664a9/filelock-4.1.1-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "3f4a557945a7b0f95efeb1f432267affe5d45ac8ddde2aed1b97ebb62382c089"
+
+[[packages]]
+name = "fsspec"
+version = "2026.9.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/6c/c0/a98505f18594f1bce828bb159cec0fcf9860562f1a2c85913409fc8f3d9e/fsspec-2026.9.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f"
+
+[[packages]]
+name = "jinja2"
+version = "3.1.6"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"
+
+[[packages]]
+name = "markupsafe"
+version = "3.0.4"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/4f/a7/aeedb5140afa41fc74c225e9184ab96723a6e873b6ee1c9fede7283456d8/markupsafe-3.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "8e124f974786f831d6043728e38296969d3579db8896fe004682f5758e613581"
+
+[[packages]]
+name = "mpmath"
+version = "1.3.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c"
+
+[[packages]]
+name = "networkx"
+version = "3.7"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/7e/cd/fe58041e9011f307c490e3e17dd48cc516448f7c698a3f2d9d9d65d7e6a8/networkx-3.7-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0"
+
+[[packages]]
+name = "numpy"
+version = "2.3.5"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/b6/23/2a1b231b8ff672b4c450dac27164a8b2ca7d9b7144f9c02d2396518352eb/numpy-2.3.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "0d8163f43acde9a73c2a33605353a4f1bc4798745a8b1d73183b28e5b435ae28"
+
+[[packages]]
+name = "nvidia-cublas"
+version = "13.1.0.3"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/e7/44/423ac00af4dd95a5aeb27207e2c0d9b7118702149bf4704c3ddb55bb7429/nvidia_cublas-13.1.0.3-py3-none-manylinux_2_27_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "ee8722c1f0145ab246bccb9e452153b5e0515fd094c3678df50b2a0888b8b171"
+
+[[packages]]
+name = "nvidia-cuda-cupti"
+version = "13.0.85"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/33/6d/737d164b4837a9bbd202f5ae3078975f0525a55730fe871d8ed4e3b952b0/nvidia_cuda_cupti-13.0.85-py3-none-manylinux_2_25_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "4eb01c08e859bf924d222250d2e8f8b8ff6d3db4721288cf35d14252a4d933c8"
+
+[[packages]]
+name = "nvidia-cuda-nvrtc"
+version = "13.0.88"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/c3/68/483a78f5e8f31b08fb1bb671559968c0ca3a065ac7acabfc7cee55214fd6/nvidia_cuda_nvrtc-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "ad9b6d2ead2435f11cbb6868809d2adeeee302e9bb94bcf0539c7a40d80e8575"
+
+[[packages]]
+name = "nvidia-cuda-runtime"
+version = "13.0.96"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/2e/24/d1558f3b68b1d26e706813b1d10aa1d785e4698c425af8db8edc3dced472/nvidia_cuda_runtime-13.0.96-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "7f82250d7782aa23b6cfe765ecc7db554bd3c2870c43f3d1821f1d18aebf0548"
+
+[[packages]]
+name = "nvidia-cudnn-cu13"
+version = "9.15.1.9"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/0c/d0/90f98fc55c48a7d8f5ad0a03a6321acc1a7024bdd550d96b3547a04ea6b4/nvidia_cudnn_cu13-9.15.1.9-py3-none-manylinux_2_27_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "ebc9a647918df0d7298d67cfaf41579fd4c78ead9aba246f5ad9414d61b9ec4c"
+
+[[packages]]
+name = "nvidia-cufft"
+version = "12.0.0.61"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/a8/2f/7b57e29836ea8714f81e9898409196f47d772d5ddedddf1592eadb8ab743/nvidia_cufft-12.0.0.61-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "6c44f692dce8fd5ffd3e3df134b6cdb9c2f72d99cf40b62c32dde45eea9ddad3"
+
+[[packages]]
+name = "nvidia-cufile"
+version = "1.15.1.6"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/3f/70/4f193de89a48b71714e74602ee14d04e4019ad36a5a9f20c425776e72cd6/nvidia_cufile-1.15.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "08a3ecefae5a01c7f5117351c64f17c7c62efa5fffdbe24fc7d298da19cd0b44"
+
+[[packages]]
+name = "nvidia-curand"
+version = "10.4.0.35"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/a5/9f/be0a41ca4a4917abf5cb9ae0daff1a6060cc5de950aec0396de9f3b52bc5/nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "1aee33a5da6e1db083fe2b90082def8915f30f3248d5896bcec36a579d941bfc"
+
+[[packages]]
+name = "nvidia-cusolver"
+version = "12.0.4.66"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/5f/67/cba3777620cdacb99102da4042883709c41c709f4b6323c10781a9c3aa34/nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "0a759da5dea5c0ea10fd307de75cdeb59e7ea4fcb8add0924859b944babf1112"
+
+[[packages]]
+name = "nvidia-cusparse"
+version = "12.6.3.3"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/fa/18/623c77619c31d62efd55302939756966f3ecc8d724a14dab2b75f1508850/nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "2b3c89c88d01ee0e477cb7f82ef60a11a4bcd57b6b87c33f789350b59759360b"
+
+[[packages]]
+name = "nvidia-cusparselt-cu13"
+version = "0.8.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/fd/53/43b0d71f4e702fa9733f8b4571fdca50a8813f1e450b656c239beff12315/nvidia_cusparselt_cu13-0.8.0-py3-none-manylinux2014_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "25e30a8a7323935d4ad0340b95a0b69926eee755767e8e0b1cf8dd85b197d3fd"
+
+[[packages]]
+name = "nvidia-nccl-cu13"
+version = "2.28.9"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/b0/b4/878fefaad5b2bcc6fcf8d474a25e3e3774bc5133e4b58adff4d0bca238bc/nvidia_nccl_cu13-2.28.9-py3-none-manylinux_2_18_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "e4553a30f34195f3fa1da02a6da3d6337d28f2003943aa0a3d247bbc25fefc42"
+
+[[packages]]
+name = "nvidia-nvjitlink"
+version = "13.0.88"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/56/7a/123e033aaff487c77107195fa5a2b8686795ca537935a24efae476c41f05/nvidia_nvjitlink-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "13a74f429e23b921c1109976abefacc69835f2f433ebd323d3946e11d804e47b"
+
+[[packages]]
+name = "nvidia-nvshmem-cu13"
+version = "3.4.5"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/3c/35/a9bf80a609e74e3b000fef598933235c908fcefcef9026042b8e6dfde2a9/nvidia_nvshmem_cu13-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "290f0a2ee94c9f3687a02502f3b9299a9f9fe826e6d0287ee18482e78d495b80"
+
+[[packages]]
+name = "nvidia-nvtx"
+version = "13.0.85"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/c2/f3/d86c845465a2723ad7e1e5c36dcd75ddb82898b3f53be47ebd429fb2fa5d/nvidia_nvtx-13.0.85-py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "4936d1d6780fbe68db454f5e72a42ff64d1fd6397df9f363ae786930fd5c1cd4"
+
+[[packages]]
+name = "omegaconf"
+version = "2.3.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/e3/94/1843518e420fa3ed6919835845df698c7e27e183cb997394e4a670973a65/omegaconf-2.3.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "7b4df175cdb08ba400f45cae3bdcae7ba8365db4d165fc65fd04b050ab63b46b"
+
+[[packages]]
+name = "pillow"
+version = "13.0.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/e6/99/fdf65cc539e266ab93546c261bdf98411fe165c6e4e13f9dbf597097192b/pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "42d63be3af4f9b951b199b0a9d23365d37ab14687e6d77b74940432c8515c4ca"
+
+[[packages]]
+name = "provider-core"
+version = "0.7.5"
+
+[packages.archive]
+url = "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.5/provider_core-0.7.5-py3-none-any.whl"
+
+[packages.archive.hashes]
+sha256 = "9c8b9c8f09e69605d16f4628f817b41b5de065c66e864caefba8f1af9062a8f2"
+
+[[packages]]
+name = "pydantic"
+version = "2.14.3"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/72/b8/b864503789ef5c58597d2a7b4adbee62c26440ab1e682581fc6838df8947/pydantic-2.14.3-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "3f7b347782ab7e4cf4c798496ae3a82787d9f21ec12676a9c564355eeef8daa8"
+
+[[packages]]
+name = "pydantic-core"
+version = "2.50.4"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/91/23/e0c6e3cd09a0ac809953fea698c816b9f03bf0b35b6820c9553e4f5d85a8/pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "c81d98e27d9d9261909dcccab1ba5d6ea1c98b0bb9470e368604614fd1d36ddd"
+
+[[packages]]
+name = "pyyaml"
+version = "6.0.3"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/8b/9d/b3589d3877982d4f2329302ef98a8026e7f4443c765c46cfecc8858c6b4b/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc"
+
+[[packages]]
+name = "rdkit"
+version = "2025.9.6"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/43/8c/42dde9df1a665e3589eeeaea463b11ec89c9d0c0e82db22d8128e3e14490/rdkit-2025.9.6-cp312-cp312-manylinux_2_28_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "6be95b735c428ba27badf39e92078133d3a505f872d0a31467ba577d73c57676"
+
+[[packages]]
+name = "setuptools"
+version = "78.1.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/54/21/f43f0a1fa8b06b32812e0975981f4677d28e0f3271601dc88ac5a5b83220/setuptools-78.1.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8"
+
+[[packages]]
+name = "sympy"
+version = "1.14.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5"
+
+[[packages]]
+name = "torch"
+version = "2.10.0+cu130"
+
+[packages.archive]
+url = "https://download.pytorch.org/whl/cu130/torch-2.10.0%2Bcu130-cp312-cp312-manylinux_2_28_x86_64.whl"
+
+[packages.archive.hashes]
+sha256 = "858f0cbcc78d726fea9499eb3464faa98392fa093845a3262209bd226b7844d6"
+
+[[packages]]
+name = "triton"
+version = "3.6.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/ab/a8/cdf8b3e4c98132f965f88c2313a4b493266832ad47fb52f23d14d4f86bb5/triton-3.6.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+
+[packages.wheels.hashes]
+sha256 = "74caf5e34b66d9f3a429af689c1c7128daba1d8208df60e81106b115c00d6fca"
+
+[[packages]]
+name = "typing-extensions"
+version = "4.16.0"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+
+[[packages]]
+name = "typing-inspection"
+version = "0.4.5"
+
+[[packages.wheels]]
+url = "https://files.pythonhosted.org/packages/de/0c/ea2544850a7c135e15033a5c7a8e7211136184b7ae63e2239d557c2b3019/typing_inspection-0.4.5-py3-none-any.whl"
+
+[packages.wheels.hashes]
+sha256 = "bc210535442b39e1bf2805e0c7a17dfd6a4ace760c84c7f7d16245d23a6b1c39"
+
+[tool.nmr-provider-tools]
+source-lock-sha256 = "9a46617e324cedb888122bcd6e7562a343d40f3f85497adbf0e52d18a0b0b4aa"
+
+[tool.chefnmr2]
+inputs-sha256 = "57d55115a501b126f031783ca6ceab95a5d05ed3547d277edb660d4b6f7f295a"
+resolution = "annotated-types==0.8.0 \\\n    --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0\nantlr4-python3-runtime==4.9.3 \\\n    --hash=sha256:f224469b4168294902bb1efa80a8bf7855f24c99aef99cbefc1bcd3cce77881b\ncuda-bindings==13.0.3 \\\n    --hash=sha256:cf41d9e69019939aa15296fa66ea7d3fdb8d2c6383f729f4b1156c8b37808a06\ncuda-pathfinder==1.6.0 \\\n    --hash=sha256:1503af579d8379c24bdd65528379bc57039b0455be9f5f9686cf8e473a1fce51\neinops==0.8.2 \\\n    --hash=sha256:54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193\nfilelock==4.1.1 \\\n    --hash=sha256:3f4a557945a7b0f95efeb1f432267affe5d45ac8ddde2aed1b97ebb62382c089\nfsspec==2026.9.0 \\\n    --hash=sha256:8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f\njinja2==3.1.6 \\\n    --hash=sha256:85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67\nmarkupsafe==3.0.4 \\\n    --hash=sha256:8e124f974786f831d6043728e38296969d3579db8896fe004682f5758e613581\nmpmath==1.3.0 \\\n    --hash=sha256:a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c\nnetworkx==3.7 \\\n    --hash=sha256:e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0\nnumpy==2.3.5 \\\n    --hash=sha256:0d8163f43acde9a73c2a33605353a4f1bc4798745a8b1d73183b28e5b435ae28\nnvidia-cublas==13.1.0.3 \\\n    --hash=sha256:ee8722c1f0145ab246bccb9e452153b5e0515fd094c3678df50b2a0888b8b171\nnvidia-cuda-cupti==13.0.85 \\\n    --hash=sha256:4eb01c08e859bf924d222250d2e8f8b8ff6d3db4721288cf35d14252a4d933c8\nnvidia-cuda-nvrtc==13.0.88 \\\n    --hash=sha256:ad9b6d2ead2435f11cbb6868809d2adeeee302e9bb94bcf0539c7a40d80e8575\nnvidia-cuda-runtime==13.0.96 \\\n    --hash=sha256:7f82250d7782aa23b6cfe765ecc7db554bd3c2870c43f3d1821f1d18aebf0548\nnvidia-cudnn-cu13==9.15.1.9 \\\n    --hash=sha256:ebc9a647918df0d7298d67cfaf41579fd4c78ead9aba246f5ad9414d61b9ec4c\nnvidia-cufft==12.0.0.61 \\\n    --hash=sha256:6c44f692dce8fd5ffd3e3df134b6cdb9c2f72d99cf40b62c32dde45eea9ddad3\nnvidia-cufile==1.15.1.6 \\\n    --hash=sha256:08a3ecefae5a01c7f5117351c64f17c7c62efa5fffdbe24fc7d298da19cd0b44\nnvidia-curand==10.4.0.35 \\\n    --hash=sha256:1aee33a5da6e1db083fe2b90082def8915f30f3248d5896bcec36a579d941bfc\nnvidia-cusolver==12.0.4.66 \\\n    --hash=sha256:0a759da5dea5c0ea10fd307de75cdeb59e7ea4fcb8add0924859b944babf1112\nnvidia-cusparse==12.6.3.3 \\\n    --hash=sha256:2b3c89c88d01ee0e477cb7f82ef60a11a4bcd57b6b87c33f789350b59759360b\nnvidia-cusparselt-cu13==0.8.0 \\\n    --hash=sha256:25e30a8a7323935d4ad0340b95a0b69926eee755767e8e0b1cf8dd85b197d3fd\nnvidia-nccl-cu13==2.28.9 \\\n    --hash=sha256:e4553a30f34195f3fa1da02a6da3d6337d28f2003943aa0a3d247bbc25fefc42\nnvidia-nvjitlink==13.0.88 \\\n    --hash=sha256:13a74f429e23b921c1109976abefacc69835f2f433ebd323d3946e11d804e47b\nnvidia-nvshmem-cu13==3.4.5 \\\n    --hash=sha256:290f0a2ee94c9f3687a02502f3b9299a9f9fe826e6d0287ee18482e78d495b80\nnvidia-nvtx==13.0.85 \\\n    --hash=sha256:4936d1d6780fbe68db454f5e72a42ff64d1fd6397df9f363ae786930fd5c1cd4\nomegaconf==2.3.0 \\\n    --hash=sha256:7b4df175cdb08ba400f45cae3bdcae7ba8365db4d165fc65fd04b050ab63b46b\npillow==13.0.0 \\\n    --hash=sha256:42d63be3af4f9b951b199b0a9d23365d37ab14687e6d77b74940432c8515c4ca\nprovider-core==0.7.5 \\\n    --hash=sha256:9c8b9c8f09e69605d16f4628f817b41b5de065c66e864caefba8f1af9062a8f2\npydantic==2.14.3 \\\n    --hash=sha256:3f7b347782ab7e4cf4c798496ae3a82787d9f21ec12676a9c564355eeef8daa8\npydantic-core==2.50.4 \\\n    --hash=sha256:c81d98e27d9d9261909dcccab1ba5d6ea1c98b0bb9470e368604614fd1d36ddd\npyyaml==6.0.3 \\\n    --hash=sha256:ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc\nrdkit==2025.9.6 \\\n    --hash=sha256:6be95b735c428ba27badf39e92078133d3a505f872d0a31467ba577d73c57676\nsetuptools==78.1.0 \\\n    --hash=sha256:3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8\nsympy==1.14.0 \\\n    --hash=sha256:e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5\ntorch==2.10.0+cu130 \\\n    --hash=sha256:858f0cbcc78d726fea9499eb3464faa98392fa093845a3262209bd226b7844d6\ntriton==3.6.0 \\\n    --hash=sha256:74caf5e34b66d9f3a429af689c1c7128daba1d8208df60e81106b115c00d6fca\ntyping-extensions==4.16.0 \\\n    --hash=sha256:481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8\ntyping-inspection==0.4.5 \\\n    --hash=sha256:bc210535442b39e1bf2805e0c7a17dfd6a4ace760c84c7f7d16245d23a6b1c39\n"

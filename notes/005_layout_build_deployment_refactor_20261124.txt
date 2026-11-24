@@ -261,6 +261,15 @@ Ordered implementation batches
     retirement. Missing ProArt artifacts/access leave this batch pending; CPU
     completion is not presented as full GPU completion. No implicit transfers.
 
+    Prepared: worker-cuda uses the shared worker Dockerfile and a complete cp312
+    artifact lock. The SDK selector checked all 40 local artifacts. Read-only
+    ProArt SHA-256 checks verified 39 artifacts totaling 2,884,190,223 bytes;
+    only provider_core-0.7.5-py3-none-any.whl was absent from that package closure.
+    Compatible cached filelock/cuda-pathfinder versions avoid additional remote
+    package acquisition. No CUDA image or GPU inference was run. Source, a
+    verified checkpoint pair and required tools/base images must be available
+    on ProArt before that qualification can proceed. Nothing was copied there.
+
 [ ] 6. Finish operator workflow, promote and audit the complete move.
 
     CPU promotion depends on batches 1-4, not GPU readiness. Run this batch's
@@ -289,6 +298,22 @@ Ordered implementation batches
     paths; no old build/config authority survives; existing containment remains;
     qualification and deployment refer to the same artifacts. Historical notes
     are not rewritten to make obsolete commands appear current.
+
+    CPU promotion completed with explicit user approval. Stale qualification
+    evidence was refused without touching the live provider. The original SDK
+    provider retired cleanly before worker replacement; observed running images
+    and mounted TOML match the qualified artifacts/configuration. API directory
+    accepted ChefNMR2 at 2026-11-24T08:29:32.922738Z. One transient job-discovery
+    503 was observed after startup, with no repeated warning during monitoring.
+    Rollback: .work/rollback/20261124T082915Z-77dc2d1c. CUDA/ProArt completion
+    remains pending batch 5, so the full completion contract is not claimed.
+
+    Build-owner audit removed mirrored SDK/direct version pins from captured
+    CPU baselines; regenerated package/artifact arrays are exactly unchanged.
+    Verified recovered packages and SDK tooling were retained in the existing
+    local /home/ra/Downloads/wheelhouse, adding only missing files. Large Torch
+    and CUDA packages were reused; only two small missing local wheels were
+    fetched. The original ProArt preparation note remains outside these commits.
 
 Commit and review discipline
 ----------------------------

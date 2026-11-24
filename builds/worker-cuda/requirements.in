@@ -1,0 +1,10 @@
+# Candidate science stack already cached by the ProArt providers; qualification pending
+provider-core
+torch==2.10.0+cu130
+numpy==2.3.5
+rdkit==2025.9.6
+omegaconf==2.3.0
+einops==0.8.2
+PyYAML==6.0.3
+# Explicit builder for OmegaConf's source-only antlr runtime
+setuptools==78.1.0

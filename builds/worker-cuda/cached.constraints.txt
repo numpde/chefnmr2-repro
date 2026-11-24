@@ -1,0 +1,3 @@
+# Compatible transitive artifacts present in both the local and ProArt pools
+cuda-pathfinder==1.6.0
+filelock==4.1.1

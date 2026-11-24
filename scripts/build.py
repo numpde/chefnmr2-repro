@@ -91,17 +91,20 @@ class Build:
             finally:
                 temporary.unlink(missing_ok=True)
 
-    def container(self, image, mounts, network='none', writable_pool=False):
+    def container(self, image, mounts, network='none', writable_pool=False, scratch=None):
         command = self.docker + ['run', '--rm', '--pull=never', '--network', network, '--read-only', '--user', '65532:65532', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '2', '--memory', '4g', '--tmpfs', '/tmp:rw,nosuid,nodev,size=3g', '-e', 'HOME=/tmp', '-e', 'PROVIDER_CORE_IN_CONTAINER=1']
-        if writable_pool:
+        if writable_pool or scratch is not None:
             options = json.loads(self.run(self.docker + ['info', '--format', '{{json .SecurityOptions}}'], capture_output=True, text=True).stdout)
             if 'name=rootless' not in options:
-                raise ValueError('Package acquisition requires a rootless engine so pool writes retain the invoking host user')
+                raise ValueError('Acquisition and resolver scratch require a rootless engine so host files retain the invoking user')
             command[command.index('--user') + 1] = '0:0'
+        if scratch is not None:
+            mounts = [*mounts, (scratch, '/scratch')]
+            command += ['-e', 'UV_CACHE_DIR=/scratch']
         for source, target in mounts:
             if ',' in str(source):
                 raise ValueError(f'Cannot mount {source}: Docker bind paths cannot contain commas')
-            command += ['--mount', f'type=bind,src={source},dst={target}' + ('' if writable_pool and target == '/pool' else ',readonly')]
+            command += ['--mount', f'type=bind,src={source},dst={target}' + ('' if (writable_pool and target == '/pool') or target == '/scratch' else ',readonly')]
         return command + ['--entrypoint', 'python', image]
 
     def sdk_tool(self, image, stage, *arguments, network='none'):
@@ -118,9 +121,8 @@ class Build:
     def input_identity(self, profile, target):
         directory = ROOT / 'builds' / profile
         inputs = {str(path.relative_to(ROOT)): digest(path) for path in (ROOT / 'builds/sdk.constraints.txt', directory / 'requirements.in')}
-        baseline = directory / 'baseline.constraints.txt'
-        if baseline.exists():
-            inputs[str(baseline.relative_to(ROOT))] = digest(baseline)
+        for constraint in sorted(directory.glob('*.constraints.txt')):
+            inputs[str(constraint.relative_to(ROOT))] = digest(constraint)
         release_lock = f'provider_core-{self.sdk}-' + ('install.lock' if profile == 'provider' else 'native-install.lock')
         inputs['sdk-release-lock'] = digest(self.pool / release_lock)
         inputs['sdk-tool'] = digest(self.tool)
@@ -128,7 +130,7 @@ class Build:
         inputs['uv'] = self.bake('lock')['contexts']['uv']
         return hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest()
 
-    def lock(self, profile, offline):
+    def lock(self, profile):
         self.sdk_artifacts()
         target = self.bake(profile)
         image = self.prepare_lock_image(target)
@@ -137,18 +139,14 @@ class Build:
         with tempfile.TemporaryDirectory(prefix='chefnmr2-lock-') as temporary:
             stage = Path(temporary)
             stage.chmod(0o755)
-            command = self.container(image, [(ROOT / 'builds', '/input'), (self.pool, '/pool')], 'none' if offline else 'bridge')
+            scratch = stage / 'scratch'
+            scratch.mkdir(mode=0o700)
+            command = self.container(image, [(ROOT / 'builds', '/input'), (self.pool, '/pool')], scratch=scratch)
             command[command.index('--entrypoint') + 1] = 'uv'
             command += ['pip', 'compile', f'/input/{profile}/requirements.in', '-c', '/input/sdk.constraints.txt', '-c', '/pool/' + release_lock, '--no-python-downloads', '--python-version', target['args']['PY_VERSION'], '--generate-hashes', '--no-header', '--no-annotate', '--find-links', '/pool']
-            baseline = directory / 'baseline.constraints.txt'
-            if baseline.exists():
-                command += ['-c', f'/input/{profile}/baseline.constraints.txt']
-            if offline:
-                command += ['--offline', '--no-index']
-            else:
-                command += ['--index-url', 'https://pypi.org/simple']
-                if 'TORCH_INDEX' in target['args']:
-                    command += ['--extra-index-url', target['args']['TORCH_INDEX']]
+            for constraint in sorted(directory.glob('*.constraints.txt')):
+                command += ['-c', f'/input/{profile}/{constraint.name}']
+            command += ['--offline', '--no-index']
             resolved = self.run(command, capture_output=True, text=True).stdout
             # OmegaConf's sole source-only dependency is built in its own image
             # stage. Add its original archive identity to the resolver's hashes.
@@ -246,13 +244,12 @@ def main():
     parser.add_argument('--profile', default='')
     parser.add_argument('--context', required=True)
     parser.add_argument('--pool', required=True)
-    parser.add_argument('--offline', action='store_true', help='Resolve from the existing pool; metadata projection still reads the package index')
     args = parser.parse_args()
     build = Build(args.context, args.pool)
     if args.action == 'sdk/acquire':
         build.sdk_artifacts(acquire=True)
     elif args.action == 'lock':
-        build.lock(args.profile, args.offline)
+        build.lock(args.profile)
     elif args.action == 'acquire':
         build.acquire(args.profile)
     else:

@@ -106,8 +106,9 @@ SDK tooling with `make sdk/acquire DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUS
 `make lock PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`
 resolves against cached artifacts and reads package-index metadata to select
 published URLs; it does not download package archives. Repeat for `worker-cpu`.
-The baseline constraints preserve all installed CPU package versions captured
-before this refactor. Change them deliberately when qualifying a new CPU environment.
+The CPU baseline constraints preserve captured scientific transitive versions.
+Direct versions live in requirements.in; SDK versions come from the selected
+release. Change the scientific baseline deliberately when qualifying a new environment.
 
 `make acquire PROFILE=<profile> DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`
 is the separate networked package acquisition step. Builds require every selected
@@ -144,3 +145,9 @@ ordered eight-draw SDK batches, and session/project retirement. The two budgets
 are reported separately. It records images, versions, configuration identity,
 checkpoint hashes and results under `.work/qualification/`. Qualification shares
 checkpoints read-only and needs neither API access nor credentials.
+
+The `worker-cuda` profile is prepared for GPU qualification and uses the same
+worker Dockerfile. Its cached constraints select compatible artifacts already
+present in the ProArt pool. The full GPU environment remains unqualified;
+ProArt still needs the ChefNMR2 checkout, verified model weights and missing SDK
+artifacts. There is no placeholder ProArt deployment or automatic transfer.
