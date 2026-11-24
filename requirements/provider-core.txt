@@ -1,9 +1,9 @@
-# Generated from provider-core 0.7.4 native release lock with wheelhouse-tool.
+# Generated from provider-core 0.7.5 native release lock with wheelhouse-tool.
 # Target: CPython 3.13, Linux/amd64 (python:3.13.18-slim-bookworm).
 annotated-types @ https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl \
     --hash=sha256:f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0
-provider-core @ https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.4/provider_core-0.7.4-py3-none-any.whl \
-    --hash=sha256:e4cedd7ff7d84d3bc6df8fe8566295c8ecebef2bb87c10167c18f26fd249742b
+provider-core @ https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.5/provider_core-0.7.5-py3-none-any.whl \
+    --hash=sha256:9c8b9c8f09e69605d16f4628f817b41b5de065c66e864caefba8f1af9062a8f2
 pydantic @ https://files.pythonhosted.org/packages/72/b8/b864503789ef5c58597d2a7b4adbee62c26440ab1e682581fc6838df8947/pydantic-2.14.3-py3-none-any.whl \
     --hash=sha256:3f7b347782ab7e4cf4c798496ae3a82787d9f21ec12676a9c564355eeef8daa8
 pydantic-core @ https://files.pythonhosted.org/packages/2b/c0/1c8f2c8f1b03d3fe2fdd7962df8f5a744fe48c90b4c49615e4eb77d04141/pydantic_core-2.50.4-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.whl \
