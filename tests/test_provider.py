@@ -319,7 +319,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn("attempt:fixture", captured.output[0])
         self.assertNotIn(secret, captured.output[0])
 
-    async def test_model_cause_crosses_batch_wire_without_credentials_or_frame_locals(self):
+    async def test_model_cause_reaches_attempt_through_batch_wire_without_private_input(self):
         def failed_model(*args, **kwargs):
             private_local = "PRIVATE-FRAME-LOCAL"
             try:
@@ -329,21 +329,44 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
         worker = Inference(checkpoint_dirs=[], device="cpu", recon_workers=1)
         worker.model = SimpleNamespace(elucidate=failed_model)
-        batch = ElucidationBatch([ElucidationRequest(formula="CH4", peaks=Peaks(c=[123.456, 234.567]))])
+        batch = ElucidationBatch([ElucidationRequest(formula="CH4", peaks=Peaks(c=[123.456, 234.567]), n_samples=8, seed=0)])
         codec = JsonDataclassCodec(format="test.failure_batch.v1", value_type=ElucidationBatchResult)
 
         with patch.dict(sys.modules, {"chefnmr2.infer": SimpleNamespace(Peaks=Peaks)}):
-            with self.assertLogs("binding", level="ERROR") as captured:
+            with self.assertLogs("binding", level="ERROR") as worker_logs:
                 encoded = codec.encode(worker.elucidate_batch(batch=batch))
 
         decoded = codec.decode(encoded).replies[0]
         self.assertEqual("RuntimeError", decoded.exception_type)
         self.assertIn("could not reconstruct", decoded.message)
-        self.assertIn("ValueError", encoded.decode())
+        cause = next(
+            (
+                relationship["failure"]
+                for relationship in decoded.diagnostic["relationships"]
+                if relationship["relationship"] == "cause"
+            ),
+        )
+        self.assertEqual("ValueError", cause["exception_type"])
         self.assertTrue(decoded.diagnostic["frames"])
+
+        self.provider.inference.return_value = codec.decode(encoded)
+        prepared = await self.prepare_input({"formula": "CH4", "peaks": {"c": [123.456, 234.567]}})
+        with self.assertLogs("application", level="ERROR") as attempt_logs:
+            outcome = await self.session.execute(prepared, report_condition=self.condition)
+
+        self.assertEqual("model_failed", outcome.code)
+        self.assertEqual("chefnmr2.model_failure.v2", outcome.evidence.schema_id)
+        self.assertEqual(decoded.diagnostic, json.loads(outcome.evidence.content)["diagnostic"])
+        self.assertIn("job:fixture", attempt_logs.output[0])
+        self.assertIn("attempt:fixture", attempt_logs.output[0])
+        self.provider.inference.assert_awaited_once()
         for secret in ("hidden-token", "CH4", "123.456", "234.567", "PRIVATE-FRAME-LOCAL"):
             self.assertNotIn(secret, encoded.decode())
-            self.assertNotIn(secret, captured.output[0])
+            self.assertNotIn(secret, worker_logs.output[0])
+            self.assertNotIn(secret, outcome.evidence.content.decode())
+            self.assertNotIn(secret, attempt_logs.output[0])
+
+        await self.session.retire()
 
     async def test_revocation_during_interpretation_prevents_accepting_a_proposal(self):
         endpoint = self.use_interpreter([("submit_input", {"formula": "CH4", "peaks": {}})])
