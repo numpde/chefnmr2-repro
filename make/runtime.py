@@ -2,12 +2,14 @@
 
 import argparse
 from contextlib import contextmanager
+import fcntl
 import json
 import hashlib
 import os
 from pathlib import Path
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 import uuid
@@ -34,6 +36,51 @@ class Runtime:
             if error.stderr:
                 print(error.stderr, file=sys.stderr, end='')
             raise
+
+    @contextmanager
+    def artifacts(self):
+        """Serialize report creation, promotion and deletion in this checkout."""
+        root = ROOT / '.work'
+        root.mkdir(exist_ok=True)
+        descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_EX)
+            if any((root / kind).is_symlink() for kind in ('qualification', 'rollback')):
+                raise ValueError('Cannot manage qualification or rollback records through symbolic links')
+            yield
+        finally:
+            os.close(descriptor)
+
+    def prune_records(self, kind, keep, protected=()):
+        """Trim completed history after success; incomplete records stay for investigation."""
+        parent = ROOT / '.work' / kind
+        marker = 'summary.json' if kind == 'qualification' else 'promoted.json'
+        protected = [Path(mount['Source']).resolve() for container in protected for mount in container['Mounts']]
+        count = 0
+        for directory in sorted(parent.iterdir(), reverse=True):
+            if (directory.is_symlink() or not directory.is_dir() or directory.stat().st_uid != os.getuid()
+                    or not re.fullmatch(r'\d{8}T\d{6}Z-[0-9a-f]{8}', directory.name)):
+                continue
+            try:
+                proof = json.loads((directory / marker).read_text())
+                compose = json.loads((directory / 'compose.json').read_text())
+                if kind == 'qualification':
+                    if proof['qualification_project_retired'] is not True or proof['deployment'] != self.deployment:
+                        continue
+                    if Path(compose['configs']['deployment_provider']['file']).resolve() != (self.directory / 'provider.toml').resolve():
+                        continue
+                else:
+                    owner = compose.get('x-chefnmr2-run', {})
+                    if owner != {'engine': self.docker[-1], 'checkout': str(ROOT), 'deployment': self.deployment}:
+                        continue
+                    if not proof or not all(container['State']['Running'] is True for container in proof):
+                        continue
+            except (OSError, ValueError, KeyError, TypeError, AttributeError):
+                continue
+            count += 1
+            if count > keep and not any(path.is_relative_to(directory.resolve()) for path in protected):
+                shutil.rmtree(directory)
+                print('Removed obsolete record: ' + str(directory), flush=True)
 
     def compose(self, api=False, project=None, qualification=False):
         if not self.deployment:
@@ -130,6 +177,7 @@ class Runtime:
         report['qualification_project_retired'] = True
         (directory / 'summary.json').write_text(json.dumps(report, indent=2))
         print('Qualification passed; evidence: ' + str(directory), flush=True)
+        self.prune_records('qualification', 3)
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -142,13 +190,15 @@ def main():
     runtime = Runtime(args.host, args.deployment)
     if args.action == 'check':
         runtime.check(args.category)
-    elif args.action == 'deploy':
-        from deployment import deploy
-        if not args.qualification:
+    elif args.action in ('qualify', 'deploy'):
+        if args.action == 'deploy' and not args.qualification:
             parser.error('Select QUALIFICATION=<evidence directory> so deployment promotes proved artifacts')
-        deploy(runtime, Path(args.qualification))
-    elif args.action == 'qualify':
-        runtime.qualify()
+        with runtime.artifacts():
+            if args.action == 'qualify':
+                runtime.qualify()
+            else:
+                from deployment import deploy
+                deploy(runtime, Path(args.qualification))
     elif args.action in ('config', 'manual/config'):
         print(json.dumps(runtime.config(api=args.action == 'config'), indent=2))
     elif args.action == 'status':

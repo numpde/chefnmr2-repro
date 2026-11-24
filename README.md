@@ -179,6 +179,10 @@ are reported separately. It records images, versions, configuration identity,
 checkpoint hashes and results under `.work/qualification/`. Qualification shares
 checkpoints read-only and needs neither API access nor credentials.
 
+Successful qualification automatically keeps the three newest completed runs
+for that deployment. Unfinished or malformed records remain for investigation.
+Qualification and promotion share a checkout lock, so cleanup cannot race them.
+
 The `worker-cuda` profile is prepared for GPU qualification and uses the same
 worker Dockerfile. Its cached constraints select compatible artifacts already
 present in the ProArt pool. The full GPU environment remains unqualified;
@@ -199,6 +203,12 @@ worker. Startup never builds or pulls. The running services and mounted TOML
 are checked against the qualified artifacts before promotion is recorded.
 Rollback restores images and configuration together; uncertain retirement stops
 replacement and retains recovery evidence.
+
+Successful promotion keeps two completed rollback snapshots for that deployment
+and Docker engine, preserving snapshots referenced by the running containers.
+Failed promotions and older snapshots without recorded engine ownership are
+left intact. Cleanup runs in these workflows; no separate cleanup command or
+scheduled service is required.
 
 The checkpoint manifest retains its original provenance comments; current
 checkpoint acquisition and verification live in `compose/weights.yaml`.

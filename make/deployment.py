@@ -60,6 +60,7 @@ def deploy(runtime, qualification):
     backup.chmod(0o755)
     (backup / 'containers.json').write_text(json.dumps(containers, indent=2))
     rollback = deepcopy(definition)
+    rollback['x-chefnmr2-run'] = {'engine': runtime.docker[-1], 'checkout': str(root), 'deployment': runtime.deployment}
     for container in containers:
         service = container['Config']['Labels']['com.docker.compose.service']
         rollback['services'][service]['image'] = container['Image']
@@ -95,3 +96,4 @@ def deploy(runtime, qualification):
         raise
     (backup / 'promoted.json').write_text(json.dumps(promoted, indent=2))
     print('Promoted qualified artifacts; rollback evidence: ' + str(backup), flush=True)
+    runtime.prune_records('rollback', 2, protected=promoted)
