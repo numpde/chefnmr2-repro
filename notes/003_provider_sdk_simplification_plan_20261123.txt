@@ -2001,3 +2001,46 @@ wording in API note 047, alongside note 030. Accepted: the authority clarificati
 above names both conflicting notes. This documentation correction does not alter
 the implementation or the fixed Q6.3 criterion; the panel assessed the pinned
 owning implementation rather than either obsolete first-success rule.
+
+Localhost deployment and concurrent real-model run — 2026-11-24
+--------------------------------------------------------------
+
+The user authorized deployment after the acceptance above. The running provider
+and worker still used provider-core 0.7.2; they now report 0.7.5. The provider
+was stopped gracefully before the maintained Compose deployment replaced the
+worker, interpreter proxy and provider, without rebuilding or pulling images.
+Their running image identities match the qualified provider/worker images above;
+the proxy uses the provider image. Checkpoint and credential volumes were retained.
+The new provider advertised itself at 06:41:59 UTC after model startup.
+
+Four test-user jobs were created closed, selected only provider:chefnmr2-fw-a,
+then opened concurrently. Each preserves the exact prose specification from
+job:642e0d8b9a94e0c54914187edbbafe2fcaca430ad6d3f2c87dded8b9c9f93941.
+Descriptions are "ChefNMR2 batch qual -- #1" through "-- #4":
+- #1: job:905fa04343b26c6ce3d5af57f25c0cae33f480671133edf7b882272e82378555
+- #2: job:816cf1eb903563293ada941858e23dcca32462771224c529944f5a360aeef4c7
+- #3: job:08f0820d159882749092e391537fb4de5e66ebdff2b12089df2cc578facc1e6a
+- #4: job:3712b7109c89888f76c507c5b0a547b94a456d640bcb53840b4466af8caee0ba
+
+All four Attempts started within 13 ms at 06:44:27 UTC. Logs show two concurrent
+interpretations, followed by the other two as preparation slots became free.
+All four succeeded, each with one Attempt and its own correctly linked stored
+result. Every report contains C8H8O3, six proton peaks, eight carbon peaks, seed 0,
+eight requested samples and eight valid samples.
+
+Attempt elapsed times (#1-#4): 36.462, 129.472, 129.568, 129.656 seconds.
+Model-reported total times: 31.58, 31.03, 31.03, 30.94 seconds. Attempt elapsed
+includes interpretation, waiting and delivery; it is not model execution time.
+The first delivery was accepted at 06:45:03.815 UTC. The remaining three were
+accepted at 06:46:36.836, .838 and .841, consistent with a first singleton batch
+followed by a batch of three. Exact batch membership is inferred from the source
+and completion pattern; current runtime logs do not expose batch IDs or sizes.
+
+Final container inspection found all three services running, no OOM kills and
+zero restarts. Evidence is retained in /tmp/chefnmr2-deploy-075.EbO0QI/:
+compose.json, deploy.log, live-images.txt, provider-version.txt, worker-version.txt,
+provider-final.log, worker-final.log, live-final.txt and verified-results.json,
+plus per-job signed API exchanges and decoded reports under job-1/ through job-4/.
+This establishes live concurrent acquisition, preparation and result delivery for
+the deployed single-checkpoint CPU configuration. Timeout escalation remains
+deferred in 004_deferred_execution_timeout_20261124.txt.
