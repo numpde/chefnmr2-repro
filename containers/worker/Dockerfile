@@ -3,18 +3,21 @@ ARG PYTHON_BASE
 FROM ${PYTHON_BASE} AS source_wheels
 ENV SOURCE_DATE_EPOCH=315532800
 RUN --network=none --mount=from=wheels,target=/wheels \
-    python -m pip install --no-index --no-deps --require-hashes -r /wheels/build.txt
+    --mount=from=installation,target=/installation \
+    python -m pip install --no-index --no-deps --require-hashes -r /installation/build.txt
 # OmegaConf has one source-only dependency. Build it separately with the locked
 # setuptools input; retain its wheel hash as build evidence in the final image.
 RUN --network=none --mount=from=wheels,target=/wheels \
+    --mount=from=installation,target=/installation \
     python -m pip wheel --no-index --no-deps --no-build-isolation --require-hashes \
-        -r /wheels/sources.txt --wheel-dir /built \
+        -r /installation/sources.txt --wheel-dir /built \
     && cd /built && sha256sum *.whl > SHA256SUMS
 
 FROM ${PYTHON_BASE}
 RUN --network=none --mount=from=wheels,target=/wheels \
+    --mount=from=installation,target=/installation \
     --mount=from=source_wheels,source=/built,target=/built \
-    python -m pip install --no-index --no-deps --require-hashes -r /wheels/install.txt \
+    python -m pip install --no-index --no-deps --require-hashes -r /installation/install.txt \
     && cd /built && sha256sum --check SHA256SUMS \
     && python -m pip install --no-index --no-deps /built/*.whl \
     && python -m pip check

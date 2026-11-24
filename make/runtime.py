@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import sys
 import uuid
-from datetime import datetime, timezone
+from work import create_run_directory
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -144,9 +144,7 @@ class Runtime:
     def qualify(self):
         if os.getuid() == 0:
             raise ValueError('Run qualification as the non-root checkout owner so retained evidence keeps that ownership')
-        directory = ROOT / '.work/qualification' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ-') + uuid.uuid4().hex[:8])
-        directory.mkdir(parents=True)
-        directory.chmod(0o755)
+        directory = create_run_directory(ROOT, 'qualification')
         self.environment['CHEFNMR2_QUALIFICATION_DIRECTORY'] = str(directory)
         configuration = self.config(qualification=True)
         (directory / 'compose.json').write_text(json.dumps(configuration, indent=2))

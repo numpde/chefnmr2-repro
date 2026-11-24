@@ -1,14 +1,14 @@
 """Promote qualified images only after the current SDK session retires."""
 
 from copy import deepcopy
-from datetime import datetime, timezone
 import json
 import os
 import hashlib
 from pathlib import Path
 import subprocess
 import time
-import uuid
+
+from work import create_run_directory
 
 
 def inspect(runtime, identities):
@@ -55,9 +55,7 @@ def deploy(runtime, qualification):
         labels = container['Config']['Labels']
         if labels['com.docker.compose.project'] != definition['name'] or not Path(labels['com.docker.compose.project.working_dir']).resolve().is_relative_to(root):
             raise ValueError('Cannot replace containers: their Compose ownership differs from this checkout and deployment')
-    backup = root / '.work/rollback' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ-') + uuid.uuid4().hex[:8])
-    backup.mkdir(parents=True)
-    backup.chmod(0o755)
+    backup = create_run_directory(root, 'rollback')
     (backup / 'containers.json').write_text(json.dumps(containers, indent=2))
     rollback = deepcopy(definition)
     rollback['x-chefnmr2-run'] = {'engine': runtime.docker[-1], 'checkout': str(root), 'deployment': runtime.deployment}

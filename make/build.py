@@ -2,7 +2,6 @@
 
 import argparse
 from contextlib import contextmanager
-import fcntl
 import hashlib
 import json
 import os
@@ -15,6 +14,7 @@ import tempfile
 import tomllib
 import urllib.parse
 from fetch_sdk import artifact_names, release_url
+from work import create_run_directory
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -187,9 +187,8 @@ class Build:
         target = self.bake(profile)
         base = target['args']['PYTHON_BASE']
         self.require_image(base)
-        with tempfile.TemporaryDirectory(prefix='chefnmr2-inputs-') as temporary:
-            stage = Path(temporary)
-            stage.chmod(0o755)
+        stage = create_run_directory(ROOT, 'build')
+        try:
             shutil.copyfile(ROOT / 'builds' / profile / 'requirements.lock', stage / 'pylock.profile.toml')
             document = tomllib.loads((stage / 'pylock.profile.toml').read_text())
             if document['tool']['chefnmr2']['inputs-sha256'] != self.input_identity(profile, target):
@@ -201,9 +200,12 @@ class Build:
                     if package['name'] != 'antlr4-python3-runtime':
                         raise ValueError(f"Cannot select source package {package['name']!r}: only antlr has an explicit offline build")
                     source_options += ['--require-sdist', package['name']]
-            self.sdk_tool(base, stage, 'acquire' if acquire else 'check', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', '--pool', '/pool', *source_options, online=acquire)
+            if acquire:
+                self.sdk_tool(base, stage, 'acquire', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', '--pool', '/pool', *source_options, online=True)
             selected = json.loads(self.sdk_tool(base, stage, 'select', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', *source_options))['artifacts']
             yield target, stage, selected
+        finally:
+            shutil.rmtree(stage)
 
     def acquire(self, profile):
         with self.selected(profile, acquire=True):
@@ -211,33 +213,25 @@ class Build:
 
     def build(self, profile):
         with self.selected(profile) as (target, stage, artifacts):
-            wheels = stage / 'wheels'
-            wheels.mkdir()
             install, sources, build = [], [], []
-            descriptor = os.open(self.pool, os.O_RDONLY | os.O_DIRECTORY)
-            try:
-                fcntl.flock(descriptor, fcntl.LOCK_SH)
-                for artifact in artifacts:
-                    filename, checksum = artifact['filename'], artifact['sha256']
-                    destination = wheels / filename
-                    shutil.copyfile(self.pool / filename, destination)
-                    if digest(destination) != checksum:
-                        raise ValueError(f'Cannot stage {filename}: SHA-256 differs from the selected profile lock')
-                    requirement = f'/wheels/{filename} --hash=sha256:{checksum}\n'
-                    if filename.endswith('.whl'):
-                        install.append(requirement)
-                        if artifact['package'] == 'setuptools':
-                            build.append(requirement)
-                    elif artifact['package'] == 'antlr4-python3-runtime':
-                        sources.append(requirement)
-                    else:
-                        raise ValueError(f'Cannot build {filename}: only the declared antlr source dependency has an offline wheel build')
-            finally:
-                os.close(descriptor)
-            (wheels / 'install.txt').write_text(''.join(install))
-            (wheels / 'sources.txt').write_text(''.join(sources))
-            (wheels / 'build.txt').write_text(''.join(build))
-            self.run(self.docker + ['buildx', 'bake', '--allow', 'fs.read=' + str(wheels), '-f', 'docker-bake.hcl', profile, '--set', profile + '.contexts.wheels=' + str(wheels), '--load'])
+            for artifact in artifacts:
+                filename, checksum = artifact['filename'], artifact['sha256']
+                requirement = f'/wheels/{filename} --hash=sha256:{checksum}\n'
+                if filename.endswith('.whl'):
+                    install.append(requirement)
+                    if artifact['package'] == 'setuptools':
+                        build.append(requirement)
+                elif artifact['package'] == 'antlr4-python3-runtime':
+                    sources.append(requirement)
+                else:
+                    raise ValueError(f'Cannot build {filename}: only the declared antlr source dependency has an offline wheel build')
+            for name, lines in (('install.txt', install), ('sources.txt', sources), ('build.txt', build)):
+                (stage / name).write_text(''.join(lines))
+            self.run(self.docker + ['buildx', 'bake', '-f', 'docker-bake.hcl', profile,
+                                   '--allow', 'fs.read=' + str(self.pool),
+                                   '--allow', 'fs.read=' + str(stage),
+                                   '--set', profile + '.contexts.wheels=' + str(self.pool),
+                                   '--set', profile + '.contexts.installation=' + str(stage), '--load'])
             print(json.dumps({'profile': profile, 'image': json.loads(self.run(self.docker + ['image', 'inspect', target['tags'][0]], capture_output=True, text=True).stdout)[0]['Id']}))
 
 

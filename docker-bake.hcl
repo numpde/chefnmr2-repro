@@ -1,4 +1,5 @@
-variable "WHEELS_DIRECTORY" { default = "/missing-chefnmr2-selected-wheels" }
+variable "WHEELHOUSE" { default = "/missing-chefnmr2-wheelhouse" }
+variable "INSTALLATION" { default = "/missing-chefnmr2-installation" }
 
 target "_common" {
   platforms = ["linux/amd64"]
@@ -14,13 +15,13 @@ target "_python313" {
 target "provider" {
   inherits = ["_python313"]
   context = "containers/provider"
-  contexts = { model = "./model", wheels = WHEELS_DIRECTORY }
+  contexts = { model = "./model", wheels = WHEELHOUSE, installation = INSTALLATION }
   tags = ["chefnmr2/provider:local"]
 }
 target "worker-cpu" {
   inherits = ["_python313"]
   context = "containers/worker"
-  contexts = { model = "./model", upstream = "./model/upstream", wheels = WHEELS_DIRECTORY }
+  contexts = { model = "./model", upstream = "./model/upstream", wheels = WHEELHOUSE, installation = INSTALLATION }
   args = { TORCH_INDEX = "https://download.pytorch.org/whl/cpu" }
   tags = ["chefnmr2/worker-cpu:local"]
 }
@@ -34,7 +35,7 @@ target "lock" {
 target "worker-cuda" {
   inherits = ["_common"]
   context = "containers/worker"
-  contexts = { model = "./model", upstream = "./model/upstream", wheels = WHEELS_DIRECTORY }
+  contexts = { model = "./model", upstream = "./model/upstream", wheels = WHEELHOUSE, installation = INSTALLATION }
   args = {
     PYTHON_BASE = "docker.io/library/python:3.12.16-slim-bookworm@sha256:623674a14ef93d052bb9b0de4dbf5f28eb578a35263838941cc8aa43213c1487"
     PY_VERSION = "3.12.16"
@@ -46,7 +47,7 @@ target "worker-cuda" {
 target "weights-sanitize" {
   inherits = ["_common"]
   context = "containers/weights-sanitize"
-  contexts = { wheels = WHEELS_DIRECTORY }
+  contexts = { wheels = WHEELHOUSE, installation = INSTALLATION }
   args = {
     PYTHON_BASE = "docker.io/library/python:3.12.16-slim-bookworm@sha256:623674a14ef93d052bb9b0de4dbf5f28eb578a35263838941cc8aa43213c1487"
     PY_VERSION = "3.12.16"

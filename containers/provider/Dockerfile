@@ -2,7 +2,8 @@
 ARG PYTHON_BASE
 FROM ${PYTHON_BASE}
 RUN --network=none --mount=from=wheels,target=/wheels \
-    python -m pip install --no-index --no-deps --require-hashes -r /wheels/install.txt \
+    --mount=from=installation,target=/installation \
+    python -m pip install --no-index --no-deps --require-hashes -r /installation/install.txt \
     && python -m pip check
 
 # Use temporary storage for HOME, avoid bytecode writes on the read-only runtime
