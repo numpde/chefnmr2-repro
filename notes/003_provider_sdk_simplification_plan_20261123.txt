@@ -2,7 +2,7 @@ Provider SDK simplification and batch execution plan
 ===================================================
 
 Date: 2026-11-23
-Status: steps 1-2 and 4-5 complete; step 3 remains separate (NMRNet delegated); step 6 in progress
+Status: steps 1-2 and 4-6 complete; step 3 remains separate (NMRNet delegated)
 
 Purpose
 -------
@@ -483,14 +483,14 @@ separate gates from local implementation completion.
 
 6. Add bounded concurrent acquisition and batch assembly
 
-   [ ] Separate fetching/claiming and preparation from worker execution, using
+   [x] Separate fetching/claiming and preparation from worker execution, using
        explicit bounds for active Attempts, concurrent preparations, queued input
        bytes and retained result/delivery bytes. Stop acquisition at capacity;
        slow delivery may eventually apply backpressure, but need not immediately
        serialize otherwise available work. Reuse SDK Attempt claims and limits.
-   [ ] Configure maximum batch size and collection delay. Group only requests
+   [x] Configure maximum batch size and collection delay. Group only requests
        compatible with the selected worker/model and execution settings.
-   [ ] Retain an explicit association between each batch entry and its API job.
+   [x] Retain an explicit association between each batch entry and its API job.
        The SDK owns scheduling/routing; Chef owns its scientific batch schema.
        An SDK dispatcher owns the one batch invocation, its original task, and
        the ordered entry-to-Attempt mapping through result extraction/cleanup.
@@ -499,29 +499,29 @@ separate gates from local implementation completion.
        Use existing Attempt records for per-job evidence; do not add a second
        durable batch ledger. Retain the mapping until each entry is transferred
        to its Attempt owner or settled without publication.
-   [ ] Supply provider packing/unpacking at the typed batch boundary. Reject a
+   [x] Supply provider packing/unpacking at the typed batch boundary. Reject a
        reply with wrong cardinality or invalid entries before routing any result.
        Correlation follows the dispatch snapshot, not equality of input values.
-   [ ] Check each job's permission before admission and immediately before batch
+   [x] Check each job's permission before admission and immediately before batch
        dispatch; remove cancelled queued entries. After dispatch, cancellation
-       revokes that job's publication authority but cannot independently stop a
-       sequential worker entry with today's whole-batch protocol. Proposed first
-       behavior: finish the already-dispatched batch, retain cancelled entries
-       until their work settles, and suppress their success publication. An
-       entry revoked before its turn may still execute; today's protocol cannot
-       remove it from that dispatched batch.
-       Verify this against the SDK/API cancellation contract before enabling
-       cross-job batching. If it requires per-entry stopping, implement that
-       protocol first; do not silently weaken cancellation or enable batching.
-   [ ] Only the dispatcher requests whole-batch retirement, for shared failure,
+       suppresses newly selected publication once the SDK observes revoked
+       permission, but cannot independently stop a sequential worker entry with
+       today's whole-batch protocol. Finish the already-dispatched batch, retain
+       cancelled entries until their work settles, and preserve already selected
+       delivery duties. An entry revoked before its turn may still execute;
+       today's protocol cannot remove it from that dispatched batch.
+       The pinned API implementation permits admitted Attempts to terminalize
+       after Job cancellation; see the authority clarification below. The SDK
+       makes an observed-permission guarantee, not a server-atomic cutoff.
+   [x] Only the dispatcher requests whole-batch retirement, for shared failure,
        global stop, or cancellation of all participants. A cancelled Attempt's
        retirement joins settlement of its participation instead of declaring its
        work stopped or retiring a host still used by siblings.
-   [ ] Apply the initial retry/outcome table below. The existing wire returns one
+   [x] Apply the initial retry/outcome table below. The existing wire returns one
        complete reply; it has no streaming progress or trustworthy partial-prefix
        completion record. Partial-result recovery and per-entry model retries
        are not required for the first batching version.
-   [ ] Keep worker execution sequential initially. Parallel preparation and
+   [x] Keep worker execution sequential initially. Parallel preparation and
        acquisition do not imply simultaneous model calls or tensor batching.
 
    Quality criteria for batch 6 — concurrent jobs and batch assembly
@@ -1788,6 +1788,216 @@ consumer qualification is claimed yet. NMRNet remains delegated elsewhere.
   whole batch has been dispatched; per-entry interruption is not implemented.
 - Initial batch calls use max_attempts=1 and no scientific retries. ScientificCall
   encodes a snapshot once; retrying it after a membership change would replay a
-  revoked entry. Confirmed refusal therefore leaves this initial batch unresolved.
-  The roadmap allows configured admission retries but does not require them.
+  revoked entry. Only the pre-effect permission callback can refuse and trigger
+  repacking of surviving participants: no analysis has been acquired then. Other
+  refusals leave the batch unresolved. Configured admission retries are deferred.
   Delivery retry continues to use the original selected result, without science.
+
+
+Batch 6 first critical-panel round — 2026-11-24
+----------------------------------------------
+
+Frozen source: SDK b283814ad7910c30b92cd8e8bd1b8af07ff9635b and Chef
+fac3bf79e9d1a2c95e87a853131bffc6ecb027d4. Four independent fresh-context
+Luna-medium reviewers received their assigned fixed Q6 criterion and raw source
+and test evidence, without targets or prior verdicts. The later corrective
+commits supersede these local revisions; this first round remains recorded.
+
+- Q6.1 bounded progress: 9/10. No concrete implementation defect identified;
+  released SDK pins and normal consumer image qualification were still missing.
+- Q6.2 routing: 8/10. Complete validation and equal-input routing were supported,
+  but exclusive call ownership was only documented. Accepted: ScientificCall now
+  reserves itself for BatchCall, rejects competing/direct callers and attachment
+  during an active invocation, and releases the reservation on successful close.
+  The reviewer verified the correction and 24 passing native ScientificCall tests
+  without finding a regression (/tmp/batch6-exclusive-call.log). The pin/image gap
+  remains a separate completion obligation.
+- Q6.3 cancellation: 9/10. Pinned API authority and source supported the behavior;
+  the remaining qualification gap was the released dependency and normal images.
+- Q6.4 failure: 9/10. The reviewer proposed re-observing failed host retirement
+  until later settlement. Rejected after inspecting both supported host cleanup
+  implementations: their original cleanup actions end on settlement OR failure;
+  subsequent observations retain that terminal snapshot. The reviewer withdrew
+  this finding. No replacement score is inferred from that withdrawal.
+
+Native shared-batch tests pass after the ownership correction:
+/tmp/batch6-native-batch-r5.log (2 tests). They use actual process hosts to cover
+post-entry revocation with independently gated sibling delivery, and worker exit
+after one entry without partial-result routing or replay. The dispatcher unit
+lane passes 12 tests (/tmp/batch6-batch-call-r5.log). Chef passes 15 source-mounted
+integration tests (/tmp/batch6-chef-tests-r6.log); these do not establish released
+package/image compatibility. The final acceptance round remains pending.
+
+Final-round authority clarification: the pinned API implementation overrides
+obsolete design notes. ExecutionAttemptOutcomeService at 6a163b7a explicitly
+permits admitted Attempts to complete or fail after Job cancellation; deletion
+is its terminalization cutoff. notes/030_job_cancellation_contract_20260714.txt
+and notes/047_provider_cancellation_observation_adoption_20260718.txt both
+describe an older cancellation cutoff for first success. The latter's
+`in_progress + cancelled` first-success rejection rule also conflicts with this
+pinned implementation. Q6.3 is assessed against the implementation: the SDK
+suppresses newly selected publication after
+it observes revoked permission, retains shared participation through settlement,
+and preserves already selected delivery duties. No server-atomic cancellation
+cutoff is claimed. Continued already-dispatched computation is permitted.
+
+Release qualification corrections (all failed/interrupted evidence retained):
+- /tmp/nmr-provider-release-v0.7.5-batch6: 1172 unit tests passed; contract
+  qualification rejected the new batch_call.py because the exact module-set
+  expectation omitted it. Added that declared module; exact-set enforcement
+  remains. The focused installation contract passed (9 tests, 1 skipped).
+- /tmp/nmr-provider-release-v0.7.5-batch6-r2: units and contracts passed; an
+  old entered-revocation integration assertion awaited settlement while holding
+  its own retirement gate, expecting the former immediate None. Interrupted
+  qualification through its owning process. Corrected the test to prove the
+  claim remains while retirement is gated, then releases after original cleanup
+  and returns the same verified stop. The whole focused file passed 12 tests
+  (/tmp/batch6-model-reply-permission-r2.log). Four maintained example pins
+  were also advanced to 0.7.5; their shared initialization/failure-cleanup test
+  passed for seven contribution types (/tmp/batch6-example-initialization.log).
+- /tmp/nmr-provider-release-v0.7.5-batch6-r3: units and contracts passed;
+  integration ran 321 tests with one error (29 skipped). The multi-host test
+  requested global stop after passive host withdrawal but before the original
+  failed Attempt necessarily recorded its outcome. Cancellation plus remote
+  cleanup failure correctly remained grouped, violating the test's narrower
+  exception expectation. The test now awaits that retained controller's failure
+  while healthy delivery remains gated, then confirms shutdown returns the same
+  failure and keeps the failed claim. Two native-host tests pass after this
+  ordering correction (/tmp/batch6-job-hosts-r4.log). Independent reviewers
+  confirmed the diagnosis and actual diff; no exception is discarded or recast.
+The runtime wheel remained byte-identical across these test corrections. The r4 qualification was stopped when the review below found a production
+ownership defect; it is not a qualified release.
+
+Second panel investigation and ownership correction
+--------------------------------------------------
+
+Fresh Q6 reviewers found no initial counterexample in progress or observed
+permission handling. The coordinator proposed testing separate ScientificCalls
+sharing one host. Q6.2 and Q6.4 independently confirmed a material defect:
+per-call reservation did not grant whole-host retirement authority. A second
+batch could get a capacity refusal and retire the host beneath another call;
+post-call reply extraction could race another borrowed call as well. Q6.2's
+provisional assessment was 6/10; Q6.4 identified the same mandatory ownership
+failure without a numerical score. Q6.1 and Q6.3 remained unscored pending
+qualified artifacts. No favorable result is inferred from these incomplete
+assessments. The release was held.
+
+Accepted correction: BatchCall now requires ProcessCall, whose scope owns its
+worker. Borrowed ScientificCall cannot grant this authority and is rejected
+before dispatch. The batch reservation and active-call count live on ProcessCall;
+ScientificCall retains its original borrowed-host API. The owning host is exposed
+for service health observation; lending it to independent scientific calls
+violates that custody contract. No host-wide result registry or second owner was
+introduced. Chef already uses ProcessCall, so its production assembly is unchanged.
+
+Both reviewers verified the repair. Native tests now use an actual ProcessCall
+and prove exclusion of competing dispatchers/direct calls, refusal during an
+existing invocation, shared cancellation and worker exit without partial replies
+(/tmp/batch6-owned-batch-native.log: 4 tests). The borrowed-call regression leaves
+another active shared-host call healthy (/tmp/batch6-borrowed-call-refusal-r2.log:
+23 tests). Dispatcher unit tests pass 12 cases; Chef's adapter tests pass 15
+(/tmp/batch6-owned-batch-unit.log and /tmp/batch6-chef-tests-owned-call.log).
+The latest convention report remains 461 checks: 427 passed, 25 failing categories,
+9 skipped (/tmp/batch6-repo-checks-owned-final.log). A fresh final panel will assess
+the narrowed contract after exact artifact and normal-image qualification.
+
+Final artifact qualification
+----------------------------
+
+The corrected SDK source is 2089ceaf6a37d05a42c983154a1b260ed014045d.
+/tmp/nmr-provider-release-v0.7.5-batch6-r5 completed all five release phases:
+1172 unit tests (92 skipped), 18 installation contracts (2 skipped), 323
+integration tests (29 skipped), 18 rebuilt-wheel contracts (2 skipped), and
+255 native tests. Every phase ended OK. Privacy tests were explicitly disabled;
+the skips are not claimed as passing coverage.
+
+An independent read-only audit matched the source manifest to the frozen Git
+revision, the sdist and wheel to that manifest, the prepared release note to
+notes/112_release_v0.7.5.md, and all eight artifact hashes to their qualification
+receipts. The wheel SHA256 is
+9c8b9c8f09e69605d16f4628f817b41b5de065c66e864caefba8f1af9062a8f2.
+The earlier candidate wheels were not published.
+
+Chef's final native/API locks were projected from this release for CPython 3.13
+Linux/amd64. Independent review confirmed that both match the generated target
+projections apart from their two header comments, and that only provider-core's
+version and hash changed. No unrelated dependency or platform hash was added.
+
+Batch 6 final acceptance — 2026-11-24
+-----------------------------------
+
+Frozen SDK: 2089ceaf6a37d05a42c983154a1b260ed014045d (provider-core 0.7.5).
+Chef runtime: cf53ee8; final release pins: 1cca8f9. Only this acceptance note
+changed after the panel's reviewed source and pins. The SDK main checkout was
+fast-forwarded to the qualified commits; neither repository's main was pushed.
+
+Published release:
+https://github.com/numpde/nmr-provider-tools/releases/tag/v0.7.5
+The annotated tag peels to the frozen SDK revision. Publication verified the
+downloaded draft assets byte-for-byte before making the release public; the
+public release has the eight qualified artifacts and both qualification logs.
+Evidence: /tmp/batch6-publish-v0.7.5.log and /tmp/batch6-remote-tag.txt.
+The complete qualified bundle is retained at
+../nmr-provider-tools/release-artifacts/v0.7.5/.
+
+Normal Dockerfile builds downloaded the published wheel through the committed
+target locks; no SDK source override or local candidate wheel was mounted.
+Both images report Python 3.13.18, provider-core 0.7.5 and a clean pip check.
+The worker also imported its binding, wire, ChefNMR2 and Peaks without loading
+weights. Image identities on Docker context science:
+- Provider: sha256:701cda8a24b8701dd3ef2625a92b045605fa723eefe57ed261e8f522fec939a7
+- Worker: sha256:d810a3f660bb5e3f66b248872cafc99c8b2dc78d82ca4371b44b44c444344db6
+
+Normal-image evidence:
+- /tmp/batch6-provider-build.log and /tmp/batch6-worker-build.log
+- /tmp/batch6-provider-image-smoke.log and /tmp/batch6-worker-image-smoke.log
+- /tmp/batch6-normal-image-ids.txt
+- /tmp/batch6-chef-released-tests.log: 15 Chef adapter tests passed with only
+  tests mounted into the normal provider image; production code and SDK came
+  from the image. Invocation: /tmp/batch6-chef-released-tests.sh.
+- /tmp/batch6-chef-native-released-tests.log: 4 actual ProcessCall batch tests
+  passed in that same Python 3.13 image, using tests extracted from the released
+  sdist and the installed SDK. Invocation: /tmp/batch6-chef-native-released-tests.sh.
+
+Four fresh-context Luna-medium reviewers assessed their respective fixed Q6
+criteria without target scores or earlier verdicts in their briefs. They first
+reviewed source and focused evidence, then received exact-artifact and normal-
+image proof before final ratings. Q6.4's pre-image provisional rating was 9/10;
+the other three withheld ratings until the required evidence arrived. No source
+change was made during this final round.
+
+- Q6.1 bounded progress: 10/10. Reservation before admission, bounded observers,
+  independent preparation limits and retained input/result allowances establish
+  progress at free capacity and backpressure at limits. Queue-space waiters may
+  each hold one capped entry outside the queue budget; preparation slots and
+  Attempt claims bound their number. No material weakness identified.
+- Q6.2 routing: 10/10. ProcessCall custody, immutable participant ordering and
+  whole typed-reply/cardinality validation preserve distinct job identities,
+  including equal scientific inputs. No material weakness identified.
+- Q6.3 cancellation: 10/10. Permission is checked before entry and publication
+  selection; dispatched retirement joins shared settlement without stopping
+  siblings. The pinned API implementation supports the documented semantics.
+  No material weakness identified.
+- Q6.4 failure: 10/10. Confirmed whole replies retain per-entry outcomes; lost or
+  malformed replies remain unresolved without prefix guesses or replay. The
+  dispatcher joins original invocation/cleanup and owns fatal host retirement.
+  No material weakness identified.
+
+Each criterion independently meets the requested 9.5/10 threshold; no averaging
+or rounding was used. The earlier ownership defects and failed qualifications
+remain recorded above. Batch 6 is complete for bounded orchestration, ordered
+sequential batching and released package/image integration.
+
+Limits: no service was restarted and no live deployment or scientific accuracy
+is claimed. Already dispatched sequential entries may run after revocation;
+the SDK suppresses newly selected publication after it observes lost permission,
+while preserving already selected delivery. Preparation-waiter bounds and
+ProcessCall's private-worker custody are part of the supported contract.
+The SDK convention report remains 427 passed, 25 failing categories and 9 skipped
+out of 461 checks; this report is not green. NMRNet remains separately delegated.
+
+The final note audit additionally identified stale first-success cancellation
+wording in API note 047, alongside note 030. Accepted: the authority clarification
+above names both conflicting notes. This documentation correction does not alter
+the implementation or the fixed Q6.3 criterion; the panel assessed the pinned
+owning implementation rather than either obsolete first-success rule.
