@@ -2,7 +2,7 @@ Provider SDK simplification and batch execution plan
 ===================================================
 
 Date: 2026-11-23
-Status: steps 1-2 and 4-5 complete; step 3 remains separate (NMRNet delegated); step 6 planned
+Status: steps 1-2 and 4-5 complete; step 3 remains separate (NMRNet delegated); step 6 in progress
 
 Purpose
 -------
@@ -1759,3 +1759,35 @@ service was restarted and no model accuracy/live-deployment claim is made.
 Only the authorized release tag was pushed; local main branches were not pushed.
 Magnet's twelve unrelated modified files retain the same binary diff hash
 recorded above. Chef, SDK and NMRPeak are otherwise clean after these commits.
+
+
+Batch 6 implementation — 2026-11-24
+----------------------------------
+
+The fixed Q6.1–Q6.4 criteria above remain the acceptance criteria. Implementation
+is in the isolated SDK worktree /tmp/nmr-provider-tools-batch6; no release or
+consumer qualification is claimed yet. NMRNet remains delegated elsewhere.
+
+- SDK fa25659e separates AttemptController.start from join, preserving the
+  original retained driver. AttemptClaims accounts for declared input bytes
+  throughout the claim lifetime and checks capacity before session construction.
+  Independent read-only audit found no lifecycle defect. Controller and ownership
+  lanes passed 11 tests each (/tmp/batch6-controller-start.log and
+  /tmp/batch6-input-capacity-r3.log). A suggested duplicate protocol-maximum check
+  in the budget query was rejected: FeedInputFacts already owns that validation.
+- Concurrent service work retains the current bounded feed page while capacity
+  is full and bounds preparation at the actual session.prepare boundary. Its
+  initial eight unit tests and two native-host fixture integration tests pass
+  (/tmp/batch6-job-service-r2.log and /tmp/batch6-job-hosts-r3.log).
+- Cancellation authority: pinned nmr-api-v1 revision
+  6a163b7a9cc1e2c7485b681c0b2b969c7c20e6c8, job_cancellation.py,
+  execution_attempt_read.py and execution_attempt_outcome.py keep Job cancellation
+  separate from the already-started Attempt. Continued shared execution is
+  permitted. SDK revocation still suppresses newly selected publication for the
+  cancelled job. A sequential entry can execute after cancellation once its
+  whole batch has been dispatched; per-entry interruption is not implemented.
+- Initial batch calls use max_attempts=1 and no scientific retries. ScientificCall
+  encodes a snapshot once; retrying it after a membership change would replay a
+  revoked entry. Confirmed refusal therefore leaves this initial batch unresolved.
+  The roadmap allows configured admission retries but does not require them.
+  Delivery retry continues to use the original selected result, without science.
