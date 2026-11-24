@@ -1,0 +1,76 @@
+Ada production qualification — 2026-11-24 UTC
+============================================
+
+Deployment: nmr-dapp32-com, provider:chefnmr2-pa-a.
+Built from ab40c0e; image selection 3581824; resolver correction 65b060f.
+Provider SDK 0.7.7; worker Python 3.12.16 and Torch 2.10.0+cu130.
+
+Selected images (built offline from the deployment host's existing wheelhouse):
+- provider: sha256:43e447bd1d66d84238097ed94fdb6fda95adae9ecdcdfc795b5d90891ab93c18
+- worker: sha256:926e190ea264cdf02ee2f42ce83bae9a0cfe53218802b06011241585d8027fea
+
+The worker exposes only the configured RTX 2000 Ada UUID as cuda:0. Its live
+DeviceRequests matched the deployment. SECS also selects this GPU; this is
+not an exclusive GPU allocation. Other providers were not reconfigured.
+
+Qualification
+-------------
+make qualify DEPLOYMENT=nmr-dapp32-com DOCKER_CONTEXT=science passed.
+Evidence remains on the deployment host under:
+  tmp/qualification/20261124T194048Z-2552e34a/
+
+With epoch949 and the public upstream morphine input:
+- Model initialization: 3.347 s.
+- First/warm ten-sample calls: 1.121 s / 0.890 s, one valid candidate each.
+- Peak CUDA allocated/reserved: 1,829,019,648 / 1,851,785,216 bytes.
+- Ordered SDK batches: three entries across two calls passed.
+- Reconstruction pool and isolated runner project retired successfully.
+
+The provider image's 17 tests passed. The separate formatting work passed
+13 SDK formatting modules and 14 operator tests with unchanged Python ASTs.
+These observations do not isolate device speedup from dependency changes,
+or establish throughput under competing GPU load.
+
+Production API checks
+---------------------
+Actor: principal:user:test. Project: project:user-test.
+Origin: https://nmr.dapp32.com. Selection: only provider:chefnmr2-pa-a.
+Jobs were created closed, selected, opened, then closed after terminal outcomes.
+
+1. Structured morphine: succeeded.
+   job:b78ed3d611b34615578402a2e21d9f405151f1ea21163f32437fd277332dc366
+   execution_attempt:sha256:56a16fd30d1765367f89d4f4d1e74638df41bdc60b702edbf79dc0950972a6e6
+   Eight valid draws, one candidate; model reported 1.07 s total.
+   API Attempt timestamps span 5.357 s, including preparation and delivery.
+
+2. Initial prose ethane: failed before science with interpretation_failed.
+   job:50b9efc227190a85e1a5fd2d1e1ac179ac2615f0aa00fab095d82d4f4e517995
+   execution_attempt:sha256:1f3dd8609353771515b6c407ccb695cb15110052aaedb6688fabc4e86a057ef0
+   Protected logs retained the proxy's 502; proxy logs identified missing
+   non-loopback DNS servers. Docker's resolver was loopback-only. Commit 65b060f
+   exposes the host upstream resolver list read-only to the interpreter proxy.
+   This failed Attempt was preserved, not retried as if no outcome existed.
+
+3. New prose ethane job after correction: succeeded.
+   job:0c177100b5bf95f10c7303dc4795e998a834123ed892e597324b6981ffd2fd40
+   execution_attempt:sha256:277d5acf644005f016ef427f629ec199c8429322444e238ab2fa704322f17961
+   Interpreted C2H6, carbon 10.0 ppm, proton singlet 1.0 ppm integrating to six.
+   Eight samples; returned ethane (CC); model reported 0.83 s total.
+   API Attempt timestamps span 8.570 s, including interpretation and delivery.
+
+Both successful result bodies matched their API byte lengths and SHA-256
+fingerprints. Raw signed exchanges are retained locally under tmp/live-api/;
+no credential bytes are included in this note. All three Jobs are closed.
+
+Deployment and retirement
+-------------------------
+The maintained deploy command promoted the qualified images. During the DNS
+correction it stopped the provider, confirmed exit 0, and the runner logged
+child_retired with returncode=0 before starting the replacement model session.
+Final promotion evidence remains on the deployment host under:
+  tmp/rollback/20261124T194643Z-f33bdbe1/
+
+Provider, worker and healthy interpreter proxy remained running at completion.
+The signing credential and interpreter key are in a private deployment volume;
+the interpreter key is an independent, explicitly authorized copy of the
+existing production key, sharing its account and billing. No secret was committed.
