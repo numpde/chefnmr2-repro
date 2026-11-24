@@ -1,4 +1,5 @@
-provider-core
+# The binding's protected diagnostics import the SDK's API error projections.
+provider-core[api]
 torch==2.5.1+cpu
 numpy==2.2.2
 rdkit==2025.9.4

@@ -102,18 +102,30 @@ settle_seconds = 2
                     encoding="utf-8",
                 )
 
+                diagnostic_secrets = ("configured-interpreter-secret",)
+                interpreter_settings = SimpleNamespace(
+                    new_interpreter=Mock(),
+                    diagnostic_secrets=diagnostic_secrets,
+                )
+                service = SimpleNamespace(serve=serve)
+
                 try:
                     with patch.object(provider_main.ProviderClients, "from_config", return_value=Mock()), \
-                            patch.object(provider_main.InterpreterSettings, "from_config", return_value=Mock()), \
+                            patch.object(provider_main.InterpreterSettings, "from_config", return_value=interpreter_settings), \
                             patch.object(provider_main, "termination_signals", return_value=nullcontext()), \
                             patch.object(provider_main, "ProviderLifetime", return_value=lifetime), \
                             patch.object(provider_main, "open_provider", open_provider), \
-                            patch.object(provider_main, "JobService", return_value=SimpleNamespace(serve=serve)):
+                            patch.object(provider_main, "JobService", return_value=service) as job_service:
                         if failing_phase in ("policy", "execution"):
                             with self.assertRaises(ValueError):
                                 await provider_main.serve(config=config)
                         elif failing_phase is None:
                             await provider_main.serve(config=config)
+                            service_arguments = job_service.call_args.kwargs
+                            self.assertEqual(service_arguments["diagnostic_secrets"], diagnostic_secrets)
+                            offering, = service_arguments["offerings"]
+                            session = offering.new_session()
+                            self.assertEqual(session.diagnostic_secrets, diagnostic_secrets)
                         else:
                             with self.assertRaises(RuntimeError) as caught:
                                 await provider_main.serve(config=config)

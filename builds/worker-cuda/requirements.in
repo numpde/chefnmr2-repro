@@ -1,5 +1,6 @@
 # Candidate science stack already cached by the ProArt providers; qualification pending
-provider-core
+# The binding's protected diagnostics import the SDK's API error projections.
+provider-core[api]
 torch==2.10.0+cu130
 numpy==2.3.5
 rdkit==2025.9.6

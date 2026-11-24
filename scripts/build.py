@@ -123,7 +123,7 @@ class Build:
         inputs = {str(path.relative_to(ROOT)): digest(path) for path in (ROOT / 'builds/sdk.constraints.txt', directory / 'requirements.in')}
         for constraint in sorted(directory.glob('*.constraints.txt')):
             inputs[str(constraint.relative_to(ROOT))] = digest(constraint)
-        release_lock = f'provider_core-{self.sdk}-' + ('install.lock' if profile == 'provider' else 'native-install.lock')
+        release_lock = f'provider_core-{self.sdk}-install.lock'
         inputs['sdk-release-lock'] = digest(self.pool / release_lock)
         inputs['sdk-tool'] = digest(self.tool)
         inputs['target'] = {'args': target['args'], 'platforms': target['platforms']}
@@ -135,7 +135,7 @@ class Build:
         target = self.bake(profile)
         image = self.prepare_lock_image(target)
         directory = ROOT / 'builds' / profile
-        release_lock = f'provider_core-{self.sdk}-' + ('install.lock' if profile == 'provider' else 'native-install.lock')
+        release_lock = f'provider_core-{self.sdk}-install.lock'
         with tempfile.TemporaryDirectory(prefix='chefnmr2-lock-') as temporary:
             stage = Path(temporary)
             stage.chmod(0o755)

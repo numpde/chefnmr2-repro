@@ -68,6 +68,7 @@ async def serve(*, config: pathlib.Path) -> None:
                 new_api=clients.new_api,
                 new_delivery=clients.new_delivery,
                 stopping=stopping,
+                diagnostic_secrets=interpreter_settings.diagnostic_secrets,
             )
 
             await service.serve()
