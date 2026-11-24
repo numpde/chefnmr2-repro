@@ -208,13 +208,20 @@ below. API deployment also requires the credentials and services listed above.
 The selected `WHEELHOUSE` is the persistent package pool. Downloads write there;
 creating another checkout does not automatically create another pool. Builds
 currently make actual file copies of the selected artifacts, not hard links.
+This gives BuildKit a separate input directory containing only the selected
+artifacts and generated installation lists. Each copy is hashed against the lock;
+later changes to the pool do not change those staged bytes. The cost is temporary
+disk space and copying I/O before BuildKit imports the context. Hard links would
+share mutable file contents and require the same filesystem; this implementation
+uses ordinary copies so the pool and temporary directory can live on different
+filesystems.
 
 | Location | Contents | Lifetime |
 | --- | --- | --- |
 | `$WHEELHOUSE` | Downloaded wheels, source archives and SDK tooling, reused across selected profiles | Persistent until explicitly removed |
 | Temporary `chefnmr2-inputs-*/wheels/` directory, normally under `/tmp` | Copies of the selected profile's artifacts, rehashed before building | Removed when the build command unwinds normally, including ordinary failures; abrupt process termination can leave residue |
 | Docker/BuildKit storage | Build inputs, intermediate stages and cached layers; it may retain additional artifact copies | Managed by Docker's cache lifecycle |
-| Final images | Installed Python packages; input wheels are mounted during installation rather than explicitly copied into the final filesystem | Retained with the images |
+| Final images | Installed Python packages and the Python base image's bundled pip wheel; selected input wheels are mounted during installation rather than copied into the final filesystem | Retained with the images |
 | `make/bootstrap/acquisition/` | Generated acquisition source, bundled dependency source and a pinned pip wheel | Included in every checkout |
 | Docker volume `chefnmr2-weights_checkpoints` | Model checkpoints and preparation receipts | Persistent, separate from the checkout and wheelhouse |
 
