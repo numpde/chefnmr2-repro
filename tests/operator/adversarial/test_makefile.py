@@ -24,7 +24,7 @@ class MakefileAdversarialTests(OperatorFixture):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         arguments = self.python_arguments()
-        self.assertEqual(arguments[1], str(ROOT / 'scripts/build.py'))
+        self.assertEqual(arguments[1], str(ROOT / 'make/build.py'))
         self.assertEqual(arguments[2:5], ['build', '--profile', 'worker-cpu'])
         self.assertEqual(arguments[5:7], ['--host', 'unix:///tmp/fake-docker.sock'])
         self.assertEqual(arguments[-2:], ['--pool', pool])

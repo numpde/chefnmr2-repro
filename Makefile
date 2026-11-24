@@ -68,14 +68,14 @@ endef
 .PHONY: sdk/acquire lock acquire build
 sdk/acquire: ## Verify or acquire pinned SDK tooling in WHEELHOUSE; requires DOCKER_CONTEXT.
 	@$(operator_inputs); pool=$$(choose WHEELHOUSE); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/scripts/build.py" sdk/acquire --host "$$docker_host" --pool "$$pool"
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" sdk/acquire --host "$$docker_host" --pool "$$pool"
 
 lock: ## Resolve a profile lock from cached packages; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
 acquire: ## Acquire the profile's locked packages into WHEELHOUSE; requires PROFILE and DOCKER_CONTEXT.
 build: ## Build a selected profile offline; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
 lock acquire build:
 	@$(operator_inputs); profile=$$(choose PROFILE '$(PROFILES)'); pool=$$(choose WHEELHOUSE); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/scripts/build.py" "$@" --profile "$$profile" --host "$$docker_host" --pool "$$pool"
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" "$@" --profile "$$profile" --host "$$docker_host" --pool "$$pool"
 
 .PHONY: check test/provider test/provider/normative test/provider/adversarial
 check: test/provider ## Run all provider image tests; requires DOCKER_CONTEXT.
@@ -85,7 +85,7 @@ test/provider/adversarial: ## Run adversarial provider image tests; requires DOC
 test/provider test/provider/normative test/provider/adversarial:
 	@$(operator_inputs); select_docker; category='$(@F)'; \
 	if [[ $$category == provider ]]; then category=all; fi; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/scripts/runtime.py" check --host "$$docker_host" --category "$$category"
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/runtime.py" check --host "$$docker_host" --category "$$category"
 
 .PHONY: test/operator test/operator/normative test/operator/adversarial
 test/operator: test/operator/normative test/operator/adversarial ## Run normative and adversarial host operator tests.
@@ -103,12 +103,12 @@ logs: ## Follow bounded provider and worker logs; requires DEPLOYMENT and DOCKER
 manual: ## Run the selected provider image as a manual model client; requires DEPLOYMENT and DOCKER_CONTEXT.
 qualify config manual/config status logs manual:
 	@$(operator_inputs); deployment=$$(choose DEPLOYMENT '$(DEPLOYMENTS)'); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/scripts/runtime.py" "$@" --host "$$docker_host" --deployment "$$deployment"
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/runtime.py" "$@" --host "$$docker_host" --deployment "$$deployment"
 
 .PHONY: deploy
 deploy: ## Promote a completed qualification with clean provider retirement; requires DEPLOYMENT, QUALIFICATION and DOCKER_CONTEXT.
 	@$(operator_inputs); deployment=$$(choose DEPLOYMENT '$(DEPLOYMENTS)'); qualification=$$(choose QUALIFICATION); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/scripts/runtime.py" deploy --host "$$docker_host" --deployment "$$deployment" --qualification "$$qualification"
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/runtime.py" deploy --host "$$docker_host" --deployment "$$deployment" --qualification "$$qualification"
 
 .PHONY: weights/download weights/verify weights/sanitize
 weights/download: ## Acquire and verify checkpoints; requires PROXY_URL and DOCKER_CONTEXT.

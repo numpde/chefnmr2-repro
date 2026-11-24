@@ -656,3 +656,83 @@ callable receipt gate. Its wrapper contract is tested, but universal runtime
 refusal of unmarked checkpoints is not claimed. Exact derivative-output pins
 remain in MolDeTr pending a separately validated lifecycle change; do not remove
 them without replacing their retry/verification consumers coherently.
+
+Joint target tree after direct Chef/MolDeTr challenge, 2026-11-24
+--------------------------------------------------------------
+
+This is the agreed end state, not a statement that either checkout already
+implements it. Equivalent roles use the same paths in both repositories.
+MolDeTr's provider, worker and deployment roles are planned; do not create empty
+stubs or claim its unchanged upstream scripts enforce an owned loader gate.
+
+  Makefile                         public annotated recipes and explicit inputs
+  docker-bake.hcl                  image targets, bases and build contexts
+  make/
+    build.py                      offline dependency/image workflow
+    runtime.py                    operation and qualification orchestration
+    deployment.py                 qualified promotion and rollback
+  builds/
+    sdk.constraints.txt           provider/worker SDK release selection
+    weights-sanitize/             direct requirements.in and generated lock
+    provider/                     direct requirements.in and generated lock
+    worker-cpu/                   direct requirements.in and generated lock
+    worker-cuda/                  direct requirements.in and generated lock
+  containers/
+    weights-sanitize/
+      Dockerfile
+      sanitize.py                 preparation, output hashes and publication
+    worker/Dockerfile             one recipe with CPU/CUDA build profiles
+    provider/                     actual API adapters and their owned resources
+    lock/Dockerfile               dependency resolver environment
+  model/
+    upstream/                     pinned scientific source submodule
+    binding.py                    scientific contract, admission and lifecycle
+    wire.py                       operation request/result types
+    checkpoints.sha256            reviewed source checkpoint/config identities
+  compose/
+    weights.yaml                  downloader, sanitizer and verification
+    inference.yaml                inference services
+    provider.yaml                 API service composition
+    qualification.yaml            isolated qualification grants
+  deployments/<name>/
+    compose.yaml                  host and device grants
+    provider.yaml                 deployment API overlay
+    provider.toml                 operation settings and checkpoint selection
+    images.env                    selected image identities
+  tests/
+    operator/                     fixtures and normative/adversarial cases
+    unit/                         fixtures and normative/adversarial cases
+    provider/                     fixtures and normative/adversarial cases
+    model/
+      qualify.py                  actual-image scientific and SDK proof
+      cases/                      exercised public scientific inputs
+  notes/                          existing decisions and retained evidence
+
+Adjudication of the direct challenges:
+
+- Keep substantive host workflow code; place it in make/ because these three
+  tools are exclusively Make-owned operator workflows. Do not add forwarding
+  .mk files or duplicate public command lists. Root Make remains the entry.
+- The sanitizer publishes checkpoint bytes and their hash marker. The owned
+  model initializer checks the selected payload and required companions using
+  the exact open descriptors handed to the loader. No cross-container source
+  import or separately packaged verification utility is needed.
+- Prove producer/consumer agreement with actual sanitizer output and actual
+  worker loading, including differing Torch environments, missing/mismatched
+  markers, selected-only behavior and refusal before readiness.
+- Source pins, preparation selection and runtime ensemble selection are distinct
+  decisions: model/checkpoints.sha256, the preparation invocation and the
+  deployment's provider.toml respectively. The sanitizer consumes source pins.
+  Generated weights, output hashes and receipts remain in the artifact volume.
+- A compatible cached sanitizer dependency closure avoids large downloads and
+  needs no GPU grant. Read-only ProArt inspection verified the eleven existing
+  MolDeTr sanitizer wheel hashes and its pinned Python base; no transfer occurred.
+- Reuse build structure without inheriting worker-only dependencies. The current
+  scripts/build.py couples any Torch resolution to an ANTLR source requirement;
+  this must be corrected when adding the sanitizer profile. Source-build policy
+  follows the actual dependency/profile, not the presence of Torch. The sanitizer
+  does not acquire SDK, RDKit or OmegaConf merely to match worker structure.
+
+No image build, source relocation, deployment or GPU qualification is claimed by
+this agreement. Earlier observations and unresolved criteria scores above remain
+historical evidence, not acceptance of this implementation.

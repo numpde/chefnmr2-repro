@@ -22,7 +22,7 @@ class MakefileNormativeTests(OperatorFixture):
         ]])
         self.assertEqual(self.docker_environment_log.read_text().strip(), 'unset|unset|unset|unset')
         arguments = self.python_arguments()
-        self.assertEqual(arguments[1], str(ROOT / 'scripts/runtime.py'))
+        self.assertEqual(arguments[1], str(ROOT / 'make/runtime.py'))
         self.assertEqual(arguments[2:5], ['check', '--host', 'unix:///tmp/fake-docker.sock'])
         self.assertEqual(arguments[5:7], ['--category', 'all'])
 
