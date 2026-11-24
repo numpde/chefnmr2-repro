@@ -2,7 +2,7 @@ Provider SDK simplification and batch execution plan
 ===================================================
 
 Date: 2026-11-23
-Status: steps 1-2 complete; step 3 in progress; steps 4-6 planned
+Status: steps 1-2 and 4-5 complete; step 3 remains separate (NMRNet delegated); step 6 planned
 
 Purpose
 -------
@@ -430,9 +430,9 @@ separate gates from local implementation completion.
 
 5. Consolidate service composition and multiple offerings
 
-   [ ] Move repeated API/delivery factories, proxy configuration, signal setup
+   [x] Move repeated API/delivery factories, proxy configuration, signal setup
        and process-lifetime ownership behind supported SDK setup APIs.
-   [ ] Extend service composition to independently configured offerings, with
+   [x] Extend service composition to independently configured offerings, with
        per-offering readiness, worker exit observation and capacity.
        Separate invalid deployment configuration (reject before startup effects)
        from a valid offering whose worker fails to load. Partial activation is
@@ -442,9 +442,9 @@ separate gates from local implementation completion.
        subset and subsequent withdrawal/recovery without changing offering
        identity. Select all-or-nothing versus partial startup explicitly for a
        deployment; preserve its existing behavior until that choice is made.
-   [ ] Preserve retained Attempt and delivery obligations during shutdown.
+   [x] Preserve retained Attempt and delivery obligations during shutdown.
        Removing phase flags requires identifying the SDK owner replacing them.
-   [ ] Migrate NMRPeak/Magnet service composition only after those behaviors are
+   [x] Migrate NMRPeak/Magnet service composition only after those behaviors are
        represented; a single-host JobService wrapper is not sufficient.
 
    Quality criteria for batch 5 — service composition
@@ -1584,3 +1584,178 @@ Batch 5 continuation — 2026-11-24
   guards/API method names that need deliberate review rather than mechanical
   distortion to satisfy a scanner. Release 0.7.4 metadata is under independent
   audit; exact-artifact qualification, publication and consumer pins follow.
+
+  Batch 5 release and normal consumer qualification — 2026-11-24:
+    SDK 86bc771e prepares 0.7.4. The first exact-artifact preparation correctly
+    rejected its installation inventory: attempt_shutdown.py was absent from
+    the exact source allowlist. The one-entry correction was independently
+    audited and the installation contract passed (18 cases, two skips).
+    Failed evidence remains under SDK release-artifacts/v0.7.4; the successful
+    preparation is release-artifacts/v0.7.4-r2. Its release-test.log records
+    1,156 unit cases (92 skips), 319 installed integration cases (29 skips),
+    two 18-case contract runs (two skips each), and 254 native cases, all passing.
+    The separate full integration run covers 441 cases (29 skips), including
+    maintained examples: /tmp/batch5-sdk-integration-full.log.
+    Qualified wheel SHA256:
+      e4cedd7ff7d84d3bc6df8fe8566295c8ecebef2bb87c10167c18f26fd249742b
+    Release record SHA256:
+      e03f8c11486f4fee59bd4e9323c396726c21ecf8409db7ac0ed1a1aea1757e21
+    Publication is running through the repository's draft/upload/download-byte
+    verification workflow; publication success is not yet claimed here.
+
+    NMRPeak 61321eb and Magnet a4a4741 pin the exact 0.7.4 wheel, API/native
+    dependency closure and source record. Independent audits found no missing
+    active pin or dependency. Both normal test-image builds passed with an
+    isolated /tmp/batch5-wheelhouse; no candidate pip override was used.
+    Magnet: 784 unit and 174 integration cases pass, recorded in
+    /tmp/batch5-magnet-locked-tests.log. Final record-identity rebuild:
+    /tmp/batch5-magnet-locked-base-r2.log.
+    NMRPeak: 51 integration cases pass (/tmp/batch5-nmrpeak-locked-integration.log).
+    Its 498-case unit run retains two deliberately red encoder-limit subtests
+    and one skip (/tmp/batch5-nmrpeak-locked-tests-r2.log). These were explicitly
+    requested and committed at base a7cb4ed, before Batch 5; production admission
+    still allows padded input exceeding the encoders' 256 positions. This is
+    an existing scientific admission issue, not a new composition regression.
+    The first source-snapshot attempt lacked initialized worktree submodules;
+    initializing the pinned submodules from existing local clones resolved it.
+    Normal production provider image also builds:
+    /tmp/batch5-nmrpeak-provider-image.log, image
+      sha256:2327f0cbe8f5dcd8baf9d02aa18c1e26c6c6f9ec3a377c47044cc40f827b4c1d.
+
+    Original SDK, NMRPeak and Magnet main checkouts were fast-forwarded to the
+    reviewed commits above. Magnet's twelve unrelated modified files did not
+    overlap this migration and their binary diff was unchanged before/after:
+      sha256:6e55a1fdf59fbce53864d6baeff8ee1f96c1a88995cd7137f94405bc9184502a.
+    No main branch was pushed and no deployed service was restarted. Chef's two
+    generated CPython 3.13 Linux/amd64 locks are audited; ordinary image builds
+    against the published wheel and the final panel remain pending.
+
+    SDK 0.7.4 publication completed and the public release is not a draft:
+      https://github.com/numpde/nmr-provider-tools/releases/tag/v0.7.4
+    All eight artifacts and both qualification logs were downloaded and compared
+    before publication. Receipt: /tmp/batch5-release-publish.log. Chef 0c68dda
+    pins the published wheel; ordinary worker/provider image builds pass
+    (/tmp/batch5-chef-images.log), all 14 provider tests pass inside the image
+    (/tmp/batch5-chef-locked-tests-r2.log), and the worker imports ChefNMR2,
+    its binding and SDK 0.7.4 without loading checkpoints
+    (/tmp/batch5-chef-worker-smoke.log). The first ad hoc provider test invocation
+    omitted the maintained runtime's PROVIDER_CORE_IN_CONTAINER=1 marker and
+    was correctly refused; the corrected invocation supplies it. No deployment
+    or live scientific qualification is implied by these image checks.
+
+  Critical panel round 3 — fresh independent Luna-medium reviewers:
+    Frozen SDK 86bc771e, NMRPeak 61321eb, Magnet a4a4741, Chef 5ac1dfd with
+    subsequently committed identical 0.7.4 pins (0c68dda).
+    Q5.1: initially 8/10 for broad alleged duplicated NMRPeak orchestration.
+    The reviewer retracted that allegation after comparing actual contracts:
+    serial JobService cannot replace parallel product admission/readiness;
+    existing publisher/drain wiring is not another implementation of them.
+    Revised to 9/10, then deeper inventory tracing found a concrete remaining
+    issue: removing an offering from NMRPEAK_PRODUCT did not remove its frozen
+    runtime lane from service startup/Hello. Runtime loops themselves correctly
+    iterate their lane declarations. That narrower finding is accepted.
+    Q5.2: initially 8/10, conditional 7/10 if readiness/lock effects count;
+    substantiated final system score 7/10. A duplicate NMRPeak start could clear
+    the live owner's readiness before failing identity-lock acquisition.
+    Accepted. Immutable deployment schema/policy can be admitted before locking;
+    captured grants, frozen/interpreter inputs and legacy journal inspection
+    remain under exclusion. This preserves the existing protected-read contract.
+    Q5.3: 8.5/10. Initial missing-consumer-proof concern was narrowed to a real
+    branch: NMRPeak shared discovery paused only with Retry-After, so a sibling
+    could immediately query after a retryable no-header failure. Accepted.
+    Q5.4: initially 9/10, revised by its reviewer to 10/10. The initial caveat
+    concerned hard-crash durability before relay acceptance, outside the agreed
+    stop/drain/cancellation/resource-release contract. Reviewer explicitly
+    retracted it as a criterion weakness after tracing retained report/claim
+    ownership and consumer cleanup gates. No lost-obligation branch was found.
+    No scores are averaged or rounded; Batch 5 acceptance remains pending.
+
+    NMRPeak 5b53e1e fixes shared discovery pacing using the feed interval as a
+    minimum for every retry-authorized refusal. Regression uses actual SDK
+    parsing/classification of correlated 401, 403 and 503 responses, proves no
+    sibling exchange before the deadline and selection after recovery, without
+    claiming that discovery starts science. All 52 integrations pass:
+    /tmp/batch5-nmrpeak-discovery-green.log. The red run exposed the 503 pacing
+    defect; initial 401/403 fixture bodies omitted required detail and were
+    correctly refused. Those fixture fields were corrected before the green run.
+    Actual source/test diff was independently audited before commit.
+
+    NMRPeak cdcefb2 admits immutable deployment configuration once, then acquires
+    identity exclusion before beginning readiness ownership. Captured grants,
+    frozen/interpreter inputs and legacy journal reads remain locked; both
+    startup and cleanup failures retain their original evidence. Independent
+    source review confirmed ordering and cleanup. The 500-case normal unit run
+    retains only the two known encoder-limit failures and one skip:
+    /tmp/batch5-nmrpeak-startup-unit.log. Both lifetime integrations pass:
+    /tmp/batch5-nmrpeak-startup-lifetime.log. A neutral startup-loader docstring
+    also covers the read-only deployment validator's separate use.
+
+    NMRPeak 8f266b6 makes the product offering tuple select service/Hello lanes.
+    The fixed frozen format still carries both scientific bindings; removing
+    either supported product offering now removes only its active service lane.
+    Both removal directions and existing startup behavior pass the 28-case
+    entrypoint suite (/tmp/batch5-nmrpeak-inventory-unit.log). Independent diff
+    audit accepted the fix. A possible duplicate binding-consistency guard was
+    not added: generation_runtime already compares the frozen analysis kind to
+    the same HF/CHF offering constants used by lifecycle_lane and product.
+    These three corrections are fast-forwarded into the original NMRPeak checkout.
+    The final committed provider image builds:
+    /tmp/batch5-nmrpeak-final-provider-image.log, image
+      sha256:58dffb0382d910d6b4e858122b050439488c4917d1c3f7f2beb5f2927bfaea65.
+    Final combined integrations and a fresh panel against SDK 86bc771e,
+    NMRPeak 8f266b6, Magnet a4a4741 and Chef 0c68dda are in progress.
+
+
+Batch 5 final acceptance — 2026-11-24
+------------------------------------
+
+Final runtime revisions: SDK 86bc771e (published 0.7.4), NMRPeak 8f266b6,
+Magnet a4a4741, Chef 0c68dda. SDK 110dc4ea adds only a test after the release;
+it changes neither the runtime nor published artifacts. Original checkouts
+contain these commits. The final NMRPeak 52-case integration run passes at
+8f266b6: /tmp/batch5-nmrpeak-final-integration.log. Its final production image
+and Chef's worker/provider images build with the supported release pins.
+
+Fresh independent Luna-medium panel, fixed criteria Q5.1–Q5.4:
+- Q5.1 composition: initially 9/10, with final integration completion still
+  pending. The completed log was inspected. Reviewer then stated its remaining
+  deduction was generalized conservatism, not an unmet obligation: the binding
+  map is the necessary join from the single product declaration to frozen
+  resources. Final independent assessment: 10/10.
+- Q5.2 startup: initially 9/10. Reviewer had inspected the SDK validator but
+  not the owning API server; subsequent inspection established the exact
+  authority at nmr-api-v1 6a163b7a9cc1e2c7485b681c0b2b969c7c20e6c8:
+  nmr_api/provider/routes.py::PROVIDER_HELLO_ROUTE documents complete snapshot
+  replacement and omitted-offering removal; operations/provider_directory.py
+  locks the stable identity and replaces entries/offerings in one transaction.
+  integration_tests/test_provider_directory.py covers empty/subset replacement,
+  failed-write preservation and concurrent publication ordering. Coordinator
+  independently checked the route and atomic service. Live deployment behavior
+  is not inferred from this pinned authority. Final assessment: 10/10.
+- Q5.3 failure scope: initially 9/10 for a broad remote-service evidence caveat.
+  The reviewer withdrew that caveat after distinguishing pinned contract proof
+  from live deployment qualification; no missing request/response class or
+  host-withdrawal effect remained. Final assessment: 10/10.
+- Q5.4 shutdown: initially 9/10. Reviewer withdrew hard-crash durability and
+  remote-acceptance caveats as outside the contract, but retained 9/10 for one
+  concrete proof gap: cancellation used a scripted owner, while permanent
+  rejection separately exercised the real controller. Accepted. SDK 110dc4ea
+  extends that real-controller subprocess proof: cancel its actual drain after
+  rejection, await acknowledgement of cancellation, and verify the same report
+  hash and claim remain held, only one submission occurred, science did not
+  rerun, drain stays pending and its process remains alive. All three shutdown
+  tests pass against the published 0.7.4 SDK in Chef's validated provider image:
+  /tmp/batch5-sdk-published-cancelled-rejection.log. Independent actual-diff and
+  completed-log review confirms the combined boundary. Final assessment: 10/10.
+
+Every required criterion meets the requested threshold without averaging or
+rounding. Batch 5 is complete. Its scope remains service composition and
+ownership; bounded concurrent acquisition and batch assembly belong to Batch 6.
+NMRNet remains delegated and was not changed by this batch. The two deliberately
+red NMRPeak encoder-limit subtests remain a separate admission defect. The SDK's
+recorded 24 failing repository-quality categories remain explicit convention
+debt; this acceptance does not claim those checks are all green. No provider
+service was restarted and no model accuracy/live-deployment claim is made.
+Only the authorized release tag was pushed; local main branches were not pushed.
+Magnet's twelve unrelated modified files retain the same binary diff hash
+recorded above. Chef, SDK and NMRPeak are otherwise clean after these commits.
