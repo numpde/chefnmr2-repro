@@ -155,7 +155,7 @@ is invoked with `-C` from another directory. The live project name remains
 Checkpoint preparation uses `make weights/download`, `make weights/sanitize`
 and `make weights/verify`, with `DOCKER_CONTEXT=science`. Acquisition requires
 explicit `PROXY_URL=none` or a container-reachable proxy URL. The pinned curl
-image must already be present; verification never pulls or downloads anything.
+image is pulled when missing; verification and sanitization never pull images.
 Build the independent sanitizer with `make build PROFILE=weights-sanitize
 DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`. Its locked CPU Torch environment
 uses cached wheels and needs neither the inference image nor a GPU.

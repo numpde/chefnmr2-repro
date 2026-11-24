@@ -32,6 +32,8 @@ class MakefileNormativeTests(OperatorFixture):
         compose = [call for call in self.calls() if call[0] == '--host']
         self.assertEqual(len(compose), 2)
         self.assertEqual([call[-1] for call in compose], ['volume-init', 'download'])
+        for call in compose:
+            self.assertEqual(call[call.index('--pull') + 1], 'missing')
         self.assertIn('--env-file', compose[0])
         self.assertEqual(self.proxy_log.read_text().splitlines(), ['unset', 'none', 'none'])
 
@@ -42,3 +44,12 @@ class MakefileNormativeTests(OperatorFixture):
         self.assertEqual(len(compose), 1)
         self.assertEqual(compose[0][-1], 'sanitize')
         self.assertIn('chefnmr2-weights-writer', compose[0])
+        self.assertEqual(compose[0][compose[0].index('--pull') + 1], 'never')
+
+        self.docker_log.unlink()
+        verify = self.run_make('weights/verify', 'DOCKER_CONTEXT=local')
+        self.assertEqual(verify.returncode, 0, verify.stderr)
+        compose = [call for call in self.calls() if call[0] == '--host']
+        self.assertEqual(len(compose), 1)
+        self.assertEqual(compose[0][-1], 'verify')
+        self.assertEqual(compose[0][compose[0].index('--pull') + 1], 'never')

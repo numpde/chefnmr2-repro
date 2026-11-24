@@ -67,7 +67,7 @@ select_docker() { \
 weights_compose() { \
 	"$${docker[@]}" compose --project-directory "$(REPOSITORY_ROOT)" --env-file /dev/null -f "$(REPOSITORY_ROOT)/compose/weights.yaml" "$$@"; \
 }; \
-weights_run() { weights_compose run --rm --no-deps --pull never -T "$$@"; }
+weights_run() { weights_compose run --rm --no-deps -T "$$@"; }
 endef
 
 .PHONY: sdk/acquire lock acquire build
@@ -118,13 +118,13 @@ deploy: ## Promote a completed qualification with clean provider retirement; req
 .PHONY: weights/download weights/verify weights/sanitize
 weights/download: ## Acquire and verify checkpoints; requires PROXY_URL and DOCKER_CONTEXT.
 	@$(operator_inputs); proxy=$$(choose PROXY_URL); select_docker; export PROXY_URL="$$proxy"; \
-	weights_run volume-init; weights_run --name chefnmr2-weights-writer download
+	weights_run --pull missing volume-init; weights_run --pull missing --name chefnmr2-weights-writer download
 
 weights/verify: ## Verify the retained checkpoint volume offline; requires DOCKER_CONTEXT.
 weights/sanitize: ## Sanitize known checkpoint files in the retained volume; requires DOCKER_CONTEXT.
 weights/verify weights/sanitize:
 	@$(operator_inputs); select_docker; \
-	if [[ $@ == weights/verify ]]; then weights_run verify; else weights_run --name chefnmr2-weights-writer sanitize; fi
+	if [[ $@ == weights/verify ]]; then weights_run --pull never verify; else weights_run --pull never --name chefnmr2-weights-writer sanitize; fi
 
 .PHONY: test/unit test/unit/normative test/unit/adversarial
 test/unit: test/unit/normative test/unit/adversarial ## Run sanitizer and worker admission tests in their own images.
