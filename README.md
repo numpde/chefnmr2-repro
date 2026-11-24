@@ -31,17 +31,15 @@ The deployment requires:
 
 - `chefnmr2-weights_checkpoints`, containing `chefnmr2-epoch949`.
 - The localhost shared delivery deployment's proxy and outbox socket volumes.
-- `chefnmr2-inference_credentials`, containing `credential.json` for
-  `provider:chefnmr2-fw-a` and `interpreter.key`, each owned by UID:GID
-  `65532:65532` with mode `0600`. Use project-owned copies; no other provider's
-  credential directory is mounted.
+- `chefnmr2-inference_credentials`, containing `credential.json` and `interpreter.key`,
+  each owned by UID:GID `65532:65532` with mode `0600`. The API credential must
+  match the identity selected in the deployment's `provider.toml`. Use
+  project-owned copies; no other provider's credential directory is mounted.
 - The localhost API's public CA certificate, stored at `secrets/localhost/api-ca.pem`.
 - A captured `resolv.conf` with non-loopback IPv4 DNS servers for the SDK proxy.
   Store it at `secrets/localhost/resolv.conf`. Its DNS and outbound connections bind to the proxy container's `eth0`.
 
 ```sh
-make build PROFILE=worker-cpu DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
-make build PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
 make config DEPLOYMENT=localhost DOCKER_CONTEXT=science
 make status DEPLOYMENT=localhost DOCKER_CONTEXT=science
 make logs DEPLOYMENT=localhost DOCKER_CONTEXT=science
@@ -114,29 +112,121 @@ request, including cancellation, starts a 10-second grace. If work remains
 unfinished, the SDK retires its worker using the separate cleanup allowances.
 Interrupted work is never replayed.
 
-Build inputs live in `builds/<profile>/requirements.in`. The generated
-`requirements.lock` is a target-specific PEP 751 artifact closure with URLs,
-hashes, the resolver proof and an input identity. `builds/sdk.constraints.txt`
-selects the common SDK release. Bake owns pinned interpreters and build contexts;
-Compose uses built images and never resolves packages.
+## Setup from a new checkout
 
-Select an existing external package pool explicitly with `WHEELHOUSE`. Prepare
-SDK tooling with `make sdk/acquire DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE" PROXY_URL=<url|none>`.
-`make lock PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE" PROXY_URL=<url|none>`
-resolves against cached artifacts and reads package-index metadata to select
-published URLs; it does not download package archives. Repeat for `worker-cpu`.
-The CPU baseline constraints preserve captured scientific transitive versions.
-Direct versions live in requirements.in; SDK versions come from the selected
-release. Change the scientific baseline deliberately when qualifying a new environment.
+The host needs Git, Bash, Python 3.11 or newer, and Docker with Compose and
+Buildx. Configure a local Docker context first; the commands below run as the
+non-root checkout owner. GitHub SSH access is needed for the pinned submodule.
 
-`make acquire PROFILE=<profile> DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE" PROXY_URL=<url|none>`
-is the separate networked package acquisition step. Builds require every selected
-artifact and all pinned base/tool images locally, fail on stale locks or missing
-inputs, and run without build networking. The worker builds the declared antlr
-source archive separately with locked setuptools and retains its resulting wheel
-hash at `/opt/inference/source-wheel-sha256.txt`.
+```bash
+git clone git@github.com:numpde/chefnmr2-repro.git
+cd chefnmr2-repro
+make upstream/init
+```
 
-Run `make check DOCKER_CONTEXT=science` for the provider's offline behavior tests.
+The checkout includes dependency locks and the generated acquisition bootstrap.
+No separate SDK checkout or host installation of the SDK is needed.
+
+Select your local Docker context, an external package directory and an artifact
+download route. Replace `local` with your configured context name. An existing
+package pool can be reused across checkouts and profiles.
+
+```bash
+CONTEXT=local
+WHEELHOUSE="$HOME/.cache/chefnmr2/wheelhouse"
+PROXY_URL=none
+WORKER_PROFILE=worker-cpu
+mkdir -p "$WHEELHOUSE"
+```
+
+`PROXY_URL=none` selects direct access. To use an upstream proxy, set it to your
+HTTP, SOCKS5 or SOCKS5h URL, including its port. SOCKS5h delegates destination DNS
+to the proxy. The examples pass values explicitly: Make ignores ambient input
+settings and prompts when a required command-line input is omitted.
+
+Pull the Python base images selected by Bake before acquisition or building.
+This reads their pinned identities from the repository rather than repeating
+image versions here. Run the examples in Bash; the subshell stops on failure.
+
+```bash
+(
+  set -euo pipefail
+  docker --context "$CONTEXT" buildx bake \
+      --print provider "$WORKER_PROFILE" weights-sanitize |
+    python3 -c 'import json,sys; print(*sorted({
+        t["args"]["PYTHON_BASE"]
+        for t in json.load(sys.stdin)["target"].values()
+    }), sep="\n")' |
+    while IFS= read -r image; do
+      docker --context "$CONTEXT" pull "$image"
+    done
+)
+```
+
+Image pulls use the Docker daemon's configured proxy independently of
+`PROXY_URL`. Artifact acquisition uses the shared SDK runner: only its temporary
+gateway has host networking. Download tools share an isolated loopback HTTP
+relay, which reaches that gateway through a private Unix socket. A failed proxy
+connection never falls back to direct access. A loopback upstream proxy on a
+rootless engine requires Docker 29.5+ with RootlessKit's detached network namespace.
+
+Acquire the pinned SDK tooling, then each profile's dependencies, and build:
+
+```bash
+(
+  set -euo pipefail
+  make sdk/acquire DOCKER_CONTEXT="$CONTEXT" \
+      WHEELHOUSE="$WHEELHOUSE" PROXY_URL="$PROXY_URL"
+
+  for profile in provider "$WORKER_PROFILE" weights-sanitize; do
+    make acquire PROFILE="$profile" DOCKER_CONTEXT="$CONTEXT" \
+        WHEELHOUSE="$WHEELHOUSE" PROXY_URL="$PROXY_URL"
+    make build PROFILE="$profile" DOCKER_CONTEXT="$CONTEXT" \
+        WHEELHOUSE="$WHEELHOUSE"
+  done
+)
+```
+
+`sdk/acquire` places the SDK wheel, wheelhouse tool, release locks and checksum
+manifest in the pool. `acquire` downloads missing profile artifacts and verifies
+the locked hashes. Builds use those artifacts offline and print the resulting
+image IDs. They fail on missing inputs or stale locks.
+
+A normal new checkout uses the checked-in locks; it does not run `make lock`.
+For dependency changes, `builds/<profile>/requirements.in` and its constraints
+are the inputs. `make lock` resolves against cached packages and reads index
+metadata to select published URLs; it needs the pinned uv image from Bake too.
+The generated `requirements.lock` records target-specific URLs, hashes, resolver
+output and input identity. `builds/sdk.constraints.txt` selects the SDK release.
+
+Run `make check DOCKER_CONTEXT="$CONTEXT"` for the provider's offline behavior tests.
+Prepare checkpoints next, then select and qualify deployment images as described
+below. API deployment also requires the credentials and services listed above.
+
+## Artifact storage and copies
+
+The selected `WHEELHOUSE` is the persistent package pool. Downloads write there;
+creating another checkout does not automatically create another pool. Builds
+currently make actual file copies of the selected artifacts, not hard links.
+
+| Location | Contents | Lifetime |
+| --- | --- | --- |
+| `$WHEELHOUSE` | Downloaded wheels, source archives and SDK tooling, reused across selected profiles | Persistent until explicitly removed |
+| Temporary `chefnmr2-inputs-*/wheels/` directory, normally under `/tmp` | Copies of the selected profile's artifacts, rehashed before building | Removed when the build command unwinds normally, including ordinary failures; abrupt process termination can leave residue |
+| Docker/BuildKit storage | Build inputs, intermediate stages and cached layers; it may retain additional artifact copies | Managed by Docker's cache lifecycle |
+| Final images | Installed Python packages; input wheels are mounted during installation rather than explicitly copied into the final filesystem | Retained with the images |
+| `make/bootstrap/acquisition/` | Generated acquisition source, bundled dependency source and a pinned pip wheel | Included in every checkout |
+| Docker volume `chefnmr2-weights_checkpoints` | Model checkpoints and preparation receipts | Persistent, separate from the checkout and wheelhouse |
+
+The bootstrap is generated from the shared SDK source and verified before use;
+its provenance is recorded in [make/bootstrap/README.md](make/bootstrap/README.md).
+It is a checked-in copy, not a separately maintained implementation.
+
+The worker builds the source-only ANTLR dependency into a wheel in an intermediate
+Docker stage. That wheel is not written back to the host pool. Its resulting hash
+is retained in the final image at `/opt/inference/source-wheel-sha256.txt`.
+
+## Checkpoints and deployment
 
 `compose/` owns common service topology and security defaults. Each deployment
 owns resource values, TOML and selected artifact identities. `images.env` is read
@@ -152,25 +242,19 @@ science-only composition. Paths resolve from the repository root even when Make
 is invoked with `-C` from another directory. The live project name remains
 `chefnmr2-inference`; isolated manual projects clean up their own runner volumes.
 
-Checkpoint preparation uses `make weights/download`, `make weights/sanitize`
-and `make weights/verify`, with `DOCKER_CONTEXT=science`. Acquisition requires
-explicit `PROXY_URL=<url>` or `PROXY_URL=none` for direct access; omitted values
-are prompted for. This setting controls checkpoint downloads, independently of
-the Docker daemon's image-pull proxy.
-All artifact acquisition uses the shared SDK runner: only its temporary gateway
-has host networking. Download tools share an isolated loopback HTTP relay, which
-reaches the gateway through a private Unix socket. `PROXY_URL=none` selects the
-gateway's normal host route; a proxy failure never switches to that route.
-A loopback upstream proxy on a rootless engine requires Docker 29.5+ with
-RootlessKit's detached network namespace.
-The bootstrap source under `make/bootstrap/acquisition` is generated from the
-shared SDK source and verified before use. It needs the pinned provider Python
-base image locally, even for checkpoint downloads. The pinned curl image is
-pulled when missing. Verification and sanitization disable networking and never
-pull images.
-Build the independent sanitizer with `make build PROFILE=weights-sanitize
-DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`. Its locked CPU Torch environment
-uses cached wheels and needs neither the inference image nor a GPU.
+Prepare the checkpoints after building the sanitizer image:
+
+```bash
+make weights/download DOCKER_CONTEXT="$CONTEXT" PROXY_URL="$PROXY_URL"
+make weights/sanitize DOCKER_CONTEXT="$CONTEXT"
+make weights/verify DOCKER_CONTEXT="$CONTEXT"
+```
+
+Download acquires all ten pinned checkpoints into `chefnmr2-weights_checkpoints`.
+The pinned curl image is pulled if missing; the shared acquisition runner uses
+the provider Python base image pulled earlier. Verification and sanitization
+have networking disabled and never pull images. The sanitizer's CPU environment
+needs neither an inference image nor a GPU.
 
 `containers/weights-sanitize/sanitize.py` owns preparation and marker publication.
 Compose selects extraction, precision and companion files.
@@ -201,11 +285,11 @@ Successful qualification automatically keeps the three newest completed runs
 for that deployment. Unfinished or malformed records remain for investigation.
 Qualification and promotion share a checkout lock, so cleanup cannot race them.
 
-The `worker-cuda` profile is prepared for GPU qualification and uses the same
-worker Dockerfile. Its cached constraints select compatible artifacts already
-present in the ProArt pool. The full GPU environment remains unqualified;
-ProArt still needs the ChefNMR2 checkout, verified model weights and missing SDK
-artifacts. There is no placeholder ProArt deployment or automatic transfer.
+For GPU builds, set `WORKER_PROFILE=worker-cuda` before the acquisition and build
+steps. It uses the same worker Dockerfile with a separate locked CUDA environment.
+Only the `localhost` deployment is currently defined. A GPU deployment must select
+its GPU and built image IDs explicitly and pass qualification before API jobs are
+enabled; building the CUDA image alone does not establish that qualification.
 
 Promote a completed qualification explicitly:
 
