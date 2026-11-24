@@ -6,6 +6,8 @@ import logging
 import os
 import pathlib
 from contextlib import contextmanager, ExitStack
+from glob import glob
+from itertools import chain
 from typing import TYPE_CHECKING
 
 import provider_core.scientific as sdk
@@ -83,7 +85,8 @@ class Inference(sdk.Contribution):
         with ExitStack() as opened:
             checkpoints = []
 
-            for directory in map(pathlib.Path, self.checkpoint_dirs):
+            paths = sorted(set(chain.from_iterable(map(glob, self.checkpoint_dirs))))
+            for directory in map(pathlib.Path, paths):
                 (weights, config) = (directory / "model.pt", directory / "config.yaml")
                 streams = opened.enter_context(verified_weights(weights, companions=(config,)))
 
