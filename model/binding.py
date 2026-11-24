@@ -1,10 +1,13 @@
 """Declare the inference operation in both containers; load science only in the worker."""
 
+import json
 import logging
 import pathlib
 from typing import TYPE_CHECKING
 
 import provider_core.scientific as sdk
+from provider_core.attempt_record import MAX_EVIDENCE_BYTES
+from provider_core.diagnostics import describe_core_failure, failure_evidence_json
 
 if __package__:
     from .wire import ElucidationBatch, ElucidationBatchResult, ElucidationResult, ModelFailure
@@ -64,8 +67,32 @@ class Inference(sdk.Contribution):
 
                 elucidation_reply = ElucidationResult(**elucidation_result)
             except Exception as error:
-                log.exception(f"Batch entry failed; {index=}")
-                elucidation_reply = ModelFailure(exception_type=type(error).__name__, message=str(error))
+                # todo: Review exception text for partial scientific-input echoes;
+                # credentials and the formula are redacted, and locals are never captured.
+                diagnostic = json.loads(
+                    failure_evidence_json(
+                        {"failure": error},
+                        secrets=(
+                            elucidation.formula,
+                            str(elucidation.peaks),
+                            str(elucidation.peaks.c),
+                            str(elucidation.peaks.h),
+                            json.dumps(elucidation.peaks.c),
+                            json.dumps(elucidation.peaks.h),
+                        ),
+                        maximum_bytes=MAX_EVIDENCE_BYTES // 2,
+                        describe_owner=lambda failure, text, window: {
+                            **describe_core_failure(failure, text, window),
+                            "message": str(failure),
+                        },
+                    ),
+                )["failure"]
+                log.error(f"Batch entry failed; {index=}; diagnostic={json.dumps(diagnostic)}")
+                elucidation_reply = ModelFailure(
+                    exception_type=diagnostic["exception_type"],
+                    message=diagnostic["message"],
+                    diagnostic=diagnostic,
+                )
             else:
                 log.info(f"Batch entry completed: {index=}, {elucidation_reply.n_valid=}, {elucidation_reply.n_samples=}")
 

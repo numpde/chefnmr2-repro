@@ -103,6 +103,7 @@ class ModelFailure:
 
     exception_type: str
     message: str
+    diagnostic: dict[str, JsonValue]
 
 
 @dataclass

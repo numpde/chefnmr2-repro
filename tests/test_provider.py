@@ -177,7 +177,10 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.new_interpreter = Mock(side_effect=AssertionError("Structured input should not call an interpreter"))
         self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
         self.condition = SimpleNamespace(require_execution=Mock())
-        self.acknowledged = SimpleNamespace(start=SimpleNamespace(input="verified-input"))
+        self.acknowledged = SimpleNamespace(
+            start=SimpleNamespace(input="verified-input"),
+            admission=SimpleNamespace(job_ref="job:fixture", execution_attempt_ref="attempt:fixture"),
+        )
 
     async def asyncSetUp(self):
         await self.provider.batches.__aenter__()
@@ -297,6 +300,51 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(endpoint.retirement_confirmed)
         self.provider.inference.assert_not_called()
 
+    async def test_interpreter_failure_preserves_redacted_cause_and_attempt_identity(self):
+        secret = "fixture-unlabelled-credential"
+        self.session.diagnostic_secrets = (secret,)
+        endpoint = self.use_interpreter([])
+        endpoint.complete = AsyncMock(side_effect=ChatFailed("http_status", "Endpoint refused " + secret))
+
+        with self.assertLogs("application", level="ERROR") as captured:
+            outcome = await self.prepare_prose()
+
+        encoded = outcome.evidence.content.decode()
+        self.assertIn("ChatFailed", encoded)
+        self.assertIn("Endpoint refused", encoded)
+        self.assertNotIn(secret, encoded)
+        self.assertIn("[redacted]", encoded)
+        self.assertIn("input_digest", json.loads(encoded))
+        self.assertIn("job:fixture", captured.output[0])
+        self.assertIn("attempt:fixture", captured.output[0])
+        self.assertNotIn(secret, captured.output[0])
+
+    async def test_model_cause_crosses_batch_wire_without_credentials_or_frame_locals(self):
+        def failed_model(*args, **kwargs):
+            private_local = "PRIVATE-FRAME-LOCAL"
+            try:
+                raise ValueError("token=hidden-token")
+            except ValueError as error:
+                raise RuntimeError("could not reconstruct CH4 with [123.456, 234.567]") from error
+
+        worker = Inference(checkpoint_dirs=[], device="cpu", recon_workers=1)
+        worker.model = SimpleNamespace(elucidate=failed_model)
+        batch = ElucidationBatch([ElucidationRequest(formula="CH4", peaks=Peaks(c=[123.456, 234.567]))])
+        codec = JsonDataclassCodec(format="test.failure_batch.v1", value_type=ElucidationBatchResult)
+
+        with patch.dict(sys.modules, {"chefnmr2.infer": SimpleNamespace(Peaks=Peaks)}):
+            with self.assertLogs("binding", level="ERROR") as captured:
+                encoded = codec.encode(worker.elucidate_batch(batch=batch))
+
+        decoded = codec.decode(encoded).replies[0]
+        self.assertEqual("RuntimeError", decoded.exception_type)
+        self.assertIn("could not reconstruct", decoded.message)
+        self.assertIn("ValueError", encoded.decode())
+        self.assertTrue(decoded.diagnostic["frames"])
+        for secret in ("hidden-token", "CH4", "123.456", "234.567", "PRIVATE-FRAME-LOCAL"):
+            self.assertNotIn(secret, encoded.decode())
+            self.assertNotIn(secret, captured.output[0])
+
     async def test_revocation_during_interpretation_prevents_accepting_a_proposal(self):
         endpoint = self.use_interpreter([("submit_input", {"formula": "CH4", "peaks": {}})])
         complete = endpoint.complete
@@ -337,13 +385,14 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.provider.inference.assert_not_called()
 
     async def test_model_diagnostic_is_a_failure_for_its_job(self):
-        self.provider.inference.return_value = ElucidationBatchResult(replies=[ModelFailure("ValueError", "private diagnostic")])
+        self.provider.inference.return_value = ElucidationBatchResult(replies=[ModelFailure("ValueError", "private diagnostic", {"exception_type": "ValueError", "message": "private diagnostic"})])
         prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
         outcome = await self.session.execute(prepared, report_condition=self.condition)
 
         self.assertIsInstance(outcome, AnalysisFailure)
         self.assertEqual("model_failed", outcome.code)
         self.assertNotIn("private diagnostic", outcome.message)
+        self.assertEqual("private diagnostic", json.loads(outcome.evidence.content)["diagnostic"]["message"])
 
         await self.session.retire()
 
@@ -380,7 +429,12 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
         decoded = reply_codec.decode(reply_codec.encode(replies))
 
-        self.assertEqual([first, ModelFailure("ValueError", "bad formula"), last], decoded.replies)
+        self.assertEqual(first, decoded.replies[0])
+        self.assertEqual(last, decoded.replies[2])
+        failure = decoded.replies[1]
+        self.assertEqual("bad formula", failure.message)
+        self.assertEqual("ValueError", failure.diagnostic["exception_type"])
+        self.assertTrue(failure.diagnostic["frames"])
 
         self.assertEqual(
             [("CH4", 8, 11), ("invalid", 8, 0), ("C2H6", 16, 22)],
@@ -573,7 +627,7 @@ class ControlledInference(Contribution):
 
         return ElucidationBatchResult(
             replies=[
-                ModelFailure("ValueError", "fixture bad formula")
+                ModelFailure("ValueError", "fixture bad formula", {})
                 if request.formula == "BAD"
                 else replace(self.elucidation_result, params={"batch_index": index})
                 for (index, request) in enumerate(batch.requests)

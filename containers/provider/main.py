@@ -33,7 +33,8 @@ async def serve(*, config: pathlib.Path) -> None:
     offering_description = (about / "hello.md").read_text(encoding="utf-8").strip().format_map(deployment["offering"])
     generation = sha256(configuration + b"\0" + provider_description.encode() + b"\0" + offering_description.encode()).hexdigest()
     clients = ProviderClients.from_config(deployment["api"], grants=SharedGrants(**deployment["shared"]))
-    new_interpreter = InterpreterSettings.from_config(deployment["interpreter"]).new_interpreter
+    interpreter_settings = InterpreterSettings.from_config(deployment["interpreter"])
+    new_interpreter = interpreter_settings.new_interpreter
     stopping = asyncio.Event()
     policy = JobServicePolicy(**deployment["service"]["policy"])
     offering = AnalysisOffering(deployment["offering"]["analysis_kind"], offering_description)
@@ -51,7 +52,11 @@ async def serve(*, config: pathlib.Path) -> None:
                         host=provider.inference.host,
                         consumer_id="chefnmr2",
                         generation=generation,
-                        new_session=lambda: ElucidationSession(provider, new_interpreter=new_interpreter),
+                        new_session=lambda: ElucidationSession(
+                            provider,
+                            new_interpreter=new_interpreter,
+                            diagnostic_secrets=interpreter_settings.diagnostic_secrets,
+                        ),
                     ),
                 ),
                 host_failure_policy=HostFailurePolicy.STOP,
