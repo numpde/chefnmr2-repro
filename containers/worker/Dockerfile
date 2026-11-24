@@ -36,7 +36,6 @@ RUN install -d -m 700 -o 65532 -g 65532 /run/chefnmr2 \
 
 COPY --from=upstream chefnmr2/ ./chefnmr2/
 COPY --from=model binding.py wire.py ./
-COPY checkpoints.py ./
 
 USER 65532:65532
 

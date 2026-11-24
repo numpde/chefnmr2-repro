@@ -156,13 +156,17 @@ class Build:
                 for wheel in self.pool.glob(f'antlr4_python3_runtime-{version}-*.whl'):
                     resolved = resolved.replace(digest(wheel), digest(archive))
             (stage / 'resolved.txt').write_text(resolved)
-            sdk_hash = json.loads(self.hashes.read_text())[f'provider_core-{self.sdk}-py3-none-any.whl']
-            arguments = ['locate', '--lock', '/stage/resolved.txt', '--pool', '/pool', '--index-url', 'https://pypi.org/simple', '--source', self.release + f'provider_core-{self.sdk}-py3-none-any.whl#sha256={sdk_hash}']
+            arguments = ['locate', '--lock', '/stage/resolved.txt', '--pool', '/pool', '--index-url', 'https://pypi.org/simple']
+            if 'provider-core==' in resolved:
+                sdk_hash = json.loads(self.hashes.read_text())[f'provider_core-{self.sdk}-py3-none-any.whl']
+                arguments += ['--source', self.release + f'provider_core-{self.sdk}-py3-none-any.whl#sha256={sdk_hash}']
             if 'torch==' in resolved:
                 version = re.search(r'^torch==([^\s]+)', resolved, re.M).group(1)
                 wheel = next(self.pool.glob(f'torch-{version}-*.whl'))
                 url = target['args']['TORCH_INDEX'] + '/' + urllib.parse.quote(wheel.name)
-                arguments += ['--source', url + '#sha256=' + digest(wheel), '--require-source', 'antlr4-python3-runtime']
+                arguments += ['--source', url + '#sha256=' + digest(wheel)]
+            if 'antlr4-python3-runtime==' in resolved:
+                arguments += ['--require-source', 'antlr4-python3-runtime']
             projected = self.sdk_tool(image, stage, *arguments, network='bridge')
             # The SDK's PEP 751 projection is the complete artifact lock. The
             # .lock filename is copied to a pylock name when invoking the tool.

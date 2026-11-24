@@ -42,3 +42,15 @@ target "worker-cuda" {
   }
   tags = ["chefnmr2/worker-cuda:local"]
 }
+
+target "weights-sanitize" {
+  inherits = ["_common"]
+  context = "containers/weights-sanitize"
+  contexts = { wheels = WHEELS_DIRECTORY }
+  args = {
+    PYTHON_BASE = "docker.io/library/python:3.12.16-slim-bookworm@sha256:623674a14ef93d052bb9b0de4dbf5f28eb578a35263838941cc8aa43213c1487"
+    PY_VERSION = "3.12.16"
+    TORCH_INDEX = "https://download.pytorch.org/whl/cpu"
+  }
+  tags = ["chefnmr2/weights-sanitizer:local"]
+}

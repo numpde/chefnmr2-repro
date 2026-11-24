@@ -2,9 +2,9 @@ name: chefnmr2-weights
 
 # Acquire the pinned ChefNMR2 ensemble into one persistent Docker volume
 # volume-init grants downloader ownership, download installs verified files,
-# and verify independently checks the sealed volume without network or writes
+# and verify checks sanitized file hashes without network or writes
 # Run with an explicit local Docker context and Compose project
-# `make weights/download` runs initialization, download and verification in order
+# `make weights/download` initializes and verifies acquisition; sanitization is separate
 # Recheck without downloading weights: `run --rm --no-deps verify`.
 #
 # Output lives in Docker's <project>_checkpoints volume, not in this checkout
@@ -129,8 +129,10 @@ services:
           chmod 0755 "$$checkpoint_directory"
 
           if test -f "$$checkpoint_file"; then
-            printf '%s  %s\n' "$$expected_sha256" "$$checkpoint_file" | sha256sum -c -
-            continue
+            if printf '%s  %s\n' "$$expected_sha256" "$$checkpoint_file" | sha256sum -c - >/dev/null 2>&1; then
+              continue
+            fi
+            printf 'Restoring pinned source %s\n' "$$checkpoint_file"
           fi
 
           partial_file=$$checkpoint_file.part
@@ -171,15 +173,14 @@ services:
 
   verify:
     <<: *contained
-    user: "curl_user:curl_group"
+    image: chefnmr2/weights-sanitizer:local
+    pull_policy: never
+    user: "100:101"
     network_mode: none
     pids_limit: 16
     cpus: 0.25
-    mem_limit: 32m
-    memswap_limit: 32m
-    depends_on:
-      download:
-        condition: service_completed_successfully
+    mem_limit: 64m
+    memswap_limit: 64m
     working_dir: /checkpoints
     volumes:
       - type: volume
@@ -189,14 +190,13 @@ services:
         volume:
           nocopy: true
       - *checksums
-    entrypoint: [/bin/sh, -eu, -c]
-    command:
-      - awk '!/^#/ { print $$1 "  " $$3 }' /checks/checkpoints.sha256 | sha256sum -c -
+    entrypoint: [python, -IB, /opt/sanitize/sanitize.py]
+    command: [--verify, --pattern, "*/model.pt", --companion, config.yaml]
 
   sanitize:
     <<: *contained
-    # Reuse the cached science environment; sanitization acquires no packages.
-    image: chefnmr2/worker-cpu:local
+    # Preparation is independent of the selected CPU/CUDA inference image.
+    image: chefnmr2/weights-sanitizer:local
     pull_policy: never
     user: "100:101"
     network_mode: none
@@ -213,5 +213,5 @@ services:
         target: /checkpoints
         volume: {nocopy: true}
       - *checksums
-    entrypoint: [python, -B, /opt/inference/checkpoints.py]
+    entrypoint: [python, -IB, /opt/sanitize/sanitize.py]
     command: [--pattern, "*/model.pt", --companion, config.yaml]

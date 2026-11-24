@@ -30,10 +30,10 @@ class MakefileNormativeTests(OperatorFixture):
         result = self.run_make('weights/download', 'PROXY_URL=none', 'DOCKER_CONTEXT=local')
         self.assertEqual(result.returncode, 0, result.stderr)
         compose = [call for call in self.calls() if call[0] == '--host']
-        self.assertEqual(len(compose), 3)
-        self.assertEqual([call[-1] for call in compose], ['volume-init', 'download', 'verify'])
+        self.assertEqual(len(compose), 2)
+        self.assertEqual([call[-1] for call in compose], ['volume-init', 'download'])
         self.assertIn('--env-file', compose[0])
-        self.assertEqual(self.proxy_log.read_text().splitlines(), ['unset', 'none', 'none', 'none'])
+        self.assertEqual(self.proxy_log.read_text().splitlines(), ['unset', 'none', 'none'])
 
         self.docker_log.unlink()
         sanitize = self.run_make('weights/sanitize', 'DOCKER_CONTEXT=local')

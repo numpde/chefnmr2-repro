@@ -150,22 +150,26 @@ Checkpoint preparation uses `make weights/download`, `make weights/sanitize`
 and `make weights/verify`, with `DOCKER_CONTEXT=science`. Acquisition requires
 explicit `PROXY_URL=none` or a container-reachable proxy URL. The pinned curl
 image must already be present; verification never pulls or downloads anything.
-Sanitization reuses the cached `chefnmr2/worker-cpu:local` image and runs offline.
-Build that image after updating the checkpoint tooling.
+Build the independent sanitizer with `make build PROFILE=weights-sanitize
+DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`. Its locked CPU Torch environment
+uses cached wheels and needs neither the inference image nor a GPU.
 
-`containers/worker/checkpoints.py` supplies container checkpoint preparation and
-admission. Compose selects extraction, precision and companion files.
+`containers/weights-sanitize/sanitize.py` owns preparation and marker publication.
+Compose selects extraction, precision and companion files.
 Chef's released inference files need no rewrite: sanitization checks
 their pinned hashes and restricted loading, then publishes
 `model.pt.sanitized.json` beside each checkpoint. The receipt covers both
 `model.pt` and `config.yaml`.
 
 Model initialization requires receipts only for the selected checkpoints.
-It checks the selected receipt generation and passes the same open files to
-the loader, without repeating full-file hashes. Managed writers remove the
-receipt before replacing covered files and publish a fresh receipt last;
-manual changes to checkpoint files must follow that protocol. Qualification
-uses the same model initialization gate. Upstream source remains unchanged.
+`model/binding.py` hashes the selected weights and config against their receipt,
+checks its generation, then passes those same open files to the loader. Managed
+writers remove the receipt before replacing covered files and publish a fresh
+receipt last. Unselected checkpoints are not opened. `weights/verify` checks
+prepared hashes; `weights/download` verifies and restores pinned source bytes.
+After an interrupted conversion leaves an unmarked output, restore the source
+before sanitizing again. Qualification uses the same model initialization gate.
+Upstream source remains unchanged.
 
 Qualify the exact selected artifacts with
 `make qualify DEPLOYMENT=localhost DOCKER_CONTEXT=science`. It checks checkpoint

@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import torch
 
-import checkpoints
+import sanitize
 from checkpoint_fixtures import CheckpointCase, TrainingMetadata
 
 
@@ -24,48 +24,36 @@ class CheckpointAdversarialTests(CheckpointCase):
 
         with patch.object(torch, "load", side_effect=record_load):
             with self.assertRaises(Exception):
-                checkpoints.sanitize(weights, source_hash)
+                sanitize.sanitize(weights, source_hash)
 
         self.assertTrue(calls)
         self.assertTrue(all(value is True for value in calls))
-        self.assertFalse(checkpoints.marker_path(weights).exists())
+        self.assertFalse(sanitize.marker_path(weights).exists())
 
     def test_prepublication_failure_keeps_old_valid_receipt(self):
         weights = self.directory / "weights.pth"
         source = OrderedDict((("weight", torch.tensor([1.0], dtype=torch.float32)),))
         self.save(weights, source)
         source_hash = self.digest(weights)
-        checkpoints.sanitize(
+        sanitize.sanitize(
             weights,
             source_hash,
-            output_definitions={"keep": (source_hash, "preserve")},
         )
-        marker = checkpoints.marker_path(weights)
+        marker = sanitize.marker_path(weights)
         old_receipt = marker.read_bytes()
 
-        self.directory.chmod(0o755)
-        expected = self.directory / "wrong-output.pth"
-        self.save(expected, OrderedDict((("weight", torch.tensor([1.0], dtype=torch.float16)),)))
-        wrong_hash = "0" * 64
-        with self.assertRaisesRegex(ValueError, "output SHA-256"):
-            checkpoints.sanitize(
-                weights,
-                source_hash,
-                output_definitions={
-                    "keep": (source_hash, "preserve"),
-                    "fp16": (wrong_hash, "float16"),
-                },
-                precision="fp16",
-            )
+        with patch.object(torch, "save", side_effect=OSError("injected serialization failure")):
+            with self.assertRaisesRegex(OSError, "serialization failure"):
+                sanitize.sanitize(weights, source_hash, precision="fp16")
 
         self.assertEqual(marker.read_bytes(), old_receipt)
-        with checkpoints.verified_weights(weights) as streams:
+        with sanitize.verified_files(weights) as streams:
             admitted = torch.load(streams[weights], weights_only=True)
         self.assertEqual(admitted["weight"].dtype, torch.float32)
 
-    def test_postreplacement_failure_leaves_no_receipt_and_retry_finishes(self):
-        weights, source_hash, _, definitions, inert_global = self.mol_source_and_outputs()
-        marker = checkpoints.marker_path(weights)
+    def test_postreplacement_failure_requires_source_restore(self):
+        weights, source_hash, inert_global = self.mol_source()
+        marker = sanitize.marker_path(weights)
         original_replace = Path.replace
 
         def fail_receipt_replace(path, target):
@@ -75,36 +63,28 @@ class CheckpointAdversarialTests(CheckpointCase):
 
         with patch.object(Path, "replace", fail_receipt_replace):
             with self.assertRaisesRegex(OSError, "receipt publication failure"):
-                checkpoints.sanitize(
+                sanitize.sanitize(
                     weights,
                     source_hash,
-                    output_definitions=definitions,
                     precision="fp16",
                     extract="model",
                     inert_globals=(inert_global,),
                 )
 
         self.assertFalse(marker.exists())
-        self.assertEqual(self.digest(weights), definitions["fp16"][0])
+        self.assertNotEqual(self.digest(weights), source_hash)
         with self.assertRaises(FileNotFoundError):
-            with checkpoints.verified_weights(weights):
-                self.fail("replaced weights remain unavailable until retry publishes a receipt")
+            with sanitize.verified_files(weights):
+                self.fail("unmarked replacement weights must remain unavailable")
 
-        checkpoints.sanitize(
-            weights,
-            source_hash,
-            output_definitions=definitions,
-            precision="fp16",
-            extract="model",
-            inert_globals=(inert_global,),
-        )
-        self.assertTrue(marker.exists())
-        with checkpoints.verified_weights(weights) as streams:
-            self.assertEqual(torch.load(streams[weights], weights_only=True)["first"].dtype, torch.float16)
+        with self.assertRaisesRegex(ValueError, "restore the pinned source"):
+            sanitize.sanitize(weights, source_hash, precision="fp16", extract="model")
+        self.assertFalse(marker.exists())
+        self.assertFalse(weights.with_name(weights.name + ".sanitize.part").exists())
 
     def test_marker_invalidation_during_opening_rejects_mixed_generation(self):
         weights, config = self.make_bundle()
-        marker = checkpoints.marker_path(weights)
+        marker = sanitize.marker_path(weights)
         replacement = self.directory / "replacement.pt"
         self.save(replacement, {"generation": 2})
         weights.parent.chmod(0o755)
@@ -122,13 +102,13 @@ class CheckpointAdversarialTests(CheckpointCase):
 
         with patch.object(Path, "open", replace_after_payload_open):
             with self.assertRaises((FileNotFoundError, ValueError)):
-                with checkpoints.verified_weights(weights, companions=(config,)):
+                with sanitize.verified_files(weights, companions=(config,)):
                     self.fail("a mixed or invalidated generation must not be yielded")
         self.assertTrue(replaced)
 
     def test_atomic_marker_replacement_rejects_old_open_generation(self):
         weights, config = self.make_bundle()
-        marker = checkpoints.marker_path(weights)
+        marker = sanitize.marker_path(weights)
         old_inode = marker.stat().st_ino
         replacement_marker = marker.with_name(marker.name + ".next")
         weights.parent.chmod(0o755)
@@ -146,7 +126,7 @@ class CheckpointAdversarialTests(CheckpointCase):
 
         with patch.object(Path, "open", replace_marker_after_payload_open):
             with self.assertRaisesRegex(ValueError, "sanitization changed while opening"):
-                with checkpoints.verified_weights(weights, companions=(config,)):
+                with sanitize.verified_files(weights, companions=(config,)):
                     self.fail("a replacement marker must not validate an older opened generation")
 
         self.assertTrue(replaced)
@@ -157,12 +137,12 @@ class CheckpointAdversarialTests(CheckpointCase):
         weights = self.directory / "weights.pt"
         self.save(weights, {"generation": torch.tensor([1])})
         source_hash = self.digest(weights)
-        checkpoints.sanitize(weights, source_hash)
+        sanitize.sanitize(weights, source_hash)
         self.directory.chmod(0o755)
         replacement = self.directory / "replacement.pt"
         self.save(replacement, {"generation": torch.tensor([2])})
 
-        with checkpoints.verified_weights(weights) as streams:
+        with sanitize.verified_files(weights) as streams:
             replacement.replace(weights)
             admitted = torch.load(streams[weights], map_location="cpu", weights_only=True)
 
@@ -170,39 +150,19 @@ class CheckpointAdversarialTests(CheckpointCase):
         self.assertEqual(admitted["generation"].item(), 1)
         self.assertEqual(current["generation"].item(), 2)
 
-    def test_binding_refuses_missing_marker_before_constructor_and_uses_selected_subset(self):
-        import binding
+    def test_payload_hash_mismatch_refuses_before_loading(self):
+        weights, config = self.make_bundle()
+        weights.chmod(0o644)
+        weights.write_bytes(b"changed weights")
+        with patch.object(torch, "load") as load:
+            with self.assertRaisesRegex(ValueError, "SHA-256"):
+                with sanitize.verified_files(weights, companions=(config,)):
+                    self.fail("changed weights must not be admitted")
+            load.assert_not_called()
 
-        selected, config = self.make_bundle(tag="selected")
-        unmarked = self.directory / "unmarked" / "model.pt"
-        self.save(unmarked, {"weights": {"weight": torch.tensor([1.0])}})
-
-        constructor_calls = []
-
-        def constructor(members, *, device, recon_workers):
-            constructor_calls.append((members, device, recon_workers))
-            loaded = []
-            for _tag, model_stream, config_stream in members:
-                loaded.append((
-                    torch.load(model_stream, map_location="cpu", weights_only=True, mmap=False),
-                    config_stream.read(),
-                ))
-            return type("LoadedModel", (), {"recon_pool": None, "loaded": loaded})()
-
-        with patch("chefnmr2.infer.ChefNMR2", side_effect=constructor):
-            refused = binding.Inference(
-                checkpoint_dirs=[str(unmarked.parent)], device="cpu", recon_workers=1,
-            )
-            with self.assertRaisesRegex(FileNotFoundError, "sanitization receipt is missing"):
-                refused.initialize(assets=object())
-            self.assertEqual(constructor_calls, [])
-
-            selected_worker = binding.Inference(
-                checkpoint_dirs=[str(selected.parent)], device="cpu", recon_workers=1,
-            )
-            selected_worker.initialize(assets=object())
-
-        self.assertEqual(len(constructor_calls), 1)
-        self.assertEqual(constructor_calls[0][0][0][0], selected.parent.name)
-        self.assertEqual(selected_worker.model.loaded[0][0]["metadata"], {"fixture": "selected"})
-        self.assertEqual(selected_worker.model.loaded[0][1].decode(), config.read_text())
+    def test_companion_hash_mismatch_refuses(self):
+        weights, config = self.make_bundle()
+        config.write_text("changed config")
+        with self.assertRaisesRegex(ValueError, "SHA-256"):
+            with sanitize.verified_files(weights, companions=(config,)):
+                self.fail("changed config must not be admitted")

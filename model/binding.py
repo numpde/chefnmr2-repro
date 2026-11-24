@@ -1,9 +1,11 @@
 """Declare the inference operation in both containers; load science only in the worker."""
 
+import hashlib
 import json
 import logging
+import os
 import pathlib
-from contextlib import ExitStack
+from contextlib import contextmanager, ExitStack
 from typing import TYPE_CHECKING
 
 import provider_core.scientific as sdk
@@ -21,6 +23,36 @@ if TYPE_CHECKING:
 log = logging.getLogger(__name__)
 
 
+@contextmanager
+def verified_weights(path, companions=()):
+    """Verify selected checkpoint inputs and retain those exact files for loading."""
+    path = pathlib.Path(path)
+    paths = [path, *(pathlib.Path(companion) for companion in companions)]
+    marker = path.with_name(path.name + ".sanitized.json")
+    with ExitStack() as opened:
+        try:
+            receipt_stream = opened.enter_context(marker.open())
+        except FileNotFoundError as error:
+            raise FileNotFoundError(
+                f"Cannot load {path}: its sanitization receipt is missing; run make weights/sanitize."
+            ) from error
+        receipt = json.load(receipt_stream)
+        if (receipt["schema"] != 1 or receipt["policy"] != "torch-weights-only-v1" or
+                not {item.name for item in paths}.issubset(receipt["files"])):
+            raise ValueError(f"Cannot load {path}: its sanitization receipt does not cover the selected files and policy")
+        streams = {item: opened.enter_context(item.open("rb")) for item in paths}
+        for item, stream in streams.items():
+            digest = hashlib.file_digest(stream, "sha256").hexdigest()
+            if digest != receipt["files"][item.name]:
+                raise ValueError(f"Cannot load {item}: SHA-256 {digest} differs from its sanitization receipt")
+            stream.seek(0)
+        # Managed writers invalidate the receipt before replacing covered files.
+        # Recheck after opening and hashing; the retained descriptors then stay fixed.
+        if not os.path.samestat(os.fstat(receipt_stream.fileno()), marker.stat()):
+            raise ValueError(f"Cannot load {path}: sanitization changed while opening the checkpoint")
+        yield streams
+
+
 class Inference(sdk.Contribution):
     def __init__(self, *, checkpoint_dirs: list[str], device: str, recon_workers: int) -> None:
         super().__init__()
@@ -35,8 +67,6 @@ class Inference(sdk.Contribution):
 
     def initialize(self, *, assets: sdk.AssetAccess) -> None:
         """Load the checkpoints before the SDK acknowledges model readiness."""
-        from checkpoints import verified_weights
-
         with ExitStack() as opened:
             checkpoints = []
             for directory in map(pathlib.Path, self.checkpoint_dirs):
