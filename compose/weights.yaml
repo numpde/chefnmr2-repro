@@ -1,3 +1,5 @@
+name: chefnmr2-weights
+
 # Acquire the pinned ChefNMR2 ensemble into one persistent Docker volume
 # volume-init grants downloader ownership, download installs verified files,
 # and verify independently checks the sealed volume without network or writes
@@ -37,7 +39,7 @@ x-contained: &contained
 
 x-checksums: &checksums
   type: bind
-  source: ../../model/checkpoints.sha256
+  source: model/checkpoints.sha256
   target: /checks/checkpoints.sha256
   read_only: true
   bind:

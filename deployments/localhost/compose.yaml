@@ -1,0 +1,19 @@
+name: chefnmr2-inference
+services:
+  manual:
+    cpus: 1
+    mem_limit: 512m
+    memswap_limit: 512m
+    pids_limit: 32
+  worker:
+    cpus: 2
+    mem_limit: 8g
+    memswap_limit: 8g
+    pids_limit: 64
+configs:
+  deployment_provider:
+    file: deployments/localhost/provider.toml
+volumes:
+  checkpoints:
+    external: true
+    name: chefnmr2-weights_checkpoints

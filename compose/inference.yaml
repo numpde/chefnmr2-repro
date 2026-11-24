@@ -1,0 +1,94 @@
+services:
+  manual:
+    image: ${CHEFNMR2_PROVIDER_IMAGE:?Select a qualified provider image}
+    platform: linux/amd64
+    profiles:
+    - manual
+    command:
+    - --config
+    - /config/provider.toml
+    entrypoint:
+    - python
+    - manual.py
+    depends_on:
+    - worker
+    stdin_open: true
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: '3'
+        compress: 'true'
+    init: true
+    stop_signal: SIGINT
+    stop_grace_period: 90s
+    network_mode: none
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    environment:
+      PROVIDER_CORE_IN_CONTAINER: '1'
+    tmpfs:
+    - /tmp:rw,nosuid,nodev,noexec,size=64m
+    configs:
+    - source: deployment_provider
+      target: /config/provider.toml
+    volumes:
+    - runner:/run/chefnmr2:ro
+    pull_policy: never
+  worker:
+    image: ${CHEFNMR2_WORKER_IMAGE:?Select a qualified worker image}
+    platform: linux/amd64
+    command:
+    - --role
+    - chefnmr2
+    - --socket
+    - /run/chefnmr2/runner.sock
+    - --scratch
+    - /run/chefnmr2-scratch
+    - --status-directory
+    - /run/chefnmr2-status
+    - --owner-session-lifetime
+    - --startup-seconds
+    - '30'
+    - --terminate-seconds
+    - '10'
+    - --kill-seconds
+    - '5'
+    - --cleanup-seconds
+    - '10'
+    - --
+    - python
+    - -m
+    - provider_core.process_worker
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: '3'
+        compress: 'true'
+    init: true
+    stop_signal: SIGINT
+    stop_grace_period: 30s
+    network_mode: none
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    environment:
+      PROVIDER_CORE_IN_CONTAINER: '1'
+      OMP_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    tmpfs:
+    - /tmp:rw,nosuid,nodev,noexec,size=64m
+    - /run/chefnmr2-scratch:rw,nosuid,nodev,noexec,size=64m,uid=65532,gid=65532,mode=0700
+    - /run/chefnmr2-status:rw,nosuid,nodev,noexec,size=1m,uid=65532,gid=65532,mode=0700
+    volumes:
+    - checkpoints:/checkpoints:ro
+    - runner:/run/chefnmr2
+    pull_policy: never
+volumes:
+  runner: {}

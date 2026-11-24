@@ -35,20 +35,19 @@ The deployment requires:
   `provider:chefnmr2-fw-a` and `interpreter.key`, each owned by UID:GID
   `65532:65532` with mode `0600`. Use project-owned copies; no other provider's
   credential directory is mounted.
-- The localhost API's public CA certificate, selected explicitly below.
+- The localhost API's public CA certificate, stored at `secrets/localhost/api-ca.pem`.
 - A captured `resolv.conf` with non-loopback IPv4 DNS servers for the SDK proxy.
-  Its DNS and outbound connections bind to the proxy container's `eth0`.
+  Store it at `secrets/localhost/resolv.conf`. Its DNS and outbound connections bind to the proxy container's `eth0`.
 
 ```sh
-export CHEFNMR2_API_CA="$PWD/secrets/localhost/api-ca.pem"
-export CHEFNMR2_DNS_CONFIG="$PWD/secrets/localhost/resolv.conf"
 make build PROFILE=worker-cpu DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
 make build PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
-docker --context science compose -f docker/compose/inference.yaml -f docker/compose/provider.yaml up -d --no-build worker provider
-docker --context science compose -f docker/compose/inference.yaml -f docker/compose/provider.yaml logs -f provider worker
+make config DEPLOYMENT=localhost DOCKER_CONTEXT=science
+make status DEPLOYMENT=localhost DOCKER_CONTEXT=science
+make logs DEPLOYMENT=localhost DOCKER_CONTEXT=science
 ```
 
-`config/deployments/localhost/provider.toml` selects the endpoint, identity,
+`deployments/localhost/provider.toml` selects the endpoint, identity,
 scientific settings, and execution limits. Keep credential contents outside the
 repository. Stopping the provider requests retirement of its active job and
 model; the worker's SDK runner remains available for another provider session.
@@ -69,15 +68,13 @@ and proxy rather than copying those providers' conversation or transport code.
 For manual model testing, use the separate client in the provider image:
 
 ```sh
-make build PROFILE=worker-cpu DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
-make build PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
-docker --context science compose -f docker/compose/inference.yaml up -d --no-build worker
 printf '%s\n' '{"requests":[{"formula":"CH4","peaks":{"h":[[1.0,4,"s"]]}}]}' |
-  docker --context science compose -f docker/compose/inference.yaml run --rm -T manual
+  make manual DEPLOYMENT=localhost DOCKER_CONTEXT=science
 ```
 
-Stop the API provider before using the manual client: both use the same model
-runner. The manual client loads the model once for its input stream and writes
+Manual runs use a unique Compose project and private runner state, sharing only
+the checkpoint volume read-only. API services and credentials are unnecessary.
+The manual client loads the model once for its input stream and writes
 one JSON batch reply per line. Closing stdin retires its model session.
 
 The worker accepts `{"requests": [...]}` and returns `{"replies": [...]}`. Entries
@@ -120,3 +117,22 @@ source archive separately with locked setuptools and retains its resulting wheel
 hash at `/opt/inference/source-wheel-sha256.txt`.
 
 Run `make check DOCKER_CONTEXT=science` for the provider's offline behavior tests.
+
+`compose/` owns common service topology and security defaults. Each deployment
+owns resource values, TOML and selected artifact identities. `images.env` is read
+by Compose itself; its two immutable image IDs serve provider/proxy/manual and
+the worker respectively. Builds print IDs; selecting artifacts for qualification
+and promotion is an explicit edit of that deployment file.
+
+The localhost API overlay is separate from its science overlay because Compose
+interpolates and validates all loaded config definitions, including inactive
+services. Manual operations never load API credentials, CA or DNS definitions.
+`make manual/config DEPLOYMENT=localhost DOCKER_CONTEXT=science` renders that
+science-only composition. Paths resolve from the repository root even when Make
+is invoked with `-C` from another directory. The live project name remains
+`chefnmr2-inference`; isolated manual projects clean up their own runner volumes.
+
+Checkpoint acquisition and verification use `make weights/download` and
+`make weights/verify`, both with `DOCKER_CONTEXT=science`. Acquisition requires
+explicit `PROXY_URL=none` or a container-reachable proxy URL. The pinned curl
+image must already be present; verification never pulls or downloads anything.

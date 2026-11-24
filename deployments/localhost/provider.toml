@@ -7,7 +7,7 @@ seed = 0
 
 [runner]
 role = "chefnmr2"
-# Match the runner's --socket in docker/compose/inference.yaml and the lease file
+# Match the runner's --socket in compose/inference.yaml and the lease file
 # created by containers/worker/Dockerfile, both on the runner volume.
 socket = "/run/chefnmr2/runner.sock"
 lease_file = "/run/chefnmr2/.owner-session.lock"

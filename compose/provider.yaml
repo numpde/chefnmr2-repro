@@ -1,0 +1,122 @@
+services:
+  provider:
+    image: ${CHEFNMR2_PROVIDER_IMAGE:?Select a qualified provider image}
+    platform: linux/amd64
+    command:
+    - --config
+    - /config/provider.toml
+    depends_on:
+      worker:
+        condition: service_started
+      interpreter-proxy:
+        condition: service_healthy
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: '3'
+        compress: 'true'
+    init: true
+    stop_signal: SIGINT
+    stop_grace_period: 90s
+    network_mode: none
+    read_only: true
+    cap_drop:
+    - ALL
+    security_opt:
+    - no-new-privileges:true
+    environment:
+      PROVIDER_CORE_IN_CONTAINER: '1'
+    tmpfs:
+    - /tmp:rw,nosuid,nodev,noexec,size=64m
+    configs:
+    - source: deployment_provider
+      target: /config/provider.toml
+    - source: localhost_api_ca
+      target: /run/config/api-ca.pem
+    volumes:
+    - runner:/run/chefnmr2:ro
+    - provider-lifetime:/run/chefnmr2-provider
+    - interpreter-socket:/run/chefnmr2-interpreter:ro
+    - type: volume
+      source: credentials
+      target: /run/chefnmr2-credentials
+      read_only: true
+      volume:
+        nocopy: true
+    - type: volume
+      source: api-proxy
+      target: /run/nmr-api-proxy
+      read_only: true
+      volume:
+        nocopy: true
+    - type: volume
+      source: api-outbox
+      target: /run/nmr-api-outbox
+      read_only: true
+      volume:
+        nocopy: true
+    pull_policy: never
+  interpreter-proxy:
+    image: ${CHEFNMR2_PROVIDER_IMAGE:?Select a qualified provider image}
+    platform: linux/amd64
+    entrypoint:
+    - python
+    - -m
+    - provider_core.provider_proxy
+    command:
+    - --mode
+    - external
+    - --interface
+    - eth0
+    - --authority
+    - api.openai.com:443
+    - --socket
+    - /run/chefnmr2-interpreter/proxy.sock
+    - --ready-file
+    - /run/chefnmr2-interpreter/ready
+    - --status-directory
+    - /run/status
+    - --log-level
+    - INFO
+    init: true
+    read_only: true
+    cap_drop:
+    - ALL
+    # The SDK binds outbound connections to its selected interface.
+    cap_add:
+    - NET_RAW
+    security_opt:
+    - no-new-privileges:true
+    networks:
+    - interpreter-egress
+    configs:
+    - source: interpreter_dns
+      target: /etc/resolv.conf
+    environment:
+      PROVIDER_CORE_IN_CONTAINER: '1'
+    tmpfs:
+    - /run/status:rw,nosuid,nodev,noexec,size=1m,uid=65532,gid=65532,mode=0700
+    volumes:
+    - interpreter-socket:/run/chefnmr2-interpreter
+    healthcheck:
+      test:
+      - CMD
+      - python
+      - -c
+      - from pathlib import Path; assert Path('/run/chefnmr2-interpreter/ready').is_file()
+      interval: 2s
+      timeout: 2s
+      retries: 15
+    logging:
+      driver: local
+      options:
+        max-size: 10m
+        max-file: '3'
+        compress: 'true'
+    pull_policy: never
+volumes:
+  provider-lifetime: {}
+  interpreter-socket: {}
+networks:
+  interpreter-egress: {}

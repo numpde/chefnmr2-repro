@@ -161,7 +161,7 @@ Ordered implementation batches
     tests and Torch-free imports pass. Removing the selected einops artifact
     fails before assembly and leaves no operation staging directory.
 
-[ ] 3. Separate deployment choices from common service definitions.
+[x] 3. Separate deployment choices from common service definitions.
 
     Move Compose and localhost config. Put localhost volume identities, config
     paths, socket grants, image selections and resource values in its overlay.
@@ -196,6 +196,16 @@ Ordered implementation batches
     grants, limits and external volume identities; manual composition requires
     no API secrets, CA or DNS variables. Provider/proxy/manual refer to the same
     provider image. Only the intended worker receives GPU access when selected.
+
+    Evidence: rendered localhost grants, limits, networks and volume identities
+    match the baseline. Manual rendering has exactly worker/manual, its private
+    runner, read-only checkpoints and selected deployment TOML; it needs no API
+    variables and renders identically from another working directory.
+    Native Compose images.env supplies one provider ID to all three consumers.
+    A separate deployment API overlay is necessary because Compose processes
+    config definitions even for inactive services; manual never loads that file.
+    An isolated real CH4 request completed all eight draws and returned methane;
+    its runner container and volume retired without touching the live API project.
 
 [ ] 4. Qualify the migrated CPU images and retire compatibility machinery.
 

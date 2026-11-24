@@ -1,0 +1,28 @@
+services:
+  provider:
+    cpus: 1
+    mem_limit: 512m
+    memswap_limit: 512m
+    pids_limit: 32
+    group_add:
+    - '1000'
+  interpreter-proxy:
+    cpus: 0.5
+    mem_limit: 128m
+    memswap_limit: 128m
+    pids_limit: 32
+configs:
+  localhost_api_ca:
+    file: secrets/localhost/api-ca.pem
+  interpreter_dns:
+    file: secrets/localhost/resolv.conf
+volumes:
+  credentials:
+    external: true
+    name: chefnmr2-inference_credentials
+  api-proxy:
+    external: true
+    name: nmr-api-delivery-proxy-socket
+  api-outbox:
+    external: true
+    name: nmr-api-delivery-outbox-socket
