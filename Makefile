@@ -21,6 +21,10 @@ unexport DOCKER_CONTEXT PROXY_URL WHEELHOUSE PROFILE DEPLOYMENT QUALIFICATION
 help: ## List workflows; inputs may prompt on a terminal and environment values never select them.
 	@awk -F ':.*## ' '/^[a-z][a-z0-9_./-]*:.*## / { printf "  make %-28s %s\n", $$1, $$2 }' "$(REPOSITORY_ROOT)/Makefile"
 
+.PHONY: upstream/init
+upstream/init: ## Initialize the pinned upstream submodule with a shallow checkout; may use the network.
+	git -C "$(REPOSITORY_ROOT)" submodule update --init --checkout --depth 1 -- model/upstream
+
 # One selector owns explicit input, terminal prompting, cancellation and choices.
 define operator_inputs
 choose() { \
