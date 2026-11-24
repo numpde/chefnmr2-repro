@@ -2,9 +2,12 @@
 
 import asyncio
 from copy import deepcopy
+from contextlib import asynccontextmanager, nullcontext
 from dataclasses import asdict
 import json
+from pathlib import Path
 import sys
+from tempfile import TemporaryDirectory
 from threading import Event
 import unittest
 from types import SimpleNamespace
@@ -15,6 +18,7 @@ from provider_core.chat_errors import ChatFailed
 from provider_core.embedded_host import InProcessExecutionHost
 from provider_core.hosting import OperationPolicy
 from provider_core.interpreter_settings import ManagedInterpreter
+from provider_core.lifetime import ProviderLifetime
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
 from provider_core.scientific import Analysis, Contribution, operation
 from provider_core.scientific_call import ErrorPolicy, ScientificCall
@@ -22,6 +26,84 @@ from provider_core.scientific_call import ErrorPolicy, ScientificCall
 from application import ElucidationSession, ElucidationReport
 from binding import Inference
 from wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ElucidationResult, ModelFailure, Peaks
+import main as provider_main
+
+
+class ProviderLifetimeTests(unittest.IsolatedAsyncioTestCase):
+    async def test_exclusion_remains_through_service_and_model_cleanup(self):
+        for failing_phase in (None, "policy", "service", "model_cleanup"):
+            with self.subTest(failing_phase=failing_phase), TemporaryDirectory() as directory:
+                root = Path(directory)
+                lifetime = ProviderLifetime(root)
+                failure = RuntimeError("fixture unsettled cleanup")
+                phases = []
+
+                def observe_exclusion(phase):
+                    phases.append(phase)
+                    with self.assertRaises(BlockingIOError):
+                        ProviderLifetime(root).open()
+                    if failing_phase == phase:
+                        raise failure
+
+                @asynccontextmanager
+                async def open_provider(deployment):
+                    observe_exclusion("model_start")
+                    try:
+                        yield SimpleNamespace(inference=SimpleNamespace(host=object()))
+                    finally:
+                        observe_exclusion("model_cleanup")
+
+                async def serve():
+                    observe_exclusion("service")
+
+                config = root / "provider.toml"
+                config.write_text(f'''
+[api]
+[interpreter]
+[shared]
+project = "test-delivery"
+gid = 1000
+[offering]
+analysis_kind = "mol_from_1h_13c_formula"
+n_samples = 8
+seed = 0
+[service]
+lifetime_directory = {json.dumps(str(root))}
+[service.policy]
+feed_seconds = {0 if failing_phase == "policy" else 1}
+hello_seconds = 60
+observation_seconds = 1
+recovery_seconds = 10
+retry_max_seconds = 2
+settle_seconds = 2
+''', encoding="utf-8")
+
+                try:
+                    with patch.object(provider_main.ProviderClients, "from_config", return_value=Mock()), \
+                            patch.object(provider_main.InterpreterSettings, "from_config", return_value=Mock()), \
+                            patch.object(provider_main, "termination_signals", return_value=nullcontext()), \
+                            patch.object(provider_main, "ProviderLifetime", return_value=lifetime), \
+                            patch.object(provider_main, "open_provider", open_provider), \
+                            patch.object(provider_main, "JobService", return_value=SimpleNamespace(serve=serve)):
+                        if failing_phase == "policy":
+                            with self.assertRaises(ValueError):
+                                await provider_main.serve(config=config)
+                        elif failing_phase is None:
+                            await provider_main.serve(config=config)
+                        else:
+                            with self.assertRaises(RuntimeError) as caught:
+                                await provider_main.serve(config=config)
+                            self.assertIs(caught.exception, failure)
+
+                    expected = [] if failing_phase == "policy" else ["model_start", "service", "model_cleanup"]
+                    self.assertEqual(expected, phases)
+                    if failing_phase in (None, "policy"):
+                        ProviderLifetime(root).open().close()
+                    else:
+                        with self.assertRaises(BlockingIOError):
+                            ProviderLifetime(root).open()
+                finally:
+                    lifetime.close()
 
 
 class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):

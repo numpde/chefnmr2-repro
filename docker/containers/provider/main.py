@@ -2,21 +2,17 @@
 
 import argparse
 import asyncio
-from dataclasses import replace
 from hashlib import sha256
 import logging
 import pathlib
-import signal
 import tomllib
 
 from provider_core.interpreter_settings import InterpreterSettings
-from provider_core.api import ProviderAPI
-from provider_core.api_config import api_settings_with_material
+from provider_core.provider_clients import ProviderClients
+from provider_core.process_signals import termination_signals
 from provider_core.job_service import JobService, JobServicePolicy
 from provider_core.lifetime import ProviderLifetime
-from provider_core.shared_delivery_client import SharedDeliveryClient
 from provider_core.shared_grants import SharedGrants
-from provider_core.startup_file import read_startup_file
 from provider_core.validation.upstream.nmr.v1.hello import AnalysisOffering
 
 if __package__:
@@ -35,52 +31,34 @@ async def serve(*, config: pathlib.Path) -> None:
     provider_description = (about / "provider.md").read_text(encoding="utf-8").strip()
     offering_description = (about / "hello.md").read_text(encoding="utf-8").strip().format_map(deployment["offering"])
     generation = sha256(configuration + b"\0" + provider_description.encode() + b"\0" + offering_description.encode()).hexdigest()
-    (settings, provider_ref, publication) = api_settings_with_material(deployment["api"], read_startup_file)
-    grants = SharedGrants(**deployment["shared"])
-    settings = replace(settings, http=replace(settings.http, proxy_socket=str(grants.proxy_socket)))
+    clients = ProviderClients.from_config(deployment["api"], grants=SharedGrants(**deployment["shared"]))
     new_interpreter = InterpreterSettings.from_config(deployment["interpreter"]).new_interpreter
     stopping = asyncio.Event()
-    loop = asyncio.get_running_loop()
+    policy = JobServicePolicy(**deployment["service"]["policy"])
+    offering = AnalysisOffering(deployment["offering"]["analysis_kind"], offering_description)
 
-    for number in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(number, stopping.set)
-
-    def new_api():
-        return ProviderAPI(settings.identity, settings.http.new_transport(), expected_topology=settings.expected_topology)
-
-    def new_delivery():
-        return SharedDeliveryClient(
-            grants.endpoint(settings.identity.origin, provider_ref),
-            publication,
-            exchange_seconds=settings.http.exchange_seconds,
-            retirement_seconds=settings.http.retirement_seconds,
-        )
-
-    lifetime = ProviderLifetime(pathlib.Path(deployment["service"]["lifetime_directory"])).open()
-
-    try:
+    with termination_signals(stopping.set):
+        lifetime = ProviderLifetime(pathlib.Path(deployment["service"]["lifetime_directory"])).open()
         async with open_provider(deployment) as provider:
             service = JobService(
-                provider_ref=provider_ref,
+                provider_ref=clients.provider_ref,
                 consumer_id="chefnmr2",
                 generation=generation,
-                offering=AnalysisOffering(provider.offering["analysis_kind"], offering_description),
+                offering=offering,
                 display_name="ChefNMR2",
                 description=provider_description,
                 host=provider.inference.host,
-                policy=JobServicePolicy(**deployment["service"]["policy"]),
+                policy=policy,
                 new_session=lambda: ElucidationSession(provider, new_interpreter=new_interpreter),
-                new_api=new_api,
-                new_delivery=new_delivery,
+                new_api=clients.new_api,
+                new_delivery=clients.new_delivery,
                 stopping=stopping,
             )
 
             await service.serve()
-    finally:
+        # Release only after both the service and model contexts complete.
+        # A failed cleanup retains exclusion until this process exits.
         lifetime.close()
-
-        for number in (signal.SIGINT, signal.SIGTERM):
-            loop.remove_signal_handler(number)
 
 
 if __name__ == "__main__":
