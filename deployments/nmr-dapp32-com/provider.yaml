@@ -7,10 +7,17 @@ services:
     group_add:
     - '1000'
   interpreter-proxy:
+    # Interface-bound DNS cannot use Docker's loopback resolver.
+    configs:
+    - source: interpreter_dns
+      target: /run/systemd/resolve/resolv.conf
     cpus: 0.5
     mem_limit: 128m
     memswap_limit: 128m
     pids_limit: 32
+configs:
+  interpreter_dns:
+    file: /run/systemd/resolve/resolv.conf
 volumes:
   credentials:
     external: true

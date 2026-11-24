@@ -129,7 +129,9 @@ API jobs. Checked-in candidate IDs are not evidence of qualification.
 ## API deployment
 
 `nmr-dapp32-com` targets the public API as `provider:chefnmr2-pa-a`, using system
-CA trust and Docker's DNS. It requires the shared delivery volumes below and
+CA trust. Its interpreter proxy reads the host's upstream DNS servers from
+`/run/systemd/resolve/resolv.conf`; its interface-bound DNS cannot use Docker's
+loopback resolver. It requires the shared delivery volumes below and
 `chefnmr2-nmr-dapp32-com_credentials`, containing its dedicated `credential.json`
 and `interpreter.key` with the same ownership and permissions as localhost.
 
