@@ -12,7 +12,7 @@ from provider_core.interpreter import ModelReportedInterpretationProblem, ModelW
 from provider_core.payload import PayloadRejected
 
 if __package__:
-    from .._shared.wire import Peaks
+    from model.wire import Peaks
 else:
     from wire import Peaks
 

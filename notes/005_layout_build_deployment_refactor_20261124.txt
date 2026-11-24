@@ -1,0 +1,256 @@
+ChefNMR2 layout, build and deployment refactor
+============================================
+
+Date: 2026-11-24
+Status: plan; implementation has not started
+Baseline: 222c7b8; ChefNMR2 submodule 9922b6c571428757c37f127225a62f2070d6ddc0
+
+Completion contract
+-------------------
+
+- One provider image serves CPU and GPU deployments. One worker Dockerfile and
+  one SDK contribution implement both worker variants. The SDK remains the
+  runner/process owner; do not reintroduce worker.py or a custom supervisor.
+- model/binding.py owns the scientific operation and lifecycle; model/wire.py
+  owns its request/result types. Both images consume the same declaration.
+  Scientific imports remain lazy so the provider needs no Torch installation.
+- docker-bake.hcl owns image targets, pinned bases, target platforms and named
+  build contexts. Each builds/<profile>/requirements.in owns direct dependency
+  intent; its generated requirements.lock selects the complete target-specific
+  artifact closure. builds/sdk.constraints.txt selects one SDK release.
+- Compose owns runtime topology and containment. Deployment overlays own host
+  mounts, resource settings, selected image digests and GPU device grants.
+  provider.toml owns SDK/scientific/API settings. No custom config merger.
+- Qualification runs the actual worker/provider images with the selected
+  deployment configuration and separate runner state. Credentials and API
+  connectivity are unnecessary for manual model qualification.
+- The existing CPU environment and behavior survive the move. CUDA is a
+  separately qualified environment; it cannot silently replace CPU packages or
+  fall back to CPU inference.
+- Old executable paths, duplicate configs and unused commands disappear when
+  their consumers move. Historical notes keep their original paths as evidence.
+
+Scope and external dependencies
+-------------------------------
+
+The CPU baseline is Python 3.13.18, Torch 2.5.1 and provider-core 0.7.5. Preserve
+the submodule revision, checkpoint hashes, batch protocol, sampling defaults,
+resource limits and credentials during the structural migration.
+
+The ProArt preparation note identifies a candidate Python 3.12 / Torch
+2.10.0+cu130 environment, not a qualified ChefNMR2 runtime. Its package inventory
+does not prove a complete dependency closure or current GPU availability.
+Missing source, SDK artifacts and checkpoints remain explicit prerequisites.
+No transfers to/from ProArt, changes to other providers, or SDK release are part
+of this move. The separately maintained ProArt preparation note is read-only
+input to this plan. Execution-timeout escalation remains separate SDK work.
+
+Destination and removal map
+---------------------------
+
+  docker/containers/provider/       -> containers/provider/
+  docker/containers/worker/         -> containers/worker/
+  docker/containers/_shared/*.py    -> model/{binding,wire}.py
+  chefnmr2-upstream/                -> model/upstream/ (same gitlink revision)
+  requirements/checkpoints.sha256 -> model/checkpoints.sha256
+  docker/compose/                   -> compose/
+  config/deployments/localhost/     -> deployments/localhost/
+
+New build ownership:
+  Makefile
+  docker-bake.hcl
+  builds/sdk.constraints.txt
+  builds/{provider,worker-cpu,worker-cuda}/{requirements.in,requirements.lock}
+
+New runtime/qualification ownership:
+  deployments/localhost/compose.yaml
+  deployments/proart/{compose.yaml,provider.toml}
+  tests/model/qualify.py
+  tests/model/cases/                 (only cases actually exercised)
+
+Remove after replacement:
+  requirements/provider-api.txt    -> provider profile lock
+  requirements/provider-core.txt   -> complete worker profile locks
+  config/deployments/test/provider.toml -> selected deployment's provider.toml
+  docker/containers/compatibility/Dockerfile -> actual-image qualification
+  scripts/host/operator-input.sh    -> unused; no current callers found
+
+Retain tests/test_provider.py, notes and ignored secrets. No forwarding modules,
+symlinks, duplicate Compose build definitions or permanent migration adapters.
+
+Ordered implementation batches
+------------------------------
+
+[x] 1. Move source and update its consumers atomically.
+
+    Move provider/worker directories, model binding/types, submodule and
+    checkpoint manifest to their destinations. Update .gitmodules, Docker
+    contexts/COPY inputs, tests, current Compose references and active README
+    commands in the same change. Keep the binding's runtime module identity
+    stable; changing its host path need not change its container import path.
+    Preserve narrow build contexts and the provider .dockerignore allowlist.
+
+    Acceptance: unchanged gitlink/checkpoint bytes; working submodule checkout;
+    both image builds consume only their intended contexts; provider tests and
+    image imports pass. Provider imports must work without Torch installed.
+    No live deployment replacement in this batch.
+
+    Evidence: submodule remains at 9922b6c57142; checkpoint manifest bytes are
+    unchanged. Relocated worker/provider builds reused all dependency layers.
+    Rendered runtime configuration is identical after excluding build paths.
+    Provider image tests and Torch-free imports are checked before commit.
+
+[ ] 2. Establish explicit, complete CPU build inputs.
+
+    Add the provider and worker-cpu profiles, common SDK selection, Bake targets
+    and a working root Makefile. Reuse the SDK's artifact-selection tooling and
+    release locks; do not write a second package resolver. Preserve the released
+    SDK dependency selections when resolving the combined scientific closure.
+    Inspect the current CPU image's actual package versions before locking:
+    matching direct pins alone does not preserve its transitive environment.
+
+    Generate target-specific URL/hash locks; do not hand-edit derived files.
+    Account explicitly for any source-only dependency, including its build
+    inputs and resulting wheel, rather than permitting arbitrary install-time
+    source builds. Unsupported/missing artifacts must identify the missing
+    input before image assembly starts.
+
+    Separate lock generation, explicit acquisition, staging and offline build.
+    Stage only selected verified artifacts into a project-owned temporary
+    directory. Build must neither download packages nor implicitly pull missing
+    base images/frontends. Missing inputs fail; acquisition is a separate target.
+    Clean staging on success/failure without modifying the source package pool.
+    Reuse SDK/tooling helpers; extract a small repository helper only if actual
+    shell lifecycle logic warrants it, rather than growing a Make framework.
+
+    Remove Dockerfile dependency extraction and Compose build sections once
+    Bake owns those facts. Compose consumes built images. Make owns invocation
+    order and cleanup, not another copy of build definitions.
+
+    Acceptance: provider and CPU worker build offline from locked inputs;
+    pip check and provider tests pass in those images; installed CPU packages
+    match the captured baseline or any necessary change is separately explained
+    and qualified. One missing selected artifact fails before installation.
+
+[ ] 3. Separate deployment choices from common service definitions.
+
+    Move Compose and localhost config. Put localhost volume identities, config
+    paths, socket grants, image selections and resource values in its overlay.
+    Common files retain service relationships and security defaults. Keep the
+    explicit existing production Compose project name so moves do not create
+    new runner/credential/weight volume identities accidentally.
+
+    Make selects compose files and an explicit project directory consistently;
+    verify relative-path resolution from another working directory. A selected
+    deployment overlay chooses the worker image and matching device settings
+    together. No independent GPU switch that can disagree with provider.toml.
+
+    Point manual at the same deployment TOML as the API service, then delete the
+    test TOML. Its science settings currently match localhost; extra API sections
+    must not cause manual to open credentials or start API/proxy services.
+    Manual qualification uses a distinct Compose project and runner volume;
+    only the verified checkpoint volume is shared read-only.
+
+    Acceptance: compare rendered before/after localhost services for unchanged
+    grants, limits and external volume identities; manual composition requires
+    no API secrets, CA or DNS variables. Provider/proxy/manual refer to the same
+    provider image. Only the intended worker receives GPU access when selected.
+
+[ ] 4. Qualify the migrated CPU images and retire compatibility machinery.
+
+    Extract useful assertions from the compatibility Dockerfile into
+    tests/model/qualify.py and exercised input cases. Run with the exact worker
+    image under test, mounting test inputs read-only, not a separately assembled
+    scientific environment. Exercise the SDK session/batch path with manual
+    from the exact provider image as well.
+
+    Preserve checks for checkpoint loading, completed sample count, functioning
+    reconstruction, parseable structures and matching molecular formula. Record
+    image IDs/digests, Python/Torch/SDK versions, submodule/checkpoint identity,
+    device, sample count/seed and elapsed times. Keep legacy ten-sample evidence
+    distinct from the eight-sample deployment smoke; do not imply identical runs.
+    Check a multi-entry batch retains input/reply order and session retirement
+    cleans up the model. Reuse existing provider failure/cancellation tests.
+
+    Acceptance: actual CPU images pass provider tests and real-model checks;
+    cleanup removes only the qualification project's containers/scratch, keeping
+    checkpoints and explicitly retained evidence. Then remove the compatibility
+    Dockerfile and unused operator-input helper in the owning commit.
+
+[ ] 5. Add and qualify the CUDA profile and ProArt deployment.
+
+    Add worker-cuda inputs and a Bake target using the same worker Dockerfile.
+    Select a complete scientific/SDK closure for the candidate interpreter;
+    cp313 native wheels cannot be reused as cp312 wheels. Keep the provider on
+    its existing Python image. Document scientific version differences from CPU.
+
+    Create a concrete ProArt deployment overlay/TOML once actual local inputs
+    are available: explicit engine, worker image, GPU UUID, checkpoint volume,
+    limits and cuda:0 within the container. Device selection is not an exclusive
+    GPU reservation. Recheck availability without changing another provider.
+    Do not insert fake credential/endpoint values merely to fill an API config.
+    Initial manual qualification can use science-only deployment settings;
+    API activation additionally needs the real identity and connectivity.
+
+    Run the same actual-image checks, including cold/warm requests and peak GPU
+    memory. Verify CUDA execution, not just device visibility. CPU/GPU candidates
+    need scientific validity, not identical random samples or candidate votes.
+
+    Acceptance: complete verified input closure, offline CUDA image build,
+    explicit GPU use, ordered batch replies, valid results and confirmed model
+    retirement. Missing ProArt artifacts/access leave this batch pending; CPU
+    completion is not presented as full GPU completion. No implicit transfers.
+
+[ ] 6. Finish operator workflow, promote and audit the complete move.
+
+    Document the Make commands for lock/acquire/build/check/qualify/deploy/logs
+    and checkpoint download/verify. Keep acquisition separate from build and
+    deployment. Expose profile selection for builds and deployment selection
+    for runtime operations; no orphan fragments or duplicate target registry.
+
+    Before replacing localhost, retain its previous image identities, effective
+    Compose configuration and mounted deployment config for rollback. Promote
+    the exact qualified artifacts; do not rebuild during deployment. Use a
+    resolvable image digest, or an explicit no-pull local image identity where no
+    registry digest exists. Retire the current provider through the SDK lifecycle
+    before replacing its worker. Failed/unconfirmed retirement blocks replacement;
+    do not replay uncertain attempts or delete persistent volumes to recover.
+
+    Verify startup and a bounded live API smoke when deploying; keep any live
+    job creation explicit. Roll back images/config together if startup fails.
+    ProArt API activation is a separate step after CUDA qualification and actual
+    provider credentials/connectivity are available.
+
+    Acceptance: maintained README commands work; no active references to removed
+    paths; no old build/config authority survives; existing containment remains;
+    qualification and deployment refer to the same artifacts. Historical notes
+    are not rewritten to make obsolete commands appear current.
+
+Commit and review discipline
+----------------------------
+
+Each numbered batch has a coherent commit boundary; split further only where
+each commit has a working consumer and removes the authority it replaces.
+Update this checklist with evidence and material deviations as work completes.
+Keep relocation changes distinct from dependency/environment changes so reviewers
+can identify the source of a regression. Do not mix the unrelated ProArt note
+into these commits. A blocked CUDA batch must remain visibly incomplete.
+
+Review ordinary next changes before declaring completion:
+- SDK bump: change its common selection and regenerate affected target locks;
+  no Dockerfile or Python version literal needs editing for an SDK-only change.
+- Python/CUDA change: change the selected base/profile inputs, regenerate the
+  appropriate lock and requalify; the provider need not follow worker ABI changes.
+- Second GPU deployment: add its concrete overlay/TOML, without copying model
+  code or creating another provider image.
+- Interpreter prompt edit: rebuild provider only; worker lock/image stays valid.
+- Interrupted build/qualification: project-owned staging and runtime scratch
+  clean up; shared caches, weights, credentials and other providers remain intact.
+
+Planning result
+---------------
+
+Implement batches 1-4 first to establish and qualify the CPU end state. Batch 5
+adds the CUDA environment through the same owners. Batch 6 completes promotion
+and the whole-tree audit. Preparation for missing GPU inputs may proceed
+independently; it does not authorize remote copies or make qualification optional.

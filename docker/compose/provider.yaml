@@ -5,9 +5,9 @@ services:
     image: chefnmr2-inference-provider
     platform: linux/amd64
     build:
-      context: ../containers/provider
+      context: ../../containers/provider
       additional_contexts:
-        shared: ../containers/_shared
+        shared: ../../model
         dependency-pins: ../../requirements
     command: [--config, /config/provider.toml]
     depends_on:

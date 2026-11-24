@@ -54,8 +54,8 @@ model; the worker's SDK runner remains available for another provider session.
 The SDK preserves selected results through delivery backpressure. It does not
 resume an existing API Attempt after the provider process restarts.
 
-Interpreter instructions live in `docker/containers/provider/prompts/`; public
-provider and offering descriptions live in `docker/containers/provider/about/`.
+Interpreter instructions live in `containers/provider/prompts/`; public
+provider and offering descriptions live in `containers/provider/about/`.
 The offering template uses the deployment's sample count and seed. These files
 are packaged in the provider image; rebuild it after editing them.
 

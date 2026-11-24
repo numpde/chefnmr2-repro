@@ -5,9 +5,9 @@ services:
     platform: linux/amd64
     profiles: [manual]
     build:
-      context: ../containers/provider
+      context: ../../containers/provider
       additional_contexts:
-        shared: ../containers/_shared
+        shared: ../../model
         dependency-pins: ../../requirements
     command: [--config, /config/provider.toml]
     entrypoint: [python, manual.py]
@@ -40,10 +40,10 @@ services:
   worker:
     platform: linux/amd64
     build:
-      context: ../containers/worker
+      context: ../../containers/worker
       additional_contexts:
-        shared: ../containers/_shared
-        upstream: ../../chefnmr2-upstream
+        shared: ../../model
+        upstream: ../../model/upstream
         dependency-pins: ../../requirements
     command:
       - --role

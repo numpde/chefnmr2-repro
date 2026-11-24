@@ -1,12 +1,12 @@
 # Check whether ChefNMR2 can load a model and predict structures on the selected Python version
-# using the CPU. Building installs dependencies from chefnmr2-upstream. Running
+# using the CPU. Building installs dependencies from model/upstream. Running
 # uses that source and one checkpoint/config pair, both mounted read-only.
 #
 # Build from the repository root. Docker reads upstream's dependency list without
 # copying its source into the image. This step needs internet access:
 #   docker --context <context> build --file docker/containers/compatibility/Dockerfile \
 #     --build-arg PY_VERSION=3.13 --target check \
-#     --tag chefnmr2-python313:check ./chefnmr2-upstream
+#     --tag chefnmr2-python313:check ./model/upstream
 #
 # Complete checkpoint acquisition and verification before running this check.
 # Run from the repository root, selecting one epoch directory explicitly. This
@@ -16,7 +16,7 @@
 #   docker --context <context> run --rm --init --network none --read-only \
 #     --cap-drop ALL --security-opt no-new-privileges --pids-limit 64 --cpus 2 \
 #     --memory 8g --memory-swap 8g --tmpfs /tmp:rw,nosuid,nodev,noexec,size=64m \
-#     --mount type=bind,src="$(pwd)/chefnmr2-upstream",dst=/upstream,readonly \
+#     --mount type=bind,src="$(pwd)/model/upstream",dst=/upstream,readonly \
 #     --mount type=volume,src=chefnmr2-weights_checkpoints,dst=/checkpoints,readonly \
 #     chefnmr2-python313:check /checkpoints/chefnmr2-epoch949
 #

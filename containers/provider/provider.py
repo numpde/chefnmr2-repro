@@ -10,8 +10,8 @@ from provider_core.payload import JsonDataclassCodec
 from provider_core.process_call import ProcessCall
 
 if __package__:
-    from .._shared.binding import Inference, construct
-    from .._shared.wire import ElucidationBatch, ElucidationRequest
+    from model.binding import Inference, construct
+    from model.wire import ElucidationBatch, ElucidationRequest
 else:
     from binding import Inference, construct
     from wire import ElucidationBatch, ElucidationRequest

@@ -11,7 +11,7 @@ from provider_core.interpreter import InterpretationFailed, InterpretationInputR
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
 
 if __package__:
-    from .._shared.wire import ElucidationRequest, ElucidationResult, ModelFailure
+    from model.wire import ElucidationRequest, ElucidationResult, ModelFailure
     from .job_input import JobInput, interpret
 else:
     from wire import ElucidationRequest, ElucidationResult, ModelFailure
