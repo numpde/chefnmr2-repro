@@ -1,8 +1,7 @@
 """Prepare PyTorch inference checkpoints and admit only marked generations.
 
-Both provider repositories use this module unchanged. Their Compose commands
-select extraction, precision and companion files. Preparation checks digests and
-uses restricted deserialization; admission checks only the selected receipt.
+Preparation verifies pinned input digests and uses restricted deserialization.
+Admission checks only the selected receipt generation, without rehashing weights.
 Managed writers must remove that receipt before replacing any covered file,
 publish files by rename, and publish a fresh receipt last. Admission hands the
 same open files to the loader, so later renames cannot change its inputs.

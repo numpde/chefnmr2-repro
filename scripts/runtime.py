@@ -52,11 +52,12 @@ class Runtime:
     def config(self, api=False, project=None, qualification=False):
         return json.loads(self.run(self.compose(api, project, qualification) + ['config', '--format', 'json'], capture_output=True, text=True).stdout)
 
-    def check(self):
+    def check(self, category='all'):
         definition = json.loads(self.run(self.docker + ['buildx', 'bake', '-f', 'docker-bake.hcl', '--print', 'provider'], capture_output=True, text=True).stdout)
         image = definition['target']['provider']['tags'][0]
-        command = self.docker + ['run', '--rm', '--pull=never', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '1', '--memory', '512m', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,size=64m', '-e', 'PROVIDER_CORE_IN_CONTAINER=1', '--mount', f'type=bind,src={ROOT / "tests"},dst=/tests,readonly', '--entrypoint', 'python', image, '-B', '-m', 'unittest', 'discover', '-s', '/tests', '-p', 'test_provider.py']
-        self.run(command)
+        command = self.docker + ['run', '--rm', '--pull=never', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '1', '--memory', '512m', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,size=64m', '-e', 'PROVIDER_CORE_IN_CONTAINER=1', '-e', 'PYTHONPATH=/tests/provider:/opt/provider', '--mount', f'type=bind,src={ROOT / "tests"},dst=/tests,readonly', '--entrypoint', 'python', image, '-B', '-m', 'unittest', 'discover']
+        for scenario in (('normative', 'adversarial') if category == 'all' else (category,)):
+            self.run(command + ['-s', '/tests/provider/' + scenario, '-p', 'test_*.py', '-v'])
 
     @contextmanager
     def isolated(self, qualification=False):
@@ -133,10 +134,11 @@ def main():
     parser.add_argument('--host', required=True, help='Resolved local Unix socket for the selected Docker context')
     parser.add_argument('--deployment', default='')
     parser.add_argument('--qualification', default='')
+    parser.add_argument('--category', choices=('all', 'normative', 'adversarial'), default='all')
     args = parser.parse_args()
     runtime = Runtime(args.host, args.deployment)
     if args.action == 'check':
-        runtime.check()
+        runtime.check(args.category)
     elif args.action == 'deploy':
         from deployment import deploy
         if not args.qualification:

@@ -79,7 +79,7 @@ Remove after replacement:
   docker/containers/compatibility/Dockerfile -> actual-image qualification
   scripts/host/operator-input.sh    -> unused; no current callers found
 
-Retain tests/test_provider.py, notes and ignored secrets. No forwarding modules,
+Retain provider tests (now categorized under tests/provider/), notes and ignored secrets. No forwarding modules,
 symlinks, duplicate Compose build definitions or permanent migration adapters.
 
 Ordered implementation batches
@@ -358,3 +358,301 @@ Made tooling bootstrap and builder-owned offline inputs explicit. Limited
 baseline constraints to migration so they cannot become a second SDK pin owner.
 Separated CPU promotion from GPU readiness. Uncommitted build work was inspected
 for context only; this review does not qualify or approve that implementation.
+
+
+Joint placement criteria and container checkpoint follow-up, 2026-11-24
+---------------------------------------------------------------------
+
+SDK 0.7.6 is pinned in all three complete profile locks. The worker profiles
+explicitly include SDK API dependencies because the binding imports protected
+API failure projections. Existing dependency versions are otherwise unchanged.
+JobService and ElucidationSession receive the same interpreter diagnostic secrets.
+
+The provider/CPU-worker pair passed actual-image qualification at
+.work/qualification/20261124T100743Z-c2cdee29: cold/warm ten-draw morphine checks
+completed with 10 valid draws each (85.93/82.45 seconds), ordered SDK batches
+passed, and the scientific pool/session/project retired. The exact qualified
+SDK 0.7.6 pair was deployed together. Rollback evidence is retained at
+.work/rollback/20261124T101330Z-a6191043. Both live containers reported 0.7.6.
+No weights or large packages were downloaded; verified local caches were reused.
+CUDA's 51 locked artifacts are present and hash-verified locally; CUDA execution
+is not qualified. The unrelated ProArt preparation note remains untracked.
+
+Checkpoint preparation/admission belongs to its actual consuming container:
+containers/worker/checkpoints.py in Chef and containers/weights-sanitize/checkpoints.py
+in MolDeTr. Chef CPU/CUDA profiles use the same worker Dockerfile; they are not
+separate container implementations requiring a shared source directory. The
+worker copies the module from its own build context and keeps its installed
+import path unchanged. There is no extra helper build context or forwarding
+module. Equal code can live with different actual container roles without an
+invented shared owner. This corrects the briefly introduced _shared placement.
+It does not claim every file has passed the separate placement audit.
+
+Tests are grouped by operator, unit and provider boundary, then normative and
+adversarial behavior; reusable fixtures stay at their boundary. Scientific
+qualification cases/checker remain under tests/model. Maintained category lanes
+report test identities as well as counts; no empty package markers were added.
+
+The joint criteria below are the current reviewed candidate, not an approved
+whole-repository tree. Required acceptance was raised to every criterion 10/10.
+That threshold has not been achieved by all required reviewers; no averaging or
+rounding is used, and criteria approval would not approve individual placements.
+The responsible reviewers searched the accessible repo corpus independently,
+inspected the strongest relevant precedents and material contrasts, and used
+source-based holdouts rather than treating copied conventions as authority.
+
+Joint file-placement criteria — candidate v14
+
+Purpose and scope
+Decide every repository-owned file's necessity and location in chefnmr2-repro
+and moldetr-repro before approving a tree. Cover authored code, Make recipes,
+Docker/build/runtime configuration, reviewed or generated locks, tests and their
+fixtures, documentation, and generated artifact families. Include untracked work.
+Treat each upstream submodule as an externally owned boundary, not permission to
+rearrange its contents. Preserve user-owned IDE configuration, credentials,
+caches and retained experiment/recovery evidence. Inventory their ownership and
+lifetime without treating inventory as deletion or transfer authorization.
+
+No existing path, proposed directory map, current investment, genericness or
+same filename is evidence of correct ownership. No bucket named common/shared.
+No placement is preapproved, including model/checkpoints.py or test directories.
+The criteria govern choices; a directory map is a result of applying them.
+
+Required record
+For EACH owned file, record its responsibility and owning decision/change
+trigger; actual producer and build/operator/runtime/test consumers; whether it
+is authority, projection or evidence; why a separate file and this location;
+serious adjacent alternatives including merge/delete and their consequence;
+effective input/access grants; lifetime/cleanup/recovery owner; mirror status;
+relevant precedent comparison; and evidence supporting the decision. Consumers
+include human readers/reviewers and tool discovery, not only runtime callers. Inspect distinct authored blocks when a
+file may mix responsibilities. A family-level rule may supply repeated facts,
+but each file must be named and checked for exceptions. Record unknowns; do not
+turn the record into another runtime inventory or source of configuration.
+
+C1 — Necessity and coherent granularity
+Must be true: every file and meaningful block serves a current requirement or
+an explicit supported contract. Separation follows an independently changing,
+operated, versioned or tool-discovered boundary, or a distinct semantic contract
+whose separation demonstrably improves comprehension or change safety compared
+with merging it. For a disputed semantic split, compare both arrangements under the same
+supported change; an assertion that one is clearer is insufficient. Consolidation
+and deletion are
+serious alternatives. Trace each requirement to an independently stated user
+outcome, supported workflow/contract, or demonstrated failure; a newly invented
+caller or feature cannot justify itself. Compare alternatives by how they satisfy
+that requirement, including dropping an unsupported feature. Count avoidable
+coordination as extra owners, edit sites or release steps for one supported
+change. Both excessive fragmentation and mixed responsibility
+must be assessed; neither fewer nor more files is a quality proxy.
+Counterexample: a help-printing wrapper has a real caller but owns no decision;
+or one operator script hides unrelated policies behind a broad module label.
+Decisive evidence: actual call sites/tool requirements, responsibility and change
+triggers, consequences of removal/merge, and the smallest coherent alternative.
+Mandatory failure: no necessary consumer/contract, or separation justified only
+by genericness, existing placement, test count, or symmetry.
+
+C2 — Semantic ownership, placement and dependency direction
+Must be true: the path expresses the decision owner, established independently
+of who currently executes or calls the file. Distinguish the owner of a behavior's
+contract from the physical file, image/build and execution owners where they
+differ. Where a contract has inseparable joint owners, name their respective
+decisions and the composition/interface owner rather than inventing a universal
+single-owner tie-break. Name the controlled inputs, who changes them, and source
+evidence showing which component actually determines the behavior. Compare the nearest viable owners and locations, including a
+package/tool owner where relevant. A reusable mechanism need not belong beside
+one current caller, and reuse alone does not establish a package boundary.
+Counterexample: putting a loader in a model directory solely because a model
+calls it; or moving a copied utility to a vague generic bucket.
+Decisive evidence: input-to-effect dependency graph; a representative supported
+change and, where an independent adjacent change exists, one plausible change
+that should not propagate to this owner. Do not invent independence or reject
+legitimate coordinated changes merely to supply an example;
+tool discovery/import/build-context constraints, and rejected alternatives with
+specific costs. For documentation, historical evidence and other non-executable
+files, establish the content/curation/publication owner plus the reader,
+discovery and retention contract; do not invent a runtime decision owner or
+caller. Tests and configuration similarly use their actual kind of contract.
+Mandatory failure: ownership is inferred from the current path/caller/executor,
+or the proposed move creates an unexplained reverse dependency or owner.
+
+C3 — Authority, derivation and provenance
+Must be true: each independently edited fact has one identified authority,
+including facts carried inline as constants or choices rather than separate files.
+State the fact at its authority layer: an upstream identity, a reviewed expected
+result and a measured artifact generation are distinct facts. A local projection
+of external authority is not automatically a competing authority.
+Every projection/reference/evidence file has its authoritative inputs, producer,
+regeneration or review owner, consumer and staleness behavior. Exact output pins
+and checked-in generated references require a separately established user,
+scientific or operational acceptance requirement which they materially verify.
+A checker or target created solely to read a file does not establish that
+requirement. Bind an approved expected reference to its accepted generation,
+inputs (including output-affecting dependencies, toolchain and runtime facts)
+and transformation version so later consumers can detect a stale or mismatched
+reference. Neither ban nor retain a file merely because it is generated.
+Counterexample: a target list, precision menu and implementation all maintain the
+same choices; or an approved reference is deleted just because it is derived.
+Decisive evidence: trace a real fact through its update workflow; identify every
+manual edit and what detects stale or mixed versions. Compare deriving, keeping
+or removing the file without adding a second policy carrier.
+Mandatory failure: mirrored editable authority, undocumented generation, or an
+output lock/reference with no consumer whose acceptance need is independently
+established.
+
+C4 — Effective authority and artifact lifetime
+Must be true: placement preserves the actual execution and data boundaries:
+inputs/environment, build contexts, engine/filesystem/network/device grants,
+secrets and mutable storage. Every generated family has a producer, ordinary
+consumer, retention reason and owner of applicable cleanup/recovery duties.
+Name which duties do not apply and why. For each persistent or retained family,
+record its actual storage destination, the boundary that makes it persist
+(checkout, engine volume, external cache or another owner), and the operation or
+owner authorized to retire it. Retained evidence and reusable inputs are distinct
+from disposable work.
+Counterexample: a neatly placed Compose file inherits an ambient engine or
+exposes the whole checkout; or partial receipts/staging files have no retry or
+cleanup owner. Conversely, unneeded copying or deletion can violate ownership.
+Decisive evidence: effective invocations/mounts/interpolation, resulting artifacts
+and representative lifecycle behavior. Require interruption/retry evidence when
+interruption can affect persistent or retained state, publication correctness,
+recovery or resumption; otherwise state why that failure proof does not apply.
+Disposable scratch still needs ordinary cleanup and safe-discard ownership, but
+its possible residue alone does not require a dedicated interruption test. When publication/migration correctness
+or recovery depends on multiple durable states or a retry boundary, show the
+state before/after each consequential mutation, relevant interruption points,
+what retry uses, and which temporary state may be discarded. A single atomic
+output without recovery dependencies needs only its ordinary before/after
+contract, not a separate durability analysis for every write. Assess whether
+supported invocations can overlap; where they can, show safe reader/writer and
+writer/writer behavior or an enforced exclusion, even if concurrency was not
+advertised. Identify the coordinated resource by its actual backing storage,
+not only an engine/context alias: different engines may share backing storage,
+while different aliases may refer to one server. The exclusion/proof must cover
+the same mutated resource across supported paths. Distinguish managed writes
+from external mutation. Preservation means retaining required recovery/evidence, not every
+transient file. Identify authority limits and uninspected hosts without inventing
+new approval requirements.
+Mandatory failure: unowned effective grants, generated residue or recovery state;
+or a move/cleanup that exceeds the user's authorized scope.
+
+C5 — Mirrored structure with explicit divergence and drift control
+Must be true: equivalent responsibilities have equivalent structure and naming
+across the repos where doing so improves understanding and maintenance. Each
+difference names its concrete requirement. Identical code copies have an update
+owner and an explicit parity-verification workflow. State what parity means
+for each mapped responsibility: identical mechanism, equivalent contract or
+matching structure. Name the check, its scope, permitted differences and their
+requirement, its change/review trigger, and what a mismatch blocks. This can be
+a coordinated review procedure; it need not introduce a cross-checkout runtime
+or CI dependency. Copied files do not become a single package or authority by
+assertion. A new dependency/package must earn
+its own release, installation and failure lifecycle. Genuinely independent
+contracts or change cadences may justify divergence when demonstrated by their
+requirements and update effects; mere ownership by different repos does not.
+Counterexample: matching empty folders/wrappers without consumers; or identical
+checkpoint modules silently drifting after the next fix.
+Decisive evidence: side-by-side responsibility map, justified per-file differences,
+the actual current parity result (or justified non-applicability), and a workable
+next-update/parity check that preserves independent checkouts. A future process
+alone does not prove the current copies or contracts are aligned.
+Mandatory failure: cosmetic symmetry adds machinery, unexplained divergence,
+or a claim of one implementation without a synchronization responsibility.
+
+C6 — End-to-end purpose, evolution and proof
+Must be true: the resulting placement supports the requested behavior through
+the real operator/build/producer/consumer path. Distinguish production, test-only,
+explicitly requested future interfaces and unreachable code. List bypasses and
+whether they leave the requested outcome incomplete. An interface without an
+actual intended consumer can be retained only for an explicit requested or
+supported contract; its tests prove that contract, not runtime enforcement. If
+the requested behavior needs a consumer that does not exist or cannot be changed
+within scope, record the unmet acceptance condition and required owner/action.
+Do not invent a runner or silently redefine the request as a future foundation.
+Evaluate the next ordinary
+change, removal, clean invocation and consequential failure, not only today's
+passing snapshot. Proof must use the reviewed files/artifacts and respect the
+no-large-download, no-unrequested-upstream-edit and selected-checkpoint limits.
+Counterexample: a receipt helper passes tests while the intended loader bypasses
+it; category directories exist but maintained discovery skips their tests; or a
+routine new profile requires editing a hidden parallel inventory.
+Decisive evidence: real entrypoint/caller wiring and bounded behavioral checks.
+Identify the reviewed source revision and the actual tested consumer artifact
+or mounted source identity. Observe the linkage from the actual invocation to
+the consumed code/artifact (for example immutable image identity plus relevant
+source/module/mount evidence); a path, tag or manually asserted identity is not
+that proof. Passing current mounted code does not qualify a stale baked image.
+When placement changes test discovery, run the affected maintained commands and
+record collected/executed counts and results for each relevant lane, including
+zero. Also show that the moved/required tests were selected and executed, using
+test identities or equivalent direct runner evidence; unrelated passing tests
+cannot substitute. Existing verbose output may supply this evidence without a
+new test inventory. Directory names or source inspection alone do not prove it.
+Use change/failure examples from authority to effect; explicit limits where a runner
+or consumer does not exist. Placement criteria cannot manufacture missing scope.
+Mandatory failure: a completion claim rests on tests alone despite a real bypass,
+unproved discovery, incoherent revisions or an unhandled ordinary update.
+
+C7 — Best applicable precedents across repositories
+Must be true: survey the accessible repository collection by responsibility and
+constraints, not only the nearest sibling, a familiar file name or the proposed
+solution. Each responsible reviewer owns discovery, selection and contextual
+inspection for their assigned concern. A coordinator's catalog or a survey agent
+can assist but cannot replace that reviewer's own inspection and comparison.
+Record coverage and unavailable/uninspected areas; do not claim an exhaustive
+best precedent beyond that evidence. Shortlist the strongest relevant
+examples and evaluate them against these same criteria, including a materially
+contrasting alternative where one exists. An established pattern earns no
+exemption from necessity, authority, lifecycle or proof obligations.
+Compare complete supported workflows rather than combining convenient fragments
+whose assumptions conflict. Identify why a precedent transfers, what differs,
+and what must be adapted. Synthesize improvements when no existing example is
+adequate; neither copy a known weakness nor create machinery merely to imitate
+another repo. Absence of a fit is an evidenced result, not permission to invent
+an unnecessary abstraction. Recheck affected recipients after adopting a pattern.
+Counterexample: copying hand-maintained printf help from several familiar repos
+while overlooking discoverable target annotations elsewhere; or copying a
+privileged deployment pattern into a rootless, offline scientific workflow.
+Decisive evidence: identify the searched corpus and responsibility-based bounds,
+search method/queries, candidate counts, exclusions and their reasons, and
+uninspected areas. Record which shortlisted examples had their actual owner,
+callers, complete workflow and proof inspected. Provide concrete repo/path/revision
+or reviewed working-state references with inspection date and relevant content
+hashes for dirty/uncommitted examples, comparative fit and rejected alternatives,
+and the recipient's relevant behavioral proof. A broad filename index alone is
+not a best-precedent comparison; the scope must fit the requested boundary rather
+than convenience. No claim of reading every file is required.
+A family-level comparison can cover equivalent files, with per-file exceptions.
+Mandatory failure: relying on popularity, proximity or first-found precedent;
+claiming best/exhaustive coverage without inspection; transferring incompatible
+assumptions; or adding duplicated policy, files or dependencies without benefit.
+
+Review and acceptance
+Freeze each criteria revision before review. Independent critics assess the
+criteria themselves first: can a foreseeable bad placement satisfy all of them?
+Findings precede per-criterion scores; identify decisive evidence and uncertainty.
+Score anchors: 0 = absent/untestable; 5 = plausible but admits an obvious bad
+placement; 8 = operational but a material loophole remains; 9 = minor actionable
+ambiguity remains; 9.5 = precise, proportionate and no substantiated gap remains
+within inspected scope; 10 = same with unusually complete counterexample proof.
+The user's threshold applies separately to every required assessment: all must
+reach 10/10, without averaging, rounding or scoring uninspected material.
+Mandatory failures and missing evidence block acceptance regardless of scores.
+Exchange consolidated round findings between coordinators, revise together,
+and reassess affected criteria explicitly. Never change criteria to inflate a
+score or treat criteria approval as approval of any file or implementation.
+
+Latest local assessment of this criteria family: C1/C2 = 10/10 after independent
+source-based holdouts; C3/C4/C5/C6 = 9.5/10 with no remaining material language
+defect but bounded counterexample proof; C7 final assessment was still pending
+at this record. MolDeTr's panel reported C1/C2/C3/C4/C5/C7 = 10 and C6 = 9.5.
+These are criteria ratings only. Current tree acceptance and a complete per-file
+ledger are not claimed. The latest raw holdout packet identified five distinct
+source families with source revisions, hashes, supported-change comparisons
+and independent documentary/evidence ownership.
+
+MolDeTr still has no repo-owned runner; unchanged upstream scripts bypass its
+callable receipt gate. Its wrapper contract is tested, but universal runtime
+refusal of unmarked checkpoints is not claimed. Exact derivative-output pins
+remain in MolDeTr pending a separately validated lifecycle change; do not remove
+them without replacing their retry/verification consumers coherently.

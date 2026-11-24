@@ -1,35 +1,26 @@
-"""Exercise the API science adapter inside the provider image, without a model."""
+"""Adversarial provider behavior through the SDK adapter."""
 
 import asyncio
 from copy import deepcopy
 from contextlib import asynccontextmanager, nullcontext
-from dataclasses import asdict, replace
+from dataclasses import asdict
 import json
 from pathlib import Path
 import sys
 from tempfile import TemporaryDirectory
-from threading import Event
 import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
-
 from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, AnalysisSuccess
-from provider_core.batch_call import BatchPolicy
 from provider_core.chat_errors import ChatFailed
-from provider_core.embedded_host import InProcessExecutionHost
-from provider_core.hosting import CleanupObservation, OperationPolicy
-from provider_core.interpreter_settings import ManagedInterpreter
 from provider_core.lifetime import ProviderLifetime
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
-from provider_core.process_call import ProcessCall
-from provider_core.scientific import Analysis, Contribution, operation
-from provider_core.scientific_call import ErrorPolicy, ScientificCall
-
 from application import ElucidationSession, ElucidationReport
 from binding import Inference
-from wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ElucidationResult, ModelFailure, Peaks
+from wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ModelFailure, Peaks
 import main as provider_main
-from provider import open_provider as configured_provider, batch_requests
+from provider import open_provider as configured_provider
+from provider_fixtures import ProviderCase
 
 
 class ProviderLifetimeTests(unittest.IsolatedAsyncioTestCase):
@@ -148,86 +139,7 @@ settle_seconds = 2
                     lifetime.close()
 
 
-class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
-    def setUp(self):
-        self.scientific_result = ElucidationResult(
-            candidates=[],
-            implausible_candidates=[],
-            n_samples=8,
-            n_valid=0,
-            n_unique_candidates=0,
-            validity=0.0,
-            status_counts={},
-            timing_s={},
-            ensemble={},
-            params={},
-        )
-
-        self.result_codec = JsonDataclassCodec(format="test.result.v1", value_type=ElucidationResult)
-
-        self.provider = SimpleNamespace(
-            offering={"n_samples": 8, "seed": 0},
-            inference=AsyncMock(spec=ProcessCall, return_value=ElucidationBatchResult(replies=[self.scientific_result])),
-        )
-
-        self.provider.inference.error_policy = ErrorPolicy()
-        self.provider.inference._claim_batch = Mock()
-        self.provider.inference._release_batch = Mock()
-        retirement = SimpleNamespace(observe=AsyncMock(return_value=CleanupObservation(0, True, False, ())))
-        self.provider.inference.host = SimpleNamespace(retire=lambda: retirement)
-        self.batch_failure = None
-
-        self.batch_policy = BatchPolicy(
-            maximum_entries=4,
-            collection_seconds=0.01,
-            maximum_queued_input_bytes=32768,
-            maximum_entry_input_bytes=8192,
-        )
-
-        self.provider.batches = batch_requests(self.provider.inference, policy=self.batch_policy)
-
-        self.new_interpreter = Mock(side_effect=AssertionError("Structured input should not call an interpreter"))
-        self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
-        self.condition = SimpleNamespace(require_execution=Mock())
-        self.acknowledged = SimpleNamespace(
-            start=SimpleNamespace(input="verified-input"),
-            admission=SimpleNamespace(job_ref="job:fixture", execution_attempt_ref="attempt:fixture"),
-        )
-
-    async def asyncSetUp(self):
-        await self.provider.batches.__aenter__()
-
-    async def asyncTearDown(self):
-        if self.batch_failure is None:
-            await self.provider.batches.close()
-        else:
-            with self.assertRaises(self.batch_failure):
-                await self.provider.batches.close()
-
-    async def prepare_input(self, specification):
-        instructions = SimpleNamespace(identity="verified-input", specification_bytes=json.dumps(specification).encode())
-
-        return await self.session.prepare(self.acknowledged, instructions, report_condition=self.condition)
-
-    async def test_job_uses_deployment_budget_and_returns_the_typed_result(self):
-        prepared = await self.prepare_input({"formula": "CH4", "peaks": {"h": [[1.0, 4, "s"]]}})
-        outcome = await self.session.execute(prepared, report_condition=self.condition)
-
-        self.assertIsInstance(outcome, AnalysisSuccess)
-        report = JsonDataclassCodec(format="chefnmr2.elucidation_report.v1", value_type=ElucidationReport).decode(outcome.content)
-
-        self.assertEqual(self.scientific_result, report.elucidation)
-        self.assertEqual("CH4", report.input.formula)
-        self.new_interpreter.assert_not_called()
-
-        invocation = self.provider.inference.call_args
-        (elucidation,) = invocation.kwargs["scientific_input"].requests
-
-        self.assertEqual((8, 0, "CH4"), (elucidation.n_samples, elucidation.seed, elucidation.formula))
-        self.condition.require_execution.assert_called()
-
-        await self.session.retire()
-
+class ProviderAdversarialTests(ProviderCase):
     async def test_job_cannot_override_the_deployment_sample_budget(self):
         outcome = await self.prepare_input({"formula": "CH4", "peaks": {}, "n_samples": 1000000})
 
@@ -242,56 +154,6 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         self.assertIsInstance(outcome, AnalysisFailure)
         self.new_interpreter.assert_not_called()
         self.provider.inference.assert_not_called()
-
-    def use_interpreter(self, proposals):
-        endpoint = ScriptedEndpoint(proposals)
-
-        self.session.new_interpreter = lambda: ManagedInterpreter(
-            (endpoint,),
-            interpretation_budget_seconds=5,
-            reject_combined_messages_and_tools_over_bytes=32768,
-            end_model_visit_after_turns=4,
-            end_model_visit_after_rejections=3,
-            total_http_attempts_per_turn=1,
-            connection_timeout_seconds=1,
-            retain_history_up_to_bytes=32768,
-            retain_history_up_to_records=8,
-            secrets=(),
-        )
-
-        return endpoint
-
-    async def prepare_prose(self):
-        instructions = SimpleNamespace(
-            identity="verified-input",
-            specification_bytes=b"Formula C2H6. Carbon shifts 10, 10 ppm. Proton peaks: 1 ppm, 3H, singlet; 2 ppm, 3H, singlet.",
-        )
-
-        return await self.session.prepare(self.acknowledged, instructions, report_condition=self.condition)
-
-    async def test_prose_correction_uses_same_codec_and_reports_actual_input(self):
-        supplied = {"formula": "C2H6", "peaks": {"c": [10, 10], "h": [[1, 3, "s"], [2, 3, "s"]]}}
-
-        endpoint = self.use_interpreter(
-            [
-                ("submit_input", {**supplied, "n_samples": 1000}),
-                ("submit_input", supplied),
-            ],
-        )
-
-        prepared = await self.prepare_prose()
-
-        self.provider.inference.assert_not_called()
-        self.assertTrue(endpoint.retirement_confirmed)
-
-        outcome = await self.session.execute(prepared, report_condition=self.condition)
-        report = JsonDataclassCodec(format="chefnmr2.elucidation_report.v1", value_type=ElucidationReport).decode(outcome.content)
-
-        self.assertEqual([10, 10], report.input.peaks.c)
-        self.assertEqual([(1, 3, "s"), (2, 3, "s")], report.input.peaks.h)
-        self.assertEqual(2, len(endpoint.requests))
-        self.assertEqual(8, self.provider.inference.call_args.kwargs["scientific_input"].requests[0].n_samples)
-        self.provider.inference.assert_awaited_once()
 
     async def test_model_problem_does_not_become_a_scientific_input_rejection(self):
         endpoint = self.use_interpreter([("report_interpretation_problem", {"explanation": "No molecular formula"})])
@@ -482,45 +344,6 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(PayloadRejected):
             request_codec.decode(b'{"formula":"CH4","peaks":{}}')
 
-    async def use_scientific_call(self):
-        await self.provider.batches.close()
-
-        host = InProcessExecutionHost(
-            input_bytes=8192,
-            result_bytes=65536,
-            state_values=1,
-            progress_records=1,
-            initialization_seconds=5,
-            retirement_seconds=5,
-        )
-
-        science = ControlledInference(self.scientific_result)
-        hosted = host.adopt(contribution=science, requirements=frozenset())
-
-        scientific_call = ScientificCall(
-            host=host,
-            allocation=hosted.allocation,
-            binding=hosted.call(method=ControlledInference.elucidate_batch),
-            operation_policy=OperationPolicy(5, 5, 5, 8192, 65536),
-            error_policy=ErrorPolicy(max_attempts=1),
-        )
-
-        # This fixture owns its embedded host and presents the ProcessCall port;
-        # SDK native tests establish the real process owner's custody boundary.
-        async def invoke_fixture(*, scientific_input, require_execution, _batch_owner):
-            return await scientific_call(scientific_input=scientific_input, require_execution=require_execution)
-
-        self.provider.inference = AsyncMock(spec=ProcessCall, side_effect=invoke_fixture)
-        self.provider.inference.error_policy = scientific_call.error_policy
-        self.provider.inference.host = host
-        self.provider.inference._claim_batch = Mock()
-        self.provider.inference._release_batch = Mock()
-        self.provider.batches = batch_requests(self.provider.inference, policy=self.batch_policy)
-
-        await self.provider.batches.__aenter__()
-
-        return (host, science)
-
     async def test_cancellation_settles_original_science_and_keeps_model_reusable(self):
         (host, science) = await self.use_scientific_call()
 
@@ -620,85 +443,3 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
             self.assertEqual([["CH4", "CH4", "BAD"]], science.batch_inputs)
             await asyncio.gather(*(session.retire() for session in sessions))
             await self.provider.batches.close()
-
-
-class ControlledAnalysis(Analysis):
-    def close(self) -> None:
-        self.contribution.closed_analyses += 1
-
-
-class ControlledInference(Contribution):
-    """Use real SDK execution and cleanup with a controllable model substitute."""
-
-    analysis_type = ControlledAnalysis
-
-    def __init__(self, elucidation_result):
-        super().__init__()
-
-        self.elucidation_result = elucidation_result
-        self.entered = Event()
-        self.release = Event()
-
-        self.release.set()
-        self.failure = None
-        self.calls = 0
-        self.batch_inputs = []
-        self.closed_analyses = 0
-        self.closed = False
-
-    @operation()
-    def elucidate_batch(self, *, batch: ElucidationBatch) -> ElucidationBatchResult:
-        self.calls += 1
-
-        self.batch_inputs.append([request.formula for request in batch.requests])
-
-        self.entered.set()
-
-        if not self.release.wait(timeout=(wait_seconds := 5)):
-            raise TimeoutError(f"{self.release.is_set()=} after {wait_seconds=}")
-
-        if self.failure is not None:
-            raise self.failure
-
-        return ElucidationBatchResult(
-            replies=[
-                ModelFailure("ValueError", "fixture bad formula", {})
-                if request.formula == "BAD"
-                else replace(self.elucidation_result, params={"batch_index": index})
-                for (index, request) in enumerate(batch.requests)
-            ],
-        )
-
-    def close(self) -> None:
-        self.closed = True
-
-
-class ScriptedEndpoint:
-    """Replace only model HTTP; use the real SDK conversation and tool dispatch."""
-
-    context_bytes = 32768
-    identity = b'{"configuration_id":"test","model":"scripted"}'
-
-    def __init__(self, proposals):
-        self.proposals = iter(proposals)
-        self.requests = []
-        self.retirement_confirmed = False
-
-    def __call__(self, **kwargs):
-        return self
-
-    async def complete(self, messages, tools, *, not_after):
-        self.requests.append(deepcopy(messages))
-        (name, arguments) = next(self.proposals)
-
-        return {
-            "role": "assistant",
-            "tool_calls": [{"id": str(len(self.requests)), "type": "function", "function": {"name": name, "arguments": json.dumps(arguments)}}],
-        }
-
-    async def retire(self):
-        self.retirement_confirmed = True
-
-
-if __name__ == "__main__":
-    unittest.main()

@@ -77,10 +77,22 @@ lock acquire build:
 	@$(operator_inputs); profile=$$(choose PROFILE '$(PROFILES)'); pool=$$(choose WHEELHOUSE); select_docker; \
 	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/scripts/build.py" "$@" --profile "$$profile" --host "$$docker_host" --pool "$$pool"
 
-.PHONY: check
-check: ## Run provider tests in the selected local Docker engine; requires DOCKER_CONTEXT.
-	@$(operator_inputs); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/scripts/runtime.py" check --host "$$docker_host"
+.PHONY: check test/provider test/provider/normative test/provider/adversarial
+check: test/provider ## Run all provider image tests; requires DOCKER_CONTEXT.
+test/provider: ## Run normative and adversarial provider image tests; requires DOCKER_CONTEXT.
+test/provider/normative: ## Run normative provider image tests; requires DOCKER_CONTEXT.
+test/provider/adversarial: ## Run adversarial provider image tests; requires DOCKER_CONTEXT.
+test/provider test/provider/normative test/provider/adversarial:
+	@$(operator_inputs); select_docker; category='$(@F)'; \
+	if [[ $$category == provider ]]; then category=all; fi; \
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/scripts/runtime.py" check --host "$$docker_host" --category "$$category"
+
+.PHONY: test/operator test/operator/normative test/operator/adversarial
+test/operator: test/operator/normative test/operator/adversarial ## Run normative and adversarial host operator tests.
+test/operator/normative: ## Run normative host operator tests.
+test/operator/adversarial: ## Run adversarial host operator tests.
+test/operator/normative test/operator/adversarial:
+	@PYTHONPATH="$(REPOSITORY_ROOT)/tests/operator" $(HOST_PYTHON) -m unittest discover -s "$(REPOSITORY_ROOT)/tests/operator/$(@F)" -p 'test_*.py' -v
 
 .PHONY: qualify config manual/config status logs manual
 qualify: ## Run actual-image scientific and SDK qualification; requires DEPLOYMENT and DOCKER_CONTEXT.
@@ -109,16 +121,17 @@ weights/verify weights/sanitize:
 	@$(operator_inputs); select_docker; \
 	if [[ $@ == weights/verify ]]; then weights_run verify; else weights_run --name chefnmr2-weights-writer sanitize; fi
 
-.PHONY: test/host
-test/host: ## Test host-side Make dispatch without contacting a Docker engine.
-	@$(HOST_PYTHON) -m unittest discover -s "$(REPOSITORY_ROOT)/tests" -p 'test_makefile.py'
-
-.PHONY: test/model
-test/model: ## Run checkpoint file tests in the selected cached worker image; requires DOCKER_CONTEXT.
+.PHONY: test/unit test/unit/normative test/unit/adversarial
+test/unit: test/unit/normative test/unit/adversarial ## Run all normative and adversarial checkpoint unit tests in the worker image.
+test/unit/normative: ## Run normative checkpoint unit tests in the worker image; requires DOCKER_CONTEXT.
+test/unit/adversarial: ## Run adversarial checkpoint unit tests in the worker image; requires DOCKER_CONTEXT.
+test/unit/normative test/unit/adversarial:
 	@$(operator_inputs); select_docker; \
 	"$${docker[@]}" run --rm --pull=never --network none --read-only \
 		--cap-drop ALL --security-opt no-new-privileges --pids-limit 64 --cpus 1 --memory 1g \
 		--tmpfs /tmp:rw,nosuid,nodev,noexec,size=64m -e PROVIDER_CORE_IN_CONTAINER=1 \
-		--mount "type=bind,src=$(REPOSITORY_ROOT)/tests,dst=/tests,readonly" \
+		-e PYTHONPATH=/tests/unit:/opt/inference \
+		--mount "type=bind,src=$(REPOSITORY_ROOT)/tests/unit,dst=/tests/unit,readonly" \
+		--mount "type=bind,src=$(REPOSITORY_ROOT)/containers/worker/checkpoints.py,dst=/opt/inference/checkpoints.py,readonly" \
 		--entrypoint python chefnmr2/worker-cpu:local \
-		-B -m unittest discover -s /tests -p test_checkpoints.py
+		-B -m unittest discover -s "/tests/unit/$(@F)" -p 'test_*.py' -v

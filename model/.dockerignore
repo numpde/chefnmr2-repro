@@ -2,4 +2,3 @@
 !.dockerignore
 !binding.py
 !wire.py
-!checkpoints.py

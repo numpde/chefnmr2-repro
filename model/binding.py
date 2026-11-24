@@ -35,10 +35,7 @@ class Inference(sdk.Contribution):
 
     def initialize(self, *, assets: sdk.AssetAccess) -> None:
         """Load the checkpoints before the SDK acknowledges model readiness."""
-        if __package__:
-            from .checkpoints import verified_weights
-        else:
-            from checkpoints import verified_weights
+        from checkpoints import verified_weights
 
         with ExitStack() as opened:
             checkpoints = []

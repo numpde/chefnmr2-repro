@@ -77,6 +77,19 @@ the checkpoint volume read-only. API services and credentials are unnecessary.
 The manual client loads the model once for its input stream and writes
 one JSON batch reply per line. Closing stdin retires its model session.
 
+Tests are grouped by boundary, then by ordinary behavior (`normative`) or
+failure and interruption behavior (`adversarial`):
+
+| Directory | Command | Environment |
+| --- | --- | --- |
+| `tests/operator/` | `make test/operator` | Host shell with a fake Docker executable |
+| `tests/unit/` | `make test/unit DOCKER_CONTEXT=science` | Cached worker image, synthetic checkpoints |
+| `tests/provider/` | `make test/provider DOCKER_CONTEXT=science` | Cached provider image, real SDK with controlled science and HTTP |
+
+Append `/normative` or `/adversarial` to run one category. Each boundary keeps
+its reusable fixtures beside the category directories. `tests/model/` retains
+the public scientific cases and checker used by `make qualify`.
+
 The worker accepts `{"requests": [...]}` and returns `{"replies": [...]}`. Entries
 run sequentially, and reply positions match request positions. A model exception
 produces an `exception_type`/`message` diagnostic for that entry; later entries
@@ -140,9 +153,9 @@ image must already be present; verification never pulls or downloads anything.
 Sanitization reuses the cached `chefnmr2/worker-cpu:local` image and runs offline.
 Build that image after updating the checkpoint tooling.
 
-The common `model/checkpoints.py` implementation is identical in this repo and
-MolDeTr. Compose supplies the model's extraction, precision and companion-file
-options. Chef's released inference files need no rewrite: sanitization checks
+`containers/worker/checkpoints.py` supplies container checkpoint preparation and
+admission. Compose selects extraction, precision and companion files.
+Chef's released inference files need no rewrite: sanitization checks
 their pinned hashes and restricted loading, then publishes
 `model.pt.sanitized.json` beside each checkpoint. The receipt covers both
 `model.pt` and `config.yaml`.
