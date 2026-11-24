@@ -10,8 +10,9 @@ import tomllib
 from provider_core.interpreter_settings import InterpreterSettings
 from provider_core.provider_clients import ProviderClients
 from provider_core.process_signals import termination_signals
-from provider_core.job_service import JobService, JobServicePolicy
+from provider_core.job_service import JobOffering, JobService, JobServicePolicy, HostFailurePolicy
 from provider_core.lifetime import ProviderLifetime
+from provider_core.ownership import LiveAttemptLimits
 from provider_core.shared_grants import SharedGrants
 from provider_core.validation.upstream.nmr.v1.hello import AnalysisOffering
 
@@ -42,14 +43,18 @@ async def serve(*, config: pathlib.Path) -> None:
         async with open_provider(deployment) as provider:
             service = JobService(
                 provider_ref=clients.provider_ref,
-                consumer_id="chefnmr2",
-                generation=generation,
-                offering=offering,
+                offerings=(JobOffering(
+                    announcement=offering,
+                    host=provider.inference.host,
+                    consumer_id="chefnmr2",
+                    generation=generation,
+                    new_session=lambda: ElucidationSession(provider, new_interpreter=new_interpreter),
+                ),),
+                host_failure_policy=HostFailurePolicy.STOP,
+                limits=LiveAttemptLimits(1, 262144, 131072),
                 display_name="ChefNMR2",
                 description=provider_description,
-                host=provider.inference.host,
                 policy=policy,
-                new_session=lambda: ElucidationSession(provider, new_interpreter=new_interpreter),
                 new_api=clients.new_api,
                 new_delivery=clients.new_delivery,
                 stopping=stopping,
