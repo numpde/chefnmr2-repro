@@ -17,11 +17,11 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class Runtime:
-    def __init__(self, context, deployment):
-        if not context:
-            raise ValueError('Select DOCKER_CONTEXT explicitly for runtime operations')
+    def __init__(self, host, deployment):
+        if not host:
+            raise ValueError('Select a local Docker host socket explicitly for runtime operations')
         self.environment = {key: value for key, value in os.environ.items() if not key.startswith(('COMPOSE_', 'BUILDX_')) and key not in ('DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_TLS_VERIFY', 'DOCKER_CERT_PATH', 'CHEFNMR2_PROVIDER_IMAGE', 'CHEFNMR2_WORKER_IMAGE')}
-        self.docker = ['docker', '--context', context]
+        self.docker = ['docker', '--host', host]
         self.deployment = deployment
         self.directory = ROOT / 'deployments' / deployment
         if deployment and (not re.fullmatch(r'[a-z0-9][a-z0-9_-]*', deployment) or not self.directory.is_dir()):
@@ -127,20 +127,14 @@ class Runtime:
         (directory / 'summary.json').write_text(json.dumps(report, indent=2))
         print('Qualification passed; evidence: ' + str(directory), flush=True)
 
-    def weights(self, download):
-        command = self.docker + ['compose', '--project-directory', str(ROOT), '-f', str(ROOT / 'compose/weights.yaml')]
-        for service in (('volume-init', 'download', 'verify') if download else ('verify',)):
-            self.run(command + ['run', '--rm', '--no-deps', '--pull', 'never', '-T', service])
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('check', 'qualify', 'deploy', 'config', 'manual/config', 'status', 'logs', 'manual', 'weights/download', 'weights/verify'))
-    parser.add_argument('--context', required=True)
+    parser.add_argument('action', choices=('check', 'qualify', 'deploy', 'config', 'manual/config', 'status', 'logs', 'manual'))
+    parser.add_argument('--host', required=True, help='Resolved local Unix socket for the selected Docker context')
     parser.add_argument('--deployment', default='')
     parser.add_argument('--qualification', default='')
     args = parser.parse_args()
-    runtime = Runtime(args.context, args.deployment)
+    runtime = Runtime(args.host, args.deployment)
     if args.action == 'check':
         runtime.check()
     elif args.action == 'deploy':
@@ -158,8 +152,6 @@ def main():
         runtime.run(runtime.compose(api=True) + ['logs', '--follow', '--tail', '100', 'provider', 'worker'])
     elif args.action == 'manual':
         runtime.manual()
-    else:
-        runtime.weights(download=args.action == 'weights/download')
 
 
 if __name__ == '__main__':

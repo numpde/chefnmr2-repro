@@ -25,18 +25,18 @@ def digest(path):
 
 
 class Build:
-    def __init__(self, context, pool):
+    def __init__(self, host, pool):
         if os.getuid() == 0:
             raise ValueError('Run dependency and image operations as the non-root checkout owner so cache files retain that ownership')
-        if not context:
-            raise ValueError('Select DOCKER_CONTEXT explicitly for image and dependency operations')
+        if not host:
+            raise ValueError('Select a local Docker host socket explicitly for image and dependency operations')
         if not pool:
             raise ValueError('Select WHEELHOUSE explicitly; build inputs come from that shared pool')
         self.pool = Path(pool).resolve(strict=True)
         if not self.pool.is_dir() or self.pool == ROOT or ROOT in self.pool.parents or self.pool in ROOT.parents:
             raise ValueError(f'WHEELHOUSE={str(self.pool)!r} should be a directory outside the checkout and its ancestors')
         self.environment = {key: value for key, value in os.environ.items() if not key.startswith(('COMPOSE_', 'BUILDX_')) and key not in ('DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_TLS_VERIFY', 'DOCKER_CERT_PATH')}
-        self.docker = ['docker', '--context', context]
+        self.docker = ['docker', '--host', host]
         self.sdk = re.search(r'^provider-core==([^\s]+)$', (ROOT / 'builds/sdk.constraints.txt').read_text(), re.M).group(1)
         self.manifest_hash = re.search(r'^# release-manifest-sha256 = ([0-9a-f]{64})$', (ROOT / 'builds/sdk.constraints.txt').read_text(), re.M).group(1)
         self.release = f'https://github.com/numpde/nmr-provider-tools/releases/download/v{self.sdk}/'
@@ -242,10 +242,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=('sdk/acquire', 'lock', 'acquire', 'build'))
     parser.add_argument('--profile', default='')
-    parser.add_argument('--context', required=True)
+    parser.add_argument('--host', required=True, help='Resolved local Unix socket for the selected Docker context')
     parser.add_argument('--pool', required=True)
     args = parser.parse_args()
-    build = Build(args.context, args.pool)
+    build = Build(args.host, args.pool)
     if args.action == 'sdk/acquire':
         build.sdk_artifacts(acquire=True)
     elif args.action == 'lock':

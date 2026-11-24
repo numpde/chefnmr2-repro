@@ -35,7 +35,7 @@ RUN install -d -m 700 -o 65532 -g 65532 /run/chefnmr2 \
     && install -m 600 -o 65532 -g 65532 /dev/null /run/chefnmr2/.owner-session.lock
 
 COPY --from=upstream chefnmr2/ ./chefnmr2/
-COPY --from=model binding.py wire.py ./
+COPY --from=model binding.py wire.py checkpoints.py ./
 
 USER 65532:65532
 

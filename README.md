@@ -133,10 +133,26 @@ science-only composition. Paths resolve from the repository root even when Make
 is invoked with `-C` from another directory. The live project name remains
 `chefnmr2-inference`; isolated manual projects clean up their own runner volumes.
 
-Checkpoint acquisition and verification use `make weights/download` and
-`make weights/verify`, both with `DOCKER_CONTEXT=science`. Acquisition requires
+Checkpoint preparation uses `make weights/download`, `make weights/sanitize`
+and `make weights/verify`, with `DOCKER_CONTEXT=science`. Acquisition requires
 explicit `PROXY_URL=none` or a container-reachable proxy URL. The pinned curl
 image must already be present; verification never pulls or downloads anything.
+Sanitization reuses the cached `chefnmr2/worker-cpu:local` image and runs offline.
+Build that image after updating the checkpoint tooling.
+
+The common `model/checkpoints.py` implementation is identical in this repo and
+MolDeTr. Compose supplies the model's extraction, precision and companion-file
+options. Chef's released inference files need no rewrite: sanitization checks
+their pinned hashes and restricted loading, then publishes
+`model.pt.sanitized.json` beside each checkpoint. The receipt covers both
+`model.pt` and `config.yaml`.
+
+Model initialization requires receipts only for the selected checkpoints.
+It checks the selected receipt generation and passes the same open files to
+the loader, without repeating full-file hashes. Managed writers remove the
+receipt before replacing covered files and publish a fresh receipt last;
+manual changes to checkpoint files must follow that protocol. Qualification
+uses the same model initialization gate. Upstream source remains unchanged.
 
 Qualify the exact selected artifacts with
 `make qualify DEPLOYMENT=localhost DOCKER_CONTEXT=science`. It checks checkpoint

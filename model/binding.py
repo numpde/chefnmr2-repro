@@ -3,6 +3,7 @@
 import json
 import logging
 import pathlib
+from contextlib import ExitStack
 from typing import TYPE_CHECKING
 
 import provider_core.scientific as sdk
@@ -34,16 +35,22 @@ class Inference(sdk.Contribution):
 
     def initialize(self, *, assets: sdk.AssetAccess) -> None:
         """Load the checkpoints before the SDK acknowledges model readiness."""
-        from chefnmr2.infer import ChefNMR2
+        if __package__:
+            from .checkpoints import verified_weights
+        else:
+            from checkpoints import verified_weights
 
-        checkpoints = [
-            (directory.name, directory / "model.pt", directory / "config.yaml")
-            for directory in map(pathlib.Path, self.checkpoint_dirs)
-        ]
+        with ExitStack() as opened:
+            checkpoints = []
+            for directory in map(pathlib.Path, self.checkpoint_dirs):
+                weights, config = directory / "model.pt", directory / "config.yaml"
+                streams = opened.enter_context(verified_weights(weights, companions=(config,)))
+                checkpoints.append((directory.name, streams[weights], streams[config]))
 
-        log.info(f"Loading {len(checkpoints)=} on {self.device=} with {self.recon_workers=}")
+            log.info(f"Loading {len(checkpoints)=} on {self.device=} with {self.recon_workers=}")
+            from chefnmr2.infer import ChefNMR2
 
-        self.model = ChefNMR2(checkpoints, device=self.device, recon_workers=self.recon_workers)
+            self.model = ChefNMR2(checkpoints, device=self.device, recon_workers=self.recon_workers)
 
         log.info("Model ready")
 

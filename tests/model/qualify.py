@@ -13,7 +13,8 @@ import tomllib
 from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 import torch
-from chefnmr2.infer import ChefNMR2, Peaks
+from chefnmr2.infer import Peaks
+from binding import Inference
 
 
 def validate(result, request, members):
@@ -72,7 +73,9 @@ def main():
             checkpoint_evidence[identity] = actual
         members.append((directory.name, directory / 'model.pt', directory / 'config.yaml'))
     started = time.monotonic()
-    model = ChefNMR2(members, device=settings['device'], recon_workers=settings['recon_workers'])
+    contribution = Inference(**settings)
+    contribution.initialize(assets=None)
+    model = contribution.model
     initialized_seconds = time.monotonic() - started
     observations = []
     try:
@@ -85,8 +88,7 @@ def main():
             validate(result, case, len(members))
             observations.append({'request': index + 1, 'elapsed_seconds': time.monotonic() - started, 'result': result})
     finally:
-        if model.recon_pool is not None:
-            model.recon_pool.shutdown()
+        contribution.close()
     report = {
         'worker_image': os.environ['CHEFNMR2_WORKER_IMAGE_ID'],
         'upstream_revision': os.environ['CHEFNMR2_UPSTREAM_REVISION'],
