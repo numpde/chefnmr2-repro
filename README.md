@@ -108,6 +108,12 @@ publication. Sibling jobs retain their own results. A malformed or lost whole
 reply stops the dispatcher and retires the shared host, with no automatic replay.
 Unconfirmed retirement retains ownership; shutdown does not claim success.
 
+With SDK 0.7.7, the localhost policy requests stopping after 60 seconds for the
+whole execution, including initialization and every batch entry. The first stop
+request, including cancellation, starts a 10-second grace. If work remains
+unfinished, the SDK retires its worker using the separate cleanup allowances.
+Interrupted work is never replayed.
+
 Build inputs live in `builds/<profile>/requirements.in`. The generated
 `requirements.lock` is a target-specific PEP 751 artifact closure with URLs,
 hashes, the resolver proof and an input identity. `builds/sdk.constraints.txt`

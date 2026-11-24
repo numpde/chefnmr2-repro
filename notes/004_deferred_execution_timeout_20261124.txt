@@ -1,8 +1,8 @@
-Deferred: execution timeout escalation
-=====================================
+Execution timeout escalation
+============================
 
 Date: 2026-11-24
-Status: SDK implementation complete; release and ChefNMR2 integration pending
+Status: SDK 0.7.7 integrated, qualified and deployed on localhost
 Owner: provider-core, with ChefNMR2 as a consumer
 
 In provider-core 0.7.5, execution_stop_request_seconds requests cooperative
@@ -34,7 +34,26 @@ defect. Final qualification: 267 native tests, 4 batch integration tests,
 Actual batch participants and input charges remain held during pending or failed
 retirement; interrupted work is never replayed. Independent review passed.
 
-This is not in published SDK 0.7.6. Release it, update the shared SDK selection
-and target locks, then add execution_stop_grace_seconds = 10 alongside the
-existing execution_stop_request_seconds = 60 in deployments/localhost/provider.toml.
-The changed private observation wire requires matching caller/worker versions.
+ChefNMR2 now pins the verified local 0.7.7 bundle, manifest SHA-256
+fad68c2ba9864f08720bff24ba473f0f1ee0b83e51fc9130f81b80709ba17ca5.
+Provider, CPU and CUDA locks change only the SDK; the sanitizer lock refreshes
+its build-tool identity without changing dependencies. Localhost enables a
+10-second grace alongside its existing 60-second whole-batch allowance.
+
+The rebuilt provider passed its 17 existing tests. Five existing upstream native
+grace cases passed in the installed 0.7.7 CPU worker, covering early cancellation,
+uncooperative execution, retained reservations/participants on cleanup failure
+and lost observation without replay. No new tests or dependencies were added.
+Actual-image qualification passed at
+.work/qualification/20261124T131800Z-1060970f: SDK 0.7.7, startup 4.56 s,
+cold/warm morphine 83.74/80.83 s with 10/10 valid draws each, two ordered SDK
+batches with three entries, and confirmed session/project retirement.
+
+Provider: sha256:a46f15626286b8c2089890ffc7a59405ce427a1516224aa10cd902dd7afce45f
+Worker: sha256:7a1b616311a6c04067d722a84ecb0f2b8d4fdee6eebcf77c1afac99f82947f26
+Localhost promotion completed with clean retirement of the previous provider.
+Both running containers report SDK 0.7.7; the provider's mounted policy reports
+execution_stop_request_seconds = 60 and execution_stop_grace_seconds = 10.
+Rollback evidence is .work/rollback/20261124T132316Z-d0b46554; its saved TOML
+was checked to omit the new setting, keeping the previous 0.7.6 pair restorable.
+No package downloads, ProArt transfers or GPU execution occurred.
