@@ -2,7 +2,7 @@ Deferred: execution timeout escalation
 =====================================
 
 Date: 2026-11-24
-Status: backlog; implementation deferred
+Status: SDK implementation complete; release and ChefNMR2 integration pending
 Owner: provider-core, with ChefNMR2 as a consumer
 
 In provider-core 0.7.5, execution_stop_request_seconds requests cooperative
@@ -20,3 +20,21 @@ Acceptance: a native worker that ignores stop requests is retired through its
 existing owner, with no premature resource release or replay. Then expose the
 policy in ChefNMR2's deployment configs. Timing/resource displays are separate
 work being handled elsewhere.
+
+Implemented in nmr-provider-tools commit
+650737fa94bbb9023b82a13c93368f88f9572910 on 2026-11-24.
+The optional execution.operation_policy.execution_stop_grace_seconds starts at
+the first cooperative stop request, including early caller cancellation. Its
+expiry starts retirement of the ProcessCall-owned worker, with its separate
+cleanup allowances. Borrowed calls and thread hosts cannot enable escalation.
+
+Tests first reproduced the missing setting and an early-cancellation timing
+defect. Final qualification: 267 native tests, 4 batch integration tests,
+5 transparency integration tests, and 24 projection tests (5 configured skips).
+Actual batch participants and input charges remain held during pending or failed
+retirement; interrupted work is never replayed. Independent review passed.
+
+This is not in published SDK 0.7.6. Release it, update the shared SDK selection
+and target locks, then add execution_stop_grace_seconds = 10 alongside the
+existing execution_stop_request_seconds = 60 in deployments/localhost/provider.toml.
+The changed private observation wire requires matching caller/worker versions.
