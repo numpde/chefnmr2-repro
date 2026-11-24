@@ -2,6 +2,8 @@
 
 import os
 from pathlib import Path
+import shlex
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -70,6 +72,22 @@ printf '%s\\0' "$@" > "$PYTHON_LOG"
         if not self.docker_log.exists():
             return []
         return [line.rstrip('\n').split('\0')[:-1] for line in self.docker_log.read_text().splitlines()]
+
+    def run_choose(self, name, reply):
+        # A disposable checkout keeps prompt history out of the real checkout.
+        helper = self.directory / 'repo/make/operator.sh'
+        helper.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / 'make/operator.sh', helper)
+        command = shlex.join([
+            'bash', '-eu', '-o', 'pipefail', '-c', 'source "$1"; choose "$2" > "$3"',
+            'bash', str(helper), name, str(self.directory / 'selected'),
+        ])
+        return subprocess.run(
+            ['script', '--quiet', '--return', '--command', command, '/dev/null'],
+            input=reply + '\n', cwd=self.directory,
+            env=self.environment(REPRO_EXPLICIT_INPUTS=''),
+            capture_output=True, text=True, timeout=10,
+        )
 
     def python_arguments(self):
         return self.python_log.read_bytes().decode().rstrip('\0').split('\0')

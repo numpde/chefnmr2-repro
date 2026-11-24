@@ -38,6 +38,9 @@ RootlessKit's detached network namespace. Failed proxy connections do not fall
 back to direct access. Pass Make inputs explicitly as below; omitted inputs
 prompt on a terminal, and environment variables alone do not select them.
 Docker contexts, build profiles and deployments are shown as numbered choices.
+Interactive wheelhouse and proxy prompts also offer the five most recent values
+from `tmp/inputs/`; type a number or a new value. This is local, disposable history,
+not a default. Proxy URLs with userinfo, queries or fragments are not saved.
 
 **Build the CPU images.** First pull the pinned external images, then acquire
 SDK tooling and locked dependencies. Builds run offline; each subshell stops on

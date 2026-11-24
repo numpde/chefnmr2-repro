@@ -1,8 +1,23 @@
 #!/usr/bin/env bash
 # Sourced by Make recipes: select explicit inputs or ask through the terminal.
 
+operator_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+
+remember_choice() (
+    local file=$1 value=$2 option
+    shift 2
+    local -a recent=("$value")
+    for option in "$@"; do
+        if [[ $option != "$value" ]]; then recent+=("$option"); fi
+        if [[ ${#recent[@]} == 5 ]]; then break; fi
+    done
+    umask 077
+    mkdir -p -- "${file%/*}"
+    printf '%s\n' "${recent[@]}" > "$file"
+)
+
 choose() {
-    local name=$1 choices=${2:-} input="REPRO_$1" value option number valid
+    local name=$1 choices=${2:-} input="REPRO_$1" value option number valid history=
     local -a options=()
     # Discovery commands may return one choice per line.
     read -ra options <<< "${choices//$'\n'/ }"
@@ -13,10 +28,20 @@ choose() {
             printf 'Supply %s=<value> on the make command line; a terminal is required to ask for it.\n' "$name" >&2
             return 2
         fi
+        case $name in
+            WHEELHOUSE|PROXY_URL)
+                history="$operator_root/tmp/inputs/$name"
+                if [[ -f $history ]]; then mapfile -t options < "$history"; fi
+                ;;
+        esac
         for number in "${!options[@]}"; do
             printf '  %s) %s\n' "$((number+1))" "${options[number]}" >&3
         done
-        printf 'Select %s (Enter cancels) > ' "$name" >&3
+        if [[ -n $history ]]; then
+            printf 'Select %s or enter a new value (Enter cancels) > ' "$name" >&3
+        else
+            printf 'Select %s (Enter cancels) > ' "$name" >&3
+        fi
         IFS= read -r value <&3 || value=
         exec 3>&-
         for number in "${!options[@]}"; do
@@ -38,6 +63,12 @@ choose() {
         if [[ -z $valid ]]; then
             printf 'Invalid %s=%s. Choose from %s.\n' "$name" "$value" "${options[*]}" >&2
             return 2
+        fi
+    fi
+    # History is advisory. Never retain proxy userinfo, queries or fragments.
+    if [[ -n $history && ! ( $name == PROXY_URL && ( $value == *@* || $value == *'?'* || $value == *'#'* ) ) ]]; then
+        if ! remember_choice "$history" "$value" "${options[@]}"; then
+            printf 'Could not remember %s in %s; continuing with the selected value.\n' "$name" "$history" >&2
         fi
     fi
     printf '%s\n' "$value"

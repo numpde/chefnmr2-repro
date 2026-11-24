@@ -7,6 +7,20 @@ from operator_fixtures import OperatorFixture, ROOT
 
 
 class MakefileNormativeTests(OperatorFixture):
+    def test_prompt_history_recalls_literal_values_and_accepts_new_ones(self):
+        literal = '/cache with spaces/$(touch UNEXPECTED)'
+        for value in ('/cache/old', literal, '/cache/third', '/cache/fourth', '/cache/fifth', '/cache/sixth'):
+            result = self.run_choose('WHEELHOUSE', value)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        result = self.run_choose('WHEELHOUSE', '5')
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('5) ' + literal, result.stdout)
+        self.assertEqual((self.directory / 'selected').read_text(), literal + '\n')
+        history = self.directory / 'repo/tmp/inputs/WHEELHOUSE'
+        self.assertEqual(history.read_text().splitlines(), [literal, '/cache/sixth', '/cache/fifth', '/cache/fourth', '/cache/third'])
+        self.assertEqual(history.stat().st_mode & 0o777, 0o600)
+        self.assertFalse((self.directory / 'UNEXPECTED').exists())
+
     def test_image_pull_uses_native_compose_without_building(self):
         result = self.run_make('images/pull', 'DOCKER_CONTEXT=local', cwd='/tmp')
         self.assertEqual(result.returncode, 0, result.stderr)
