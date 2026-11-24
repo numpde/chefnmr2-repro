@@ -736,3 +736,53 @@ Adjudication of the direct challenges:
 No image build, source relocation, deployment or GPU qualification is claimed by
 this agreement. Earlier observations and unresolved criteria scores above remain
 historical evidence, not acceptance of this implementation.
+
+Implementation and qualification of the agreed tree, 2026-11-24
+--------------------------------------------------------------
+
+Chef commits b7749fd and 5c2b6ea implement Make-owned host tools, the independent
+sanitizer image and selected-checkpoint hash admission. The worker has no
+checkpoint preparation module or cross-container source import. CPU/CUDA retain
+one worker Dockerfile and the provider remains free of Torch. Source checkpoint
+pins and the upstream gitlink are unchanged.
+
+MolDeTr committed its matching preparation layout as dbd5746. The producer
+containers/weights-sanitize/sanitize.py is byte-identical in both repositories:
+1795eabe212877bdd25dcb12c6deb7771d9a0e8ce7b065f817b1ad7c136bd686.
+Its requirements.in and cached.constraints.txt also match exactly. Chef uses
+its existing SDK artifact-lock projection; both sanitizer locks select the same
+eleven cached wheels. MolDeTr has no owned provider/worker/deployment runtime;
+those roles remain unimplemented, with no empty directories or bypass claims.
+
+Validation completed:
+
+- Six operator tests, thirteen sanitizer tests and six worker-binding tests pass
+  through the maintained Make lanes. Producer and binding tests run in their
+  respective sanitizer/worker images; current test source is mounted read-only.
+- Seventeen rebuilt-provider tests pass. The actual ten existing checkpoint
+  pairs were prepared by the standalone sanitizer and verified offline. No
+  source weights or packages were downloaded.
+- Independent code/build audits found the source-restoration gap: acquisition
+  rejected existing transformed bytes instead of restoring the pinned source.
+  Fixed acquisition to verify the candidate before invalidating the marker and
+  replacing the payload. A focused probe ran the rendered downloader shell in
+  its pinned curl image with networking disabled and synthetic tmpfs inputs.
+  Injected fetch failure preserved payload and marker; success installed the
+  verified source, removed the marker and left no partial file. This was an
+  execution probe, not a new maintained test lane. Both auditors verified the
+  repaired implementation and found no remaining blocker in their scopes.
+- Actual-image qualification passed at
+  .work/qualification/20261124T121424Z-391c8c7a. It used no model-source mount;
+  observed baked binding.py/wire.py hashes matched the checkout. Startup was
+  4.36 s; cold/warm morphine runs were 78.33/77.01 s, each with 10/10 valid draws.
+  Two ordered SDK batches comprising three entries passed, followed by confirmed
+  SDK-session and qualification-project retirement. SDK remained 0.7.6.
+
+Selected localhost qualification artifacts:
+  provider sha256:2617af5a6ed9f30b0cfc038c4a540b3d6217cfc2b2794f22fc5a8da0d6c7255f
+  worker   sha256:6dcd9152b082991b450ff15d083390ae3bbb368405b7b918a99097e196dc1bd9
+  sanitizer sha256:cb3d2a28aa22335d296461650f6de671f92b401435b55c0056b7687f25cc0bc6
+
+images.env selects the qualified pair for subsequent promotion. Existing live
+services were not replaced. No ProArt transfer or GPU execution occurred; GPU
+qualification and MolDeTr's absent runtime roles are not claimed complete.

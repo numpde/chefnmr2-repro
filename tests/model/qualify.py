@@ -14,6 +14,8 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 import torch
 from chefnmr2.infer import Peaks
+import binding
+import wire
 from binding import Inference
 
 
@@ -95,6 +97,7 @@ def main():
         'python': platform.python_version(),
         'torch': torch.__version__,
         'sdk': importlib.metadata.version('provider-core'),
+        'model_source_sha256': {Path(module.__file__).name: hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest() for module in (binding, wire)},
         'device': settings['device'],
         'checkpoints': checkpoint_evidence,
         'case': args.case.name,

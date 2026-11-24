@@ -89,6 +89,7 @@ class Runtime:
             'science_compose_sha256': hashlib.sha256(json.dumps(science, sort_keys=True).encode()).hexdigest(),
             'provider_toml_sha256': hashlib.sha256(configuration.read_bytes()).hexdigest(),
             'checkpoint_manifest_sha256': hashlib.sha256((ROOT / 'model/checkpoints.sha256').read_bytes()).hexdigest(),
+            'model_source_sha256': {name: hashlib.sha256((ROOT / 'model' / name).read_bytes()).hexdigest() for name in ('binding.py', 'wire.py')},
             'checker_sha256': hashlib.sha256((ROOT / 'tests/model/qualify.py').read_bytes()).hexdigest(),
             'case_sha256': {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted((ROOT / 'tests/model/cases').glob('*.json'))},
         }
@@ -115,6 +116,8 @@ class Runtime:
             model = self.run(direct, capture_output=True, text=True)
             (directory / 'model.json').write_text(model.stdout)
             (directory / 'model.stderr').write_text(model.stderr)
+            if json.loads(model.stdout)['model_source_sha256'] != self.qualification_inputs()['model_source_sha256']:
+                raise ValueError('Cannot qualify these images: the worker model contract differs from this checkout; rebuild and select the matching images')
             self.run(command + ['up', '-d', '--no-build', '--pull', 'never', 'worker'])
             print('Checking ordered SDK batches and retirement in the selected provider image', flush=True)
             manual = self.run(command + ['run', '--rm', '--no-deps', '-T', 'manual'], input=''.join(json.dumps(batch) + '\n' for batch in batch_case['batches']), capture_output=True, text=True)
