@@ -307,6 +307,9 @@ Ordered implementation batches
     503 was observed after startup, with no repeated warning during monitoring.
     Rollback: .work/rollback/20261124T082915Z-77dc2d1c. CUDA/ProArt completion
     remains pending batch 5, so the full completion contract is not claimed.
+    Final source audit passed. CLI failure injection preserved the primary exit
+    status plus cleanup cause and exact recovery command; host-root execution
+    is refused before creating qualification or rollback evidence.
 
     Build-owner audit removed mirrored SDK/direct version pins from captured
     CPU baselines; regenerated package/artifact arrays are exactly unchanged.

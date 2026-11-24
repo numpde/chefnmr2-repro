@@ -151,3 +151,21 @@ worker Dockerfile. Its cached constraints select compatible artifacts already
 present in the ProArt pool. The full GPU environment remains unqualified;
 ProArt still needs the ChefNMR2 checkout, verified model weights and missing SDK
 artifacts. There is no placeholder ProArt deployment or automatic transfer.
+
+Promote a completed qualification explicitly:
+
+```sh
+make deploy DEPLOYMENT=localhost DOCKER_CONTEXT=science QUALIFICATION="$QUALIFICATION"
+```
+
+Set `QUALIFICATION` to the directory printed by `make qualify`. Deployment checks
+that the checker, cases, science configuration and selected image IDs still
+match that evidence. It saves the current running image IDs and mounted TOML
+under `.work/rollback/`, then requires clean SDK retirement before replacing the
+worker. Startup never builds or pulls. The running services and mounted TOML
+are checked against the qualified artifacts before promotion is recorded.
+Rollback restores images and configuration together; uncertain retirement stops
+replacement and retains recovery evidence.
+
+The checkpoint manifest retains its original provenance comments; current
+checkpoint acquisition and verification live in `compose/weights.yaml`.

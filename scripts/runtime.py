@@ -93,6 +93,8 @@ class Runtime:
         }
 
     def qualify(self):
+        if os.getuid() == 0:
+            raise ValueError('Run qualification as the non-root checkout owner so retained evidence keeps that ownership')
         directory = ROOT / '.work/qualification' / (datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ-') + uuid.uuid4().hex[:8])
         directory.mkdir(parents=True)
         directory.chmod(0o755)
@@ -133,13 +135,19 @@ class Runtime:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('check', 'qualify', 'config', 'manual/config', 'status', 'logs', 'manual', 'weights/download', 'weights/verify'))
+    parser.add_argument('action', choices=('check', 'qualify', 'deploy', 'config', 'manual/config', 'status', 'logs', 'manual', 'weights/download', 'weights/verify'))
     parser.add_argument('--context', required=True)
     parser.add_argument('--deployment', default='')
+    parser.add_argument('--qualification', default='')
     args = parser.parse_args()
     runtime = Runtime(args.context, args.deployment)
     if args.action == 'check':
         runtime.check()
+    elif args.action == 'deploy':
+        from deployment import deploy
+        if not args.qualification:
+            parser.error('Select QUALIFICATION=<evidence directory> so deployment promotes proved artifacts')
+        deploy(runtime, Path(args.qualification))
     elif args.action == 'qualify':
         runtime.qualify()
     elif args.action in ('config', 'manual/config'):
@@ -158,4 +166,6 @@ if __name__ == '__main__':
     try:
         main()
     except subprocess.CalledProcessError as error:
+        for note in getattr(error, '__notes__', ()):
+            print(note, file=sys.stderr)
         raise SystemExit(error.returncode)

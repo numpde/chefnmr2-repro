@@ -11,6 +11,7 @@ help:
 	@echo 'make check DOCKER_CONTEXT=science'
 	@echo 'make config|manual/config|manual|status|logs DEPLOYMENT=localhost DOCKER_CONTEXT=science'
 	@echo 'make qualify DEPLOYMENT=localhost DOCKER_CONTEXT=science'
+	@echo 'make deploy DEPLOYMENT=localhost DOCKER_CONTEXT=science QUALIFICATION=<evidence-directory>'
 	@echo 'make weights/download|weights/verify DOCKER_CONTEXT=science'
 
 sdk/acquire lock acquire build:
@@ -23,3 +24,8 @@ export CHEFNMR2_DEPLOYMENT := $(value DEPLOYMENT)
 .PHONY: qualify config manual/config status logs manual weights/download weights/verify
 qualify config manual/config status logs manual weights/download weights/verify:
 	@python3 -B scripts/runtime.py $@ --context "$$CHEFNMR2_CONTEXT" --deployment "$$CHEFNMR2_DEPLOYMENT"
+
+export CHEFNMR2_QUALIFICATION := $(value QUALIFICATION)
+.PHONY: deploy
+deploy:
+	@python3 -B scripts/runtime.py deploy --context "$$CHEFNMR2_CONTEXT" --deployment "$$CHEFNMR2_DEPLOYMENT" --qualification "$$CHEFNMR2_QUALIFICATION"
