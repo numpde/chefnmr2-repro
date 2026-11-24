@@ -4,6 +4,7 @@ import argparse
 from contextlib import contextmanager
 import fcntl
 import json
+import logging
 import hashlib
 import os
 from pathlib import Path
@@ -15,6 +16,7 @@ import uuid
 from work import cleanup_run_directories, create_run_directory
 
 ROOT = Path(__file__).resolve().parents[1]
+log = logging.getLogger(__name__)
 
 
 class Runtime:
@@ -43,7 +45,9 @@ class Runtime:
         root.mkdir(exist_ok=True)
         descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:
+            log.info('Waiting for the checkout qualification/deployment lock')
             fcntl.flock(descriptor, fcntl.LOCK_EX)
+            log.info('Checkout qualification/deployment lock acquired')
             if any((root / kind).is_symlink() for kind in ('qualification', 'rollback')):
                 raise ValueError('Cannot manage qualification or rollback records through symbolic links')
             yield
@@ -82,7 +86,7 @@ class Runtime:
                 obsolete.append(directory)
         cleanup_run_directories(obsolete)
         for directory in obsolete:
-            print('Removed obsolete record: ' + str(directory), flush=True)
+            log.info('Removed obsolete record: %s', directory)
 
     def compose(self, api=False, project=None, qualification=False):
         if not self.deployment:
@@ -106,7 +110,9 @@ class Runtime:
         image = definition['target']['provider']['tags'][0]
         command = self.docker + ['run', '--rm', '--pull=never', '--network', 'none', '--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '1', '--memory', '512m', '--tmpfs', '/tmp:rw,nosuid,nodev,noexec,size=64m', '-e', 'PROVIDER_CORE_IN_CONTAINER=1', '-e', 'PYTHONPATH=/tests/provider:/opt/provider', '--mount', f'type=bind,src={ROOT / "tests"},dst=/tests,readonly', '--entrypoint', 'python', image, '-B', '-m', 'unittest', 'discover']
         for scenario in (('normative', 'adversarial') if category == 'all' else (category,)):
+            log.info('Running %s provider tests', scenario)
             self.run(command + ['-s', '/tests/provider/' + scenario, '-p', 'test_*.py', '-v'])
+        log.info('Provider tests passed')
 
     @contextmanager
     def isolated(self, qualification=False):
@@ -120,7 +126,9 @@ class Runtime:
             raise
         finally:
             try:
+                log.info('Retiring isolated project %s', project)
                 self.run(command + ['down', '--remove-orphans', '--volumes', '--timeout', '30'])
+                log.info('Isolated project %s retired', project)
             except subprocess.CalledProcessError:
                 if failure is None:
                     raise
@@ -128,8 +136,11 @@ class Runtime:
 
     def manual(self):
         with self.isolated() as command:
+            log.info('Starting isolated worker for %s', self.deployment)
             self.run(command + ['up', '-d', '--no-build', '--pull', 'never', 'worker'])
+            log.info('Starting manual client; reading request batches from stdin until EOF')
             self.run(command + ['run', '--rm', '--no-deps', '-T', 'manual'])
+        log.info('Manual run complete')
 
     def qualification_inputs(self):
         science = self.config()
@@ -147,6 +158,7 @@ class Runtime:
         if os.getuid() == 0:
             raise ValueError('Run qualification as the non-root checkout owner so retained evidence keeps that ownership')
         directory = create_run_directory(ROOT, 'qualification')
+        log.info('Preparing qualification; evidence: %s', directory)
         self.environment['CHEFNMR2_QUALIFICATION_DIRECTORY'] = str(directory)
         configuration = self.config(qualification=True)
         (directory / 'compose.json').write_text(json.dumps(configuration, indent=2))
@@ -159,24 +171,26 @@ class Runtime:
         with self.isolated(qualification=True) as command:
             common = command + ['run', '--rm', '--no-deps', '-T', '--entrypoint', 'python', 'worker', '-B', '/qualification/qualify.py', '--config', '/config/provider.toml', '--manifest', '/checks/checkpoints.sha256']
             direct = command + ['run', '--rm', '--no-deps', '-T', '--env', 'CHEFNMR2_WORKER_IMAGE_ID=' + images[0]['Id'], '--env', 'CHEFNMR2_UPSTREAM_REVISION=' + upstream, '--entrypoint', 'python', 'worker', '-B', '/qualification/qualify.py', '--config', '/config/provider.toml', '--manifest', '/checks/checkpoints.sha256', '--case', '/qualification/cases/morphine.json']
-            print('Checking cold and warm upstream morphine inference in ' + images[0]['Id'], flush=True)
+            log.info('Checking cold and warm upstream morphine inference in %s', images[0]['Id'])
             model = self.run(direct, capture_output=True, text=True)
             (directory / 'model.json').write_text(model.stdout)
             (directory / 'model.stderr').write_text(model.stderr)
             if json.loads(model.stdout)['model_source_sha256'] != self.qualification_inputs()['model_source_sha256']:
                 raise ValueError('Cannot qualify these images: the worker model contract differs from this checkout; rebuild and select the matching images')
+            log.info('Cold and warm inference completed; starting SDK worker')
             self.run(command + ['up', '-d', '--no-build', '--pull', 'never', 'worker'])
-            print('Checking ordered SDK batches and retirement in the selected provider image', flush=True)
+            log.info('Checking ordered SDK batches and retirement in the selected provider image')
             manual = self.run(command + ['run', '--rm', '--no-deps', '-T', 'manual'], input=''.join(json.dumps(batch) + '\n' for batch in batch_case['batches']), capture_output=True, text=True)
             replies = [json.loads(line) for line in manual.stdout.splitlines()]
             (directory / 'manual.json').write_text(json.dumps(replies, indent=2))
             (directory / 'manual.stderr').write_text(manual.stderr)
+            log.info('Validating completed batch results')
             validated = self.run(common + ['--case', '/qualification/cases/batch.json', '--batch-results', '/evidence/manual.json'], capture_output=True, text=True)
             (directory / 'batch-validation.json').write_text(validated.stdout)
             report = {'deployment': self.deployment, 'worker_image': images[0]['Id'], 'provider_image': images[1]['Id'], 'upstream_revision': upstream, 'model': json.loads(model.stdout), 'sdk_batches': json.loads(validated.stdout), 'sdk_session_retired': True}
         report['qualification_project_retired'] = True
         (directory / 'summary.json').write_text(json.dumps(report, indent=2))
-        print('Qualification passed; evidence: ' + str(directory), flush=True)
+        log.info('Qualification passed; evidence: %s', directory)
         self.prune_records('qualification', 3)
 
 def main():
@@ -187,6 +201,7 @@ def main():
     parser.add_argument('--qualification', default='')
     parser.add_argument('--category', choices=('all', 'normative', 'adversarial'), default='all')
     args = parser.parse_args()
+    log.info('Starting %s%s', args.action, f' for {args.deployment}' if args.deployment else '')
     runtime = Runtime(args.host, args.deployment)
     if args.action == 'check':
         runtime.check(args.category)
@@ -210,6 +225,7 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
     try:
         main()
     except subprocess.CalledProcessError as error:

@@ -2,11 +2,13 @@
 
 import argparse
 import json
+import logging
 from pathlib import Path
 import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
+log = logging.getLogger(__name__)
 
 
 def main():
@@ -14,6 +16,7 @@ def main():
     parser.add_argument('--host', required=True)
     parser.add_argument('--proxy', required=True)
     args = parser.parse_args()
+    log.info('Preparing checkpoint download configuration')
     docker = ['docker', '--host', args.host]
     composition = json.loads(subprocess.check_output(docker + [
         'compose', '--project-directory', str(ROOT), '--env-file', '/dev/null',
@@ -32,9 +35,12 @@ def main():
     with tempfile.TemporaryDirectory(prefix='chefnmr2-weights-') as directory:
         overlay = Path(directory) / 'worker.json'
         overlay.write_text(json.dumps(caller))
+        log.info('Downloading or verifying pinned checkpoints in %s', volume['name'])
         subprocess.run(['bash', str(ROOT / 'make/acquisition.sh'), args.host, image, args.proxy,
                         '--compose', str(overlay), 'worker-online', 'chefnmr2-weights-writer'], check=True)
+    log.info('Checkpoint download and source verification complete')
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
     main()

@@ -88,6 +88,7 @@ select_docker() {
         unix:///*) ;;
         *) printf 'Docker context %s must use a local Unix socket.\n' "$context" >&2; return 2 ;;
     esac
+    printf 'Using Docker context %s (%s)\n' "$context" "$endpoint" >&2
     for variable in ${!REPRO_@}; do unset "$variable"; done
     unset MAKEFLAGS MFLAGS GNUMAKEFLAGS MAKEOVERRIDES
     docker=(docker --host "$endpoint")

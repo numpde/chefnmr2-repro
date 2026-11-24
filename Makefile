@@ -92,7 +92,9 @@ weights/verify: ## Verify the retained checkpoint volume offline; requires DOCKE
 weights/sanitize: ## Sanitize known checkpoint files in the retained volume; requires DOCKER_CONTEXT.
 weights/verify weights/sanitize:
 	@$(weights_inputs); select_docker; \
-	if [[ $@ == weights/verify ]]; then weights_run --pull never verify; else weights_run --pull never --name chefnmr2-weights-writer sanitize; fi
+	printf 'Starting %s\n' '$@' >&2; \
+	if [[ $@ == weights/verify ]]; then weights_run --pull never verify; else weights_run --pull never --name chefnmr2-weights-writer sanitize; fi; \
+	printf '%s complete\n' '$@' >&2
 
 .PHONY: weights/watch
 weights/watch: ## Watch checkpoint file sizes during a download; requires DOCKER_CONTEXT. Ctrl+C stops watching.

@@ -4,6 +4,7 @@ import argparse
 from contextlib import contextmanager
 import hashlib
 import json
+import logging
 import os
 from pathlib import Path
 import re
@@ -17,6 +18,7 @@ from fetch_sdk import artifact_names, release_url
 from work import temporary_run_directory
 
 ROOT = Path(__file__).resolve().parents[1]
+log = logging.getLogger(__name__)
 
 
 def digest(path):
@@ -60,9 +62,11 @@ class Build:
         self.run(self.docker + ['image', 'inspect', image], stdout=subprocess.DEVNULL)
 
     def sdk_artifacts(self, acquire=False):
+        log.info('Checking SDK %s artifacts in %s', self.sdk, self.pool)
         if acquire:
             image = self.bake('provider')['args']['PYTHON_BASE']
             self.require_image(image)
+            log.info('Acquiring missing SDK artifacts')
             self.run(self.acquisition_command(image,
                 [(self.pool, '/pool'), (ROOT / 'make/fetch_sdk.py', '/fetch_sdk.py')],
                 ['-B', '/fetch_sdk.py', self.sdk, self.manifest_hash, '/pool'], writable_pool=True))
@@ -73,6 +77,7 @@ class Build:
             path = self.pool / name
             if digest(path) != hashes[name]:
                 raise ValueError(f'Cannot use {path.name}: its SHA-256 differs from the selected SDK release')
+        log.info('SDK %s verified and ready', self.sdk)
 
     def container_options(self, mounts, writable_pool=False, scratch=None):
         command = ['--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '2', '--memory', '4g', '--tmpfs', '/tmp:rw,nosuid,nodev,size=3g', '-e', 'HOME=/tmp', '-e', 'PROVIDER_CORE_IN_CONTAINER=1']
@@ -107,9 +112,10 @@ class Build:
             command = self.acquisition_command(image, mounts, application, writable_pool=arguments[0] == 'acquire')
         else:
             command = self.container(image, mounts) + application
-        return self.run(command, capture_output=True, text=True).stdout
+        return self.run(command, stdout=subprocess.PIPE, text=True).stdout
 
     def prepare_lock_image(self, target):
+        log.info('Preparing the dependency resolver image')
         base = target['args']['PYTHON_BASE']
         lock = self.bake('lock')
         self.require_image(base)
@@ -144,7 +150,8 @@ class Build:
             for constraint in sorted(directory.glob('*.constraints.txt')):
                 command += ['-c', f'/input/{profile}/{constraint.name}']
             command += ['--offline', '--no-index']
-            resolved = self.run(command, capture_output=True, text=True).stdout
+            log.info('Resolving %s dependencies from cached packages', profile)
+            resolved = self.run(command, stdout=subprocess.PIPE, text=True).stdout
             # OmegaConf's sole source-only dependency is built in its own image
             # stage. Add its original archive identity to the resolver's hashes.
             if 'antlr4-python3-runtime==' in resolved:
@@ -164,6 +171,7 @@ class Build:
                 arguments += ['--source', url + '#sha256=' + digest(wheel)]
             if 'antlr4-python3-runtime==' in resolved:
                 arguments += ['--require-source', 'antlr4-python3-runtime']
+            log.info('Locating published artifact URLs for %s', profile)
             projected = self.sdk_tool(image, stage, *arguments, online=True)
             # The SDK's PEP 751 projection is the complete artifact lock. The
             # .lock filename is copied to a pylock name when invoking the tool.
@@ -178,10 +186,12 @@ class Build:
                     os.replace(temporary_lock, directory / 'requirements.lock')
                 finally:
                     temporary_lock.unlink(missing_ok=True)
+        log.info('Saved dependency lock: %s', directory / 'requirements.lock')
 
     @contextmanager
     def selected(self, profile, acquire=False):
         self.sdk_artifacts()
+        log.info('Checking %s build inputs and cached base image', profile)
         target = self.bake(profile)
         base = target['args']['PYTHON_BASE']
         self.require_image(base)
@@ -198,13 +208,17 @@ class Build:
                         raise ValueError(f"Cannot select source package {package['name']!r}: only antlr has an explicit offline build")
                     source_options += ['--require-sdist', package['name']]
             if acquire:
+                log.info('Acquiring locked %s dependencies into %s', profile, self.pool)
                 self.sdk_tool(base, stage, 'acquire', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', '--pool', '/pool', *source_options, online=True)
+            log.info('Selecting locked %s artifacts', profile)
             selected = json.loads(self.sdk_tool(base, stage, 'select', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', *source_options))['artifacts']
+            log.info('Selected %d locked artifacts for %s', len(selected), profile)
             yield target, stage, selected
 
     def acquire(self, profile):
         with self.selected(profile, acquire=True):
             pass
+        log.info('Dependencies ready for %s', profile)
 
     def build(self, profile):
         with self.selected(profile) as (target, stage, artifacts):
@@ -222,12 +236,15 @@ class Build:
                     raise ValueError(f'Cannot build {filename}: only the declared antlr source dependency has an offline wheel build')
             for name, lines in (('install.txt', install), ('sources.txt', sources), ('build.txt', build)):
                 (stage / name).write_text(''.join(lines))
+            log.info('Building %s offline', profile)
             self.run(self.docker + ['buildx', 'bake', '-f', 'compose/images.yaml', profile,
                                    '--allow', 'fs.read=' + str(self.pool),
                                    '--allow', 'fs.read=' + str(stage),
                                    '--set', profile + '.contexts.wheels=' + str(self.pool),
                                    '--set', profile + '.contexts.installation=' + str(stage), '--load'])
-            print(json.dumps({'profile': profile, 'image': json.loads(self.run(self.docker + ['image', 'inspect', target['tags'][0]], capture_output=True, text=True).stdout)[0]['Id']}))
+            image = json.loads(self.run(self.docker + ['image', 'inspect', target['tags'][0]], capture_output=True, text=True).stdout)[0]['Id']
+        print(json.dumps({'profile': profile, 'image': image}))
+        log.info('Build complete: %s', profile)
 
 
 def main():
@@ -238,6 +255,7 @@ def main():
     parser.add_argument('--pool', required=True)
     parser.add_argument('--proxy')
     args = parser.parse_args()
+    log.info('Starting %s%s', args.action, f' for {args.profile}' if args.profile else '')
     build = Build(args.host, args.pool, args.proxy)
     if args.action == 'sdk/acquire':
         build.sdk_artifacts(acquire=True)
@@ -250,6 +268,7 @@ def main():
 
 
 if __name__ == '__main__':
+    logging.basicConfig(level=logging.INFO, format='%(message)s')
     try:
         main()
     except subprocess.CalledProcessError as error:

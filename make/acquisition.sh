@@ -17,6 +17,7 @@ else
 fi
 [[ $route != none ]] || route=system
 bundle=$root/make/bootstrap/acquisition
+printf '%s\n' 'Checking acquisition support files' >&2
 python3 -I -S -B "$bundle/acquisition_tool/source_update.py" verify --source-dir "$bundle"
 source "$bundle/acquisition_tool/owner.sh"
 run_acquisition() {
@@ -27,6 +28,9 @@ run_acquisition() {
     else
         acquisition_worker online status "$image" grants application
     fi
+    printf 'Acquisition worker exited with status %s; retiring network helpers\n' "$status" >&2
     return "$status"
 }
+printf '%s\n' 'Starting acquisition session: preparing identity, network route and worker' >&2
 acquisition_scope --endpoint "$endpoint" --bootstrap-image "$image" -- run_acquisition
+printf '%s\n' 'Acquisition session retired' >&2

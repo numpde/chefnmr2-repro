@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 import json
+import logging
 import os
 import hashlib
 from pathlib import Path
@@ -9,6 +10,8 @@ import subprocess
 import time
 
 from work import create_run_directory
+
+log = logging.getLogger(__name__)
 
 
 def inspect(runtime, identities):
@@ -29,6 +32,7 @@ def retire(runtime, containers):
     if providers:
         provider = providers[0]
         if provider['State']['Running']:
+            log.info('Stopping the current provider and waiting for SDK retirement')
             runtime.run(runtime.docker + ['stop', '--time', '90', provider['Id']])
         state = inspect(runtime, [provider['Id']])[0]['State']
         if state['Running'] or state['ExitCode'] != 0:
@@ -38,6 +42,7 @@ def retire(runtime, containers):
 def deploy(runtime, qualification):
     if os.getuid() == 0:
         raise ValueError('Promote images as the non-root checkout owner so rollback evidence keeps that ownership')
+    log.info('Checking qualification evidence: %s', qualification)
     summary = json.loads((qualification / 'summary.json').read_text())
     inputs = json.loads((qualification / 'inputs.json').read_text())
     if not summary['qualification_project_retired'] or inputs != runtime.qualification_inputs():
@@ -56,6 +61,7 @@ def deploy(runtime, qualification):
         if labels['com.docker.compose.project'] != definition['name'] or not Path(labels['com.docker.compose.project.working_dir']).resolve().is_relative_to(root):
             raise ValueError('Cannot replace containers: their Compose ownership differs from this checkout and deployment')
     backup = create_run_directory(root, 'rollback')
+    log.info('Saving rollback state: %s', backup)
     (backup / 'containers.json').write_text(json.dumps(containers, indent=2))
     rollback = deepcopy(definition)
     rollback['x-chefnmr2-run'] = {'engine': runtime.docker[-1], 'checkout': str(root), 'deployment': runtime.deployment}
@@ -69,9 +75,11 @@ def deploy(runtime, qualification):
     (backup / 'compose.json').write_text(json.dumps(rollback, indent=2))
     retire(runtime, containers)
     try:
+        log.info('Starting the qualified provider, worker and interpreter proxy')
         runtime.run(command + ['up', '-d', '--no-build', '--pull', 'never', '--wait', '--wait-timeout', '150', 'worker', 'interpreter-proxy', 'provider'])
         # Services without healthchecks can exit immediately after Compose's
         # running-state observation. Check again before recording promotion.
+        log.info('Waiting five seconds before checking the running deployment')
         time.sleep(5)
         promoted = inventory(runtime, command)
         actual_services = {container['Config']['Labels']['com.docker.compose.service']: container for container in promoted}
@@ -85,6 +93,7 @@ def deploy(runtime, qualification):
         if hashlib.sha256(mounted).hexdigest() != inputs['provider_toml_sha256']:
             raise RuntimeError('Cannot confirm promotion: the mounted provider TOML differs from the qualified configuration')
     except (subprocess.CalledProcessError, RuntimeError) as failure:
+        log.info('Promotion failed; attempting rollback from %s', backup)
         try:
             retire(runtime, inventory(runtime, command))
             if containers:
@@ -93,5 +102,5 @@ def deploy(runtime, qualification):
             failure.add_note(f'Rollback could not finish; retain {backup}: {rollback_failure}')
         raise
     (backup / 'promoted.json').write_text(json.dumps(promoted, indent=2))
-    print('Promoted qualified artifacts; rollback evidence: ' + str(backup), flush=True)
+    log.info('Promoted qualified artifacts; rollback evidence: %s', backup)
     runtime.prune_records('rollback', 2, protected=promoted)
