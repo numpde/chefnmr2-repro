@@ -9,11 +9,10 @@ import os
 from pathlib import Path
 import re
 import shlex
-import shutil
 import subprocess
 import sys
 import uuid
-from work import create_run_directory
+from work import cleanup_run_directories, create_run_directory
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -40,7 +39,7 @@ class Runtime:
     @contextmanager
     def artifacts(self):
         """Serialize report creation, promotion and deletion in this checkout."""
-        root = ROOT / '.work'
+        root = ROOT / 'tmp'
         root.mkdir(exist_ok=True)
         descriptor = os.open(root, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW)
         try:
@@ -53,10 +52,11 @@ class Runtime:
 
     def prune_records(self, kind, keep, protected=()):
         """Trim completed history after success; incomplete records stay for investigation."""
-        parent = ROOT / '.work' / kind
+        parent = ROOT / 'tmp' / kind
         marker = 'summary.json' if kind == 'qualification' else 'promoted.json'
         protected = [Path(mount['Source']).resolve() for container in protected for mount in container['Mounts']]
         count = 0
+        obsolete = []
         for directory in sorted(parent.iterdir(), reverse=True):
             if (directory.is_symlink() or not directory.is_dir() or directory.stat().st_uid != os.getuid()
                     or not re.fullmatch(r'\d{8}T\d{6}Z-[0-9a-f]{8}', directory.name)):
@@ -79,8 +79,10 @@ class Runtime:
                 continue
             count += 1
             if count > keep and not any(path.is_relative_to(directory.resolve()) for path in protected):
-                shutil.rmtree(directory)
-                print('Removed obsolete record: ' + str(directory), flush=True)
+                obsolete.append(directory)
+        cleanup_run_directories(obsolete)
+        for directory in obsolete:
+            print('Removed obsolete record: ' + str(directory), flush=True)
 
     def compose(self, api=False, project=None, qualification=False):
         if not self.deployment:

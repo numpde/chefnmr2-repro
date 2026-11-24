@@ -221,11 +221,16 @@ can also affect BuildKit's installation cache.
 | Location | Contents | Lifetime |
 | --- | --- | --- |
 | `$WHEELHOUSE` | Downloaded wheels, source archives and SDK tooling, reused across selected profiles | Persistent until explicitly removed |
-| `.work/build/YYYYMMDDTHHMMSSZ-xxxxxxxx/` | Small lock files and generated installation lists; no wheel archives | Removed on normal unwinding; abrupt termination can leave residue |
+| `tmp/{build,lock}/YYYYMMDDTHHMMSSZ-xxxxxxxx/` | Small lock files, generated installation lists and resolver scratch; no staged wheel archives | Shared context manager removes each run on completion or exception; abrupt termination can leave residue |
 | Docker/BuildKit storage | Imported wheelhouse context and cached build layers | Managed by Docker's cache lifecycle |
 | Final images | Installed Python packages and the Python base image's bundled pip wheel; dependency archives are mounted during installation rather than copied into the final filesystem | Retained with the images |
 | `make/bootstrap/acquisition/` | Generated acquisition support, bundled dependency source and a pinned pip wheel | Included in every checkout |
 | Docker volume `chefnmr2-weights_checkpoints` | Model checkpoints and preparation receipts | Persistent, separate from the checkout and wheelhouse |
+
+All run directories use `cleanup_run_directories` in `make/work.py` for removal.
+Build, acquisition and lock generation call it automatically when their scratch
+scope exits. Qualification and rollback call it for obsolete records selected by
+the retention rules below, preserving evidence and recovery inputs still needed.
 
 The bootstrap is generated from the shared SDK source and verified before use;
 its provenance is recorded in [make/bootstrap/README.md](make/bootstrap/README.md).
@@ -287,7 +292,7 @@ Qualify the exact selected artifacts with
 hashes, cold/warm ten-draw upstream morphine inference, scientific validity,
 ordered eight-draw SDK batches, and session/project retirement. The two budgets
 are reported separately. It records images, versions, configuration identity,
-checkpoint hashes and results under `.work/qualification/`. Qualification shares
+checkpoint hashes and results under `tmp/qualification/`. Qualification shares
 checkpoints read-only and needs neither API access nor credentials.
 
 Successful qualification automatically keeps the three newest completed runs
@@ -309,7 +314,7 @@ make deploy DEPLOYMENT=localhost DOCKER_CONTEXT=science QUALIFICATION="$QUALIFIC
 Set `QUALIFICATION` to the directory printed by `make qualify`. Deployment checks
 that the checker, cases, science configuration and selected image IDs still
 match that evidence. It saves the current running image IDs and mounted TOML
-under `.work/rollback/`, then requires clean SDK retirement before replacing the
+under `tmp/rollback/`, then requires clean SDK retirement before replacing the
 worker. Startup never builds or pulls. The running services and mounted TOML
 are checked against the qualified artifacts before promotion is recorded.
 Rollback restores images and configuration together; uncertain retirement stops

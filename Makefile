@@ -98,7 +98,7 @@ test/operator: test/operator/normative test/operator/adversarial ## Run normativ
 test/operator/normative: ## Run normative host operator tests.
 test/operator/adversarial: ## Run adversarial host operator tests.
 test/operator/normative test/operator/adversarial:
-	@PYTHONPATH="$(REPOSITORY_ROOT)/tests/operator" $(HOST_PYTHON) -m unittest discover -s "$(REPOSITORY_ROOT)/tests/operator/$(@F)" -p 'test_*.py' -v
+	@PYTHONPATH="$(REPOSITORY_ROOT)/tests/operator:$(REPOSITORY_ROOT)/make" $(HOST_PYTHON) -m unittest discover -s "$(REPOSITORY_ROOT)/tests/operator/$(@F)" -p 'test_*.py' -v
 
 .PHONY: qualify config manual/config status logs manual
 qualify: ## Run actual-image scientific and SDK qualification; requires DEPLOYMENT and DOCKER_CONTEXT.

@@ -228,7 +228,7 @@ Ordered implementation batches
     checkpoints and explicitly retained evidence. Then remove the compatibility
     Dockerfile and unused operator-input helper in the owning commit.
 
-    Evidence: .work/qualification/20261124T082019Z-9c6f1652 contains exact
+    Evidence: tmp/qualification/20261124T082019Z-9c6f1652 contains exact
     image/config/checkpoint identities, cold/warm ten-draw morphine observations
     and two SDK batches containing three eight-draw methane/ethane entries.
     Candidate readability/formulas, positional replies, reconstruction shutdown
@@ -305,7 +305,7 @@ Ordered implementation batches
     and mounted TOML match the qualified artifacts/configuration. API directory
     accepted ChefNMR2 at 2026-11-24T08:29:32.922738Z. One transient job-discovery
     503 was observed after startup, with no repeated warning during monitoring.
-    Rollback: .work/rollback/20261124T082915Z-77dc2d1c. CUDA/ProArt completion
+    Rollback: tmp/rollback/20261124T082915Z-77dc2d1c. CUDA/ProArt completion
     remains pending batch 5, so the full completion contract is not claimed.
     Final source audit passed. CLI failure injection preserved the primary exit
     status plus cleanup cause and exact recovery command; host-root execution
@@ -369,11 +369,11 @@ API failure projections. Existing dependency versions are otherwise unchanged.
 JobService and ElucidationSession receive the same interpreter diagnostic secrets.
 
 The provider/CPU-worker pair passed actual-image qualification at
-.work/qualification/20261124T100743Z-c2cdee29: cold/warm ten-draw morphine checks
+tmp/qualification/20261124T100743Z-c2cdee29: cold/warm ten-draw morphine checks
 completed with 10 valid draws each (85.93/82.45 seconds), ordered SDK batches
 passed, and the scientific pool/session/project retired. The exact qualified
 SDK 0.7.6 pair was deployed together. Rollback evidence is retained at
-.work/rollback/20261124T101330Z-a6191043. Both live containers reported 0.7.6.
+tmp/rollback/20261124T101330Z-a6191043. Both live containers reported 0.7.6.
 No weights or large packages were downloaded; verified local caches were reused.
 CUDA's 51 locked artifacts are present and hash-verified locally; CUDA execution
 is not qualified. The unrelated ProArt preparation note remains untracked.
@@ -772,7 +772,7 @@ Validation completed:
   execution probe, not a new maintained test lane. Both auditors verified the
   repaired implementation and found no remaining blocker in their scopes.
 - Actual-image qualification passed at
-  .work/qualification/20261124T121424Z-391c8c7a. It used no model-source mount;
+  tmp/qualification/20261124T121424Z-391c8c7a. It used no model-source mount;
   observed baked binding.py/wire.py hashes matched the checkout. Startup was
   4.36 s; cold/warm morphine runs were 78.33/77.01 s, each with 10/10 valid draws.
   Two ordered SDK batches comprising three entries passed, followed by confirmed

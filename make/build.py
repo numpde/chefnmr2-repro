@@ -14,7 +14,7 @@ import tempfile
 import tomllib
 import urllib.parse
 from fetch_sdk import artifact_names, release_url
-from work import create_run_directory
+from work import temporary_run_directory
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -135,9 +135,7 @@ class Build:
         image = self.prepare_lock_image(target)
         directory = ROOT / 'builds' / profile
         release_lock = f'provider_core-{self.sdk}-install.lock'
-        with tempfile.TemporaryDirectory(prefix='chefnmr2-lock-') as temporary:
-            stage = Path(temporary)
-            stage.chmod(0o755)
+        with temporary_run_directory(ROOT, 'lock') as stage:
             scratch = stage / 'scratch'
             scratch.mkdir(mode=0o700)
             command = self.container(image, [(ROOT / 'builds', '/input'), (self.pool, '/pool')], scratch=scratch)
@@ -187,8 +185,7 @@ class Build:
         target = self.bake(profile)
         base = target['args']['PYTHON_BASE']
         self.require_image(base)
-        stage = create_run_directory(ROOT, 'build')
-        try:
+        with temporary_run_directory(ROOT, 'build') as stage:
             shutil.copyfile(ROOT / 'builds' / profile / 'requirements.lock', stage / 'pylock.profile.toml')
             document = tomllib.loads((stage / 'pylock.profile.toml').read_text())
             if document['tool']['chefnmr2']['inputs-sha256'] != self.input_identity(profile, target):
@@ -204,8 +201,6 @@ class Build:
                 self.sdk_tool(base, stage, 'acquire', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', '--pool', '/pool', *source_options, online=True)
             selected = json.loads(self.sdk_tool(base, stage, 'select', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', *source_options))['artifacts']
             yield target, stage, selected
-        finally:
-            shutil.rmtree(stage)
 
     def acquire(self, profile):
         with self.selected(profile, acquire=True):

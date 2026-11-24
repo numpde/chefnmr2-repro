@@ -2,7 +2,7 @@
 /.idea/
 /.agents/
 /.codex/
-/.work/
+/tmp/
 
 # Local configuration and credentials.
 /.aws/

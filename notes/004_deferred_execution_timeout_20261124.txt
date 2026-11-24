@@ -45,7 +45,7 @@ grace cases passed in the installed 0.7.7 CPU worker, covering early cancellatio
 uncooperative execution, retained reservations/participants on cleanup failure
 and lost observation without replay. No new tests or dependencies were added.
 Actual-image qualification passed at
-.work/qualification/20261124T131800Z-1060970f: SDK 0.7.7, startup 4.56 s,
+tmp/qualification/20261124T131800Z-1060970f: SDK 0.7.7, startup 4.56 s,
 cold/warm morphine 83.74/80.83 s with 10/10 valid draws each, two ordered SDK
 batches with three entries, and confirmed session/project retirement.
 
@@ -54,6 +54,6 @@ Worker: sha256:7a1b616311a6c04067d722a84ecb0f2b8d4fdee6eebcf77c1afac99f82947f26
 Localhost promotion completed with clean retirement of the previous provider.
 Both running containers report SDK 0.7.7; the provider's mounted policy reports
 execution_stop_request_seconds = 60 and execution_stop_grace_seconds = 10.
-Rollback evidence is .work/rollback/20261124T132316Z-d0b46554; its saved TOML
+Rollback evidence is tmp/rollback/20261124T132316Z-d0b46554; its saved TOML
 was checked to omit the new setting, keeping the previous 0.7.6 pair restorable.
 No package downloads, ProArt transfers or GPU execution occurred.
