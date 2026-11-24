@@ -23,6 +23,7 @@ help: ## List workflows; inputs may prompt on a terminal and environment values 
 
 .PHONY: upstream/init
 upstream/init: ## Initialize the pinned upstream submodule with a shallow checkout; may use the network.
+	git -C "$(REPOSITORY_ROOT)" submodule sync -- model/upstream
 	git -C "$(REPOSITORY_ROOT)" submodule update --init --checkout --depth 1 -- model/upstream
 
 # One selector owns explicit input, terminal prompting, cancellation and choices.
