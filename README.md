@@ -42,7 +42,8 @@ The deployment requires:
 ```sh
 export CHEFNMR2_API_CA="$PWD/secrets/localhost/api-ca.pem"
 export CHEFNMR2_DNS_CONFIG="$PWD/secrets/localhost/resolv.conf"
-docker --context science compose -f docker/compose/inference.yaml -f docker/compose/provider.yaml build worker provider
+make build PROFILE=worker-cpu DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
+make build PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
 docker --context science compose -f docker/compose/inference.yaml -f docker/compose/provider.yaml up -d --no-build worker provider
 docker --context science compose -f docker/compose/inference.yaml -f docker/compose/provider.yaml logs -f provider worker
 ```
@@ -68,7 +69,8 @@ and proxy rather than copying those providers' conversation or transport code.
 For manual model testing, use the separate client in the provider image:
 
 ```sh
-docker --context science compose -f docker/compose/inference.yaml --profile manual build worker manual
+make build PROFILE=worker-cpu DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
+make build PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"
 docker --context science compose -f docker/compose/inference.yaml up -d --no-build worker
 printf '%s\n' '{"requests":[{"formula":"CH4","peaks":{"h":[[1.0,4,"s"]]}}]}' |
   docker --context science compose -f docker/compose/inference.yaml run --rm -T manual
@@ -96,8 +98,25 @@ publication. Sibling jobs retain their own results. A malformed or lost whole
 reply stops the dispatcher and retires the shared host, with no automatic replay.
 Unconfirmed retirement retains ownership; shutdown does not claim success.
 
-The SDK dependency files in `requirements/` are generated for CPython 3.13 on
-Linux/amd64. Each package has one selected wheel URL and hash. To update them,
-run the released SDK's `wheelhouse-tool locate` and `requirements` commands inside
-the pinned Python image, using the release's native and API install locks as the
-source authority. Regenerate both files when changing the SDK, Python, or platform.
+Build inputs live in `builds/<profile>/requirements.in`. The generated
+`requirements.lock` is a target-specific PEP 751 artifact closure with URLs,
+hashes, the resolver proof and an input identity. `builds/sdk.constraints.txt`
+selects the common SDK release. Bake owns pinned interpreters and build contexts;
+Compose uses built images and never resolves packages.
+
+Select an existing external package pool explicitly with `WHEELHOUSE`. Prepare
+SDK tooling with `make sdk/acquire DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`.
+`make lock PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`
+resolves against cached artifacts and reads package-index metadata to select
+published URLs; it does not download package archives. Repeat for `worker-cpu`.
+The baseline constraints preserve all installed CPU package versions captured
+before this refactor. Change them deliberately when qualifying a new CPU environment.
+
+`make acquire PROFILE=<profile> DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`
+is the separate networked package acquisition step. Builds require every selected
+artifact and all pinned base/tool images locally, fail on stale locks or missing
+inputs, and run without build networking. The worker builds the declared antlr
+source archive separately with locked setuptools and retains its resulting wheel
+hash at `/opt/inference/source-wheel-sha256.txt`.
+
+Run `make check DOCKER_CONTEXT=science` for the provider's offline behavior tests.

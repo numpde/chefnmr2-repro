@@ -2,7 +2,7 @@ ChefNMR2 layout, build and deployment refactor
 ============================================
 
 Date: 2026-11-24
-Status: plan; implementation has not started
+Status: implementation underway; batch 1 committed as 66e0c54, batch 2 pending
 Baseline: 222c7b8; ChefNMR2 submodule 9922b6c571428757c37f127225a62f2070d6ddc0
 
 Completion contract
@@ -21,6 +21,8 @@ Completion contract
 - Compose owns runtime topology and containment. Deployment overlays own host
   mounts, resource settings, selected image digests and GPU device grants.
   provider.toml owns SDK/scientific/API settings. No custom config merger.
+  Each deployment's compose.yaml supports worker/manual operation alone;
+  provider.yaml adds API-only grants and configuration when API service is used.
 - Qualification runs the actual worker/provider images with the selected
   deployment configuration and separate runner state. Credentials and API
   connectivity are unnecessary for manual model qualification.
@@ -64,7 +66,9 @@ New build ownership:
 
 New runtime/qualification ownership:
   deployments/localhost/compose.yaml
+  deployments/localhost/provider.yaml
   deployments/proart/{compose.yaml,provider.toml}
+  deployments/proart/provider.yaml  (when actual API settings are available)
   tests/model/qualify.py
   tests/model/cases/                 (only cases actually exercised)
 
@@ -98,9 +102,11 @@ Ordered implementation batches
     Evidence: submodule remains at 9922b6c57142; checkpoint manifest bytes are
     unchanged. Relocated worker/provider builds reused all dependency layers.
     Rendered runtime configuration is identical after excluding build paths.
-    Provider image tests and Torch-free imports are checked before commit.
+    Commit 66e0c54 records all 15 provider image tests passing, a read-only
+    relocation audit and no running deployment replacement. The shared model
+    build context has an allowlist excluding upstream and unrelated files.
 
-[ ] 2. Establish explicit, complete CPU build inputs.
+[x] 2. Establish explicit, complete CPU build inputs.
 
     Add the provider and worker-cpu profiles, common SDK selection, Bake targets
     and a working root Makefile. Reuse the SDK's artifact-selection tooling and
@@ -108,6 +114,10 @@ Ordered implementation batches
     SDK dependency selections when resolving the combined scientific closure.
     Inspect the current CPU image's actual package versions before locking:
     matching direct pins alone does not preserve its transitive environment.
+    Baseline snapshots are migration evidence, not a second permanent version
+    authority. Use them to establish the first lock, then remove them from the
+    maintained resolution inputs. Any dependency intentionally constrained beyond
+    the SDK release belongs in requirements.in with its concrete rationale.
 
     Generate target-specific URL/hash locks; do not hand-edit derived files.
     Account explicitly for any source-only dependency, including its build
@@ -115,10 +125,19 @@ Ordered implementation batches
     source builds. Unsupported/missing artifacts must identify the missing
     input before image assembly starts.
 
+    Include the tooling bootstrap in the workflow: pin the resolver/tool image
+    and verify the selected SDK tool/release artifacts before use. Explicit
+    acquisition must work from a checkout without an existing SDK installation;
+    lock generation/build must not depend on a previously built provider image.
+    A tooling-only lock image, if needed, is not a second science environment.
+
     Separate lock generation, explicit acquisition, staging and offline build.
     Stage only selected verified artifacts into a project-owned temporary
     directory. Build must neither download packages nor implicitly pull missing
     base images/frontends. Missing inputs fail; acquisition is a separate target.
+    Select the Docker context and builder explicitly. Verify required image
+    inputs in that builder's storage, not merely in a possibly different engine's
+    image list; disabling RUN networking alone does not make a build offline.
     Clean staging on success/failure without modifying the source package pool.
     Reuse SDK/tooling helpers; extract a small repository helper only if actual
     shell lifecycle logic warrants it, rather than growing a Make framework.
@@ -132,6 +151,16 @@ Ordered implementation batches
     match the captured baseline or any necessary change is separately explained
     and qualified. One missing selected artifact fails before installation.
 
+    Implementation: requirements.lock contains the SDK PEP 751 projection,
+    embedded resolver proof and a digest of current build inputs. The proof
+    satisfies the SDK tool without another maintained resolution file. Existing
+    CPU package archives were recovered from the local build cache; no large
+    packages were downloaded. The antlr source wheel has a separate offline
+    build with pinned setuptools and a retained output checksum. Both built
+    images match every captured installed package version exactly; 15 provider
+    tests and Torch-free imports pass. Removing the selected einops artifact
+    fails before assembly and leaves no operation staging directory.
+
 [ ] 3. Separate deployment choices from common service definitions.
 
     Move Compose and localhost config. Put localhost volume identities, config
@@ -139,6 +168,15 @@ Ordered implementation batches
     Common files retain service relationships and security defaults. Keep the
     explicit existing production Compose project name so moves do not create
     new runner/credential/weight volume identities accidentally.
+
+    Use two deployment overlays with distinct consumers:
+      manual: compose/inference.yaml + deployments/<site>/compose.yaml
+      API:    the manual files + compose/provider.yaml
+              + deployments/<site>/provider.yaml
+    Put API credentials, CA/DNS interpolation and delivery socket settings only
+    in the API composition. Compose profiles alone do not isolate required
+    variable interpolation. This additional provider.yaml is a deliberate
+    correction to the originally proposed single-overlay tree.
 
     Make selects compose files and an explicit project directory consistently;
     verify relative-path resolution from another working directory. A selected
@@ -150,6 +188,9 @@ Ordered implementation batches
     must not cause manual to open credentials or start API/proxy services.
     Manual qualification uses a distinct Compose project and runner volume;
     only the verified checkpoint volume is shared read-only.
+    Derive the qualification project name explicitly; ensure the overlay does
+    not hardcode production names for runner/scratch volumes. Worker/manual
+    configuration paths refer to the same selected provider.toml in both lanes.
 
     Acceptance: compare rendered before/after localhost services for unchanged
     grants, limits and external volume identities; manual composition requires
@@ -203,6 +244,10 @@ Ordered implementation batches
 
 [ ] 6. Finish operator workflow, promote and audit the complete move.
 
+    CPU promotion depends on batches 1-4, not GPU readiness. Run this batch's
+    CPU workflow/promotion checks after batch 4; run GPU promotion after batch 5.
+    Close the whole-plan audit only when both selected environments are qualified.
+
     Document the Make commands for lock/acquire/build/check/qualify/deploy/logs
     and checkpoint download/verify. Keep acquisition separate from build and
     deployment. Expose profile selection for builds and deployment selection
@@ -251,6 +296,18 @@ Planning result
 ---------------
 
 Implement batches 1-4 first to establish and qualify the CPU end state. Batch 5
-adds the CUDA environment through the same owners. Batch 6 completes promotion
-and the whole-tree audit. Preparation for missing GPU inputs may proceed
+adds the CUDA environment through the same owners. Batch 6 promotes CPU after
+batch 4 and GPU after batch 5, then completes the whole-tree audit. Preparation
+for missing GPU inputs may proceed
 independently; it does not authorize remote copies or make qualification optional.
+
+Plan review, 2026-11-24
+-----------------------
+
+Corrected the stale implementation status against commit 66e0c54. Added a
+separate API overlay because required CA/DNS interpolation in the current
+provider Compose file cannot be included in a credential-free manual lane.
+Made tooling bootstrap and builder-owned offline inputs explicit. Limited
+baseline constraints to migration so they cannot become a second SDK pin owner.
+Separated CPU promotion from GPU readiness. Uncommitted build work was inspected
+for context only; this review does not qualify or approve that implementation.
