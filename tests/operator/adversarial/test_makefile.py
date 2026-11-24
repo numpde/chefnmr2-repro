@@ -8,7 +8,7 @@ class MakefileAdversarialTests(OperatorFixture):
         result = self.run_make('check', DOCKER_CONTEXT='ambient-context')
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('a terminal is required', result.stderr)
-        self.assertFalse(self.docker_log.exists())
+        self.assertEqual(self.calls(), [['context', 'ls', '--format', '{{.Name}}']])
         self.assertFalse(self.python_log.exists())
 
     def test_remote_context_is_rejected_before_runtime_command(self):

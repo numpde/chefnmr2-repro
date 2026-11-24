@@ -28,6 +28,8 @@ printf '%s|%s|%s|%s\\n' "${DOCKER_HOST-unset}" "${DOCKER_CONFIG-unset}" "${COMPO
 printf '%s\\n' "${PROXY_URL-unset}" >> "$PROXY_LOG"
 if [[ $1 == context && $2 == inspect ]]; then
   printf '%s\\n' "${FAKE_DOCKER_ENDPOINT:-unix:///tmp/fake-docker.sock}"
+elif [[ $1 == context && $2 == ls ]]; then
+  printf '%s\\n' default science
 fi
 ''')
         self.write_executable('python3', '''#!/bin/bash

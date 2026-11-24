@@ -26,49 +26,9 @@ upstream/init: ## Initialize the pinned upstream submodule with a shallow checko
 	git -C "$(REPOSITORY_ROOT)" submodule sync -- model/upstream
 	git -C "$(REPOSITORY_ROOT)" submodule update --init --checkout --depth 1 -- model/upstream
 
-# One selector owns explicit input, terminal prompting, cancellation and choices.
-define operator_inputs
-choose() { \
-	local name=$$1 choices=$${2:-} input="REPRO_$$1" value option number valid; \
-	local -a options=(); \
-	read -ra options <<< "$$choices"; \
-	if [[ " $$REPRO_EXPLICIT_INPUTS " == *" $$name "* ]]; then \
-		value=$${!input}; \
-	else \
-		if ! { exec 3<>/dev/tty; } 2>/dev/null; then \
-			printf 'Supply %s=<value> on the make command line; a terminal is required to ask for it.\n' "$$name" >&2; return 2; \
-		fi; \
-		for number in "$${!options[@]}"; do printf '  %s) %s\n' "$$((number+1))" "$${options[number]}" >&3; done; \
-		printf 'Select %s (Enter cancels) > ' "$$name" >&3; \
-		IFS= read -r value <&3 || value=; exec 3>&-; \
-		for number in "$${!options[@]}"; do \
-			if [[ $$value == "$$((number+1))" ]]; then value=$${options[number]}; break; fi; \
-		done; \
-	fi; \
-	if [[ -z $$value ]]; then printf '%s selection cancelled.\n' "$$name" >&2; return 2; fi; \
-	if [[ -n $$choices ]]; then \
-		valid=; \
-		for option in "$${options[@]}"; do if [[ $$value == "$$option" ]]; then valid=yes; fi; done; \
-		if [[ -z $$valid ]]; then printf 'Invalid %s=%s. Choose from %s.\n' "$$name" "$$value" "$$choices" >&2; return 2; fi; \
-	fi; \
-	printf '%s\n' "$$value"; \
-}; \
-select_docker() { \
-	local variable context endpoint; \
-	for variable in $${!DOCKER_@} $${!COMPOSE_@} $${!BUILDX_@} $${!BUILDKIT_@}; do unset "$$variable"; done; \
-	context=$$(choose DOCKER_CONTEXT); \
-	endpoint=$$(docker context inspect "$$context" --format '{{.Endpoints.docker.Host}}'); \
-	case $$endpoint in unix:///*) ;; *) printf 'Docker context %s must use a local Unix socket.\n' "$$context" >&2; return 2;; esac; \
-	for variable in $${!REPRO_@}; do unset "$$variable"; done; \
-	unset MAKEFLAGS MFLAGS GNUMAKEFLAGS MAKEOVERRIDES; \
-	docker=(docker --host "$$endpoint"); \
-	docker_host=$$endpoint; \
-}; \
-weights_compose() { \
-	"$${docker[@]}" compose --project-directory "$(REPOSITORY_ROOT)" --env-file /dev/null -f "$(REPOSITORY_ROOT)/compose/weights.yaml" "$$@"; \
-}; \
-weights_run() { weights_compose run --rm --no-deps -T "$$@"; }
-endef
+# Shared shell behavior stays in shell files; Make only passes literal inputs.
+override operator_inputs := source "$(REPOSITORY_ROOT)/make/operator.sh"
+override weights_inputs := source "$(REPOSITORY_ROOT)/make/weights.sh"
 
 .PHONY: sdk/acquire lock acquire build
 sdk/acquire: ## Verify or acquire pinned SDK tooling in WHEELHOUSE; requires DOCKER_CONTEXT.
@@ -118,14 +78,14 @@ deploy: ## Promote a completed qualification with clean provider retirement; req
 
 .PHONY: weights/download weights/verify weights/sanitize
 weights/download: ## Acquire and verify checkpoints; requires PROXY_URL and DOCKER_CONTEXT.
-	@$(operator_inputs); proxy=$$(choose PROXY_URL); select_docker; \
+	@$(weights_inputs); proxy=$$(choose PROXY_URL); select_docker; \
 	weights_run --pull missing volume-init; \
 	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/weights.py" --host "$$docker_host" --proxy "$$proxy"
 
 weights/verify: ## Verify the retained checkpoint volume offline; requires DOCKER_CONTEXT.
 weights/sanitize: ## Sanitize known checkpoint files in the retained volume; requires DOCKER_CONTEXT.
 weights/verify weights/sanitize:
-	@$(operator_inputs); select_docker; \
+	@$(weights_inputs); select_docker; \
 	if [[ $@ == weights/verify ]]; then weights_run --pull never verify; else weights_run --pull never --name chefnmr2-weights-writer sanitize; fi
 
 .PHONY: weights/watch

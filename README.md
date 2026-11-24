@@ -37,6 +37,7 @@ engine's proxy. A loopback proxy on a rootless engine needs Docker 29.5+ with
 RootlessKit's detached network namespace. Failed proxy connections do not fall
 back to direct access. Pass Make inputs explicitly as below; omitted inputs
 prompt on a terminal, and environment variables alone do not select them.
+Docker contexts, build profiles and deployments are shown as numbered choices.
 
 **Build the CPU images.** First pull the pinned Python bases selected by Bake,
 then acquire SDK tooling and locked dependencies. The builds themselves run
@@ -220,7 +221,7 @@ Prompts and offering text live in `containers/provider/prompts/` and
 
 | Tests | Command |
 | --- | --- |
-| Host operator workflows with fake Docker | `make test/operator` |
+| Host operator workflows with fake Docker (uses util-linux `script`) | `make test/operator` |
 | Checkpoint preparation and model admission in cached images | `make test/unit DOCKER_CONTEXT="$CONTEXT"` |
 | Provider behavior with real SDK and controlled science/HTTP | `make test/provider DOCKER_CONTEXT="$CONTEXT"` |
 

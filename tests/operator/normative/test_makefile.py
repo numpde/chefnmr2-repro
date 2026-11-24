@@ -1,9 +1,28 @@
 """Normative Make workflow behavior with no real Docker engine."""
 
+import shlex
+import subprocess
+
 from operator_fixtures import OperatorFixture, ROOT
 
 
 class MakefileNormativeTests(OperatorFixture):
+    def test_context_menu_selects_a_discovered_context_by_number(self):
+        command = shlex.join(['make', '-f', str(ROOT / 'Makefile'), 'check'])
+        result = subprocess.run(
+            ['script', '--quiet', '--return', '--command', command, '/dev/null'],
+            input='2\n', cwd=self.directory, env=self.environment(),
+            capture_output=True, text=True, timeout=10,
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('1) default', result.stdout)
+        self.assertIn('2) science', result.stdout)
+        self.assertEqual(self.calls(), [
+            ['context', 'ls', '--format', '{{.Name}}'],
+            ['context', 'inspect', 'science', '--format', '{{.Endpoints.docker.Host}}'],
+        ])
+        self.assertEqual(self.python_arguments()[2:5], ['check', '--host', 'unix:///tmp/fake-docker.sock'])
+
     def test_help_and_dry_run_need_no_selection_or_engine(self):
         help_result = self.run_make('help')
         self.assertEqual(help_result.returncode, 0, help_result.stderr)
