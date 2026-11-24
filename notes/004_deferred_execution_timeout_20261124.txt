@@ -1,0 +1,22 @@
+Deferred: execution timeout escalation
+=====================================
+
+Date: 2026-11-24
+Status: backlog; implementation deferred
+Owner: provider-core, with ChefNMR2 as a consumer
+
+In provider-core 0.7.5, execution_stop_request_seconds requests cooperative
+stopping. ChefNMR2's batch binding does not check that signal, so a running
+inference can continue indefinitely despite expiry.
+
+Add configurable escalation for ProcessCall-owned workers: request cooperative
+stop, allow a bounded grace period, then retire the worker if execution remains
+unfinished. Join the original retirement and release batch participation and
+resource reservations only after confirmed cleanup; retain them if cleanup
+cannot be confirmed. An interrupted batch remains unresolved, without guessed
+partial results or automatic replay. Keep this mechanism in the SDK.
+
+Acceptance: a native worker that ignores stop requests is retired through its
+existing owner, with no premature resource release or replay. Then expose the
+policy in ChefNMR2's deployment configs. Timing/resource displays are separate
+work being handled elsewhere.
