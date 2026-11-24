@@ -14,7 +14,7 @@ import sys
 import tempfile
 import tomllib
 import urllib.parse
-import urllib.request
+from fetch_sdk import artifact_names, release_url
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -25,7 +25,7 @@ def digest(path):
 
 
 class Build:
-    def __init__(self, host, pool):
+    def __init__(self, host, pool, proxy=None):
         if os.getuid() == 0:
             raise ValueError('Run dependency and image operations as the non-root checkout owner so cache files retain that ownership')
         if not host:
@@ -36,10 +36,11 @@ class Build:
         if not self.pool.is_dir() or self.pool == ROOT or ROOT in self.pool.parents or self.pool in ROOT.parents:
             raise ValueError(f'WHEELHOUSE={str(self.pool)!r} should be a directory outside the checkout and its ancestors')
         self.environment = {key: value for key, value in os.environ.items() if not key.startswith(('COMPOSE_', 'BUILDX_')) and key not in ('DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_TLS_VERIFY', 'DOCKER_CERT_PATH')}
+        self.host, self.proxy = host, proxy
         self.docker = ['docker', '--host', host]
         self.sdk = re.search(r'^provider-core==([^\s]+)$', (ROOT / 'builds/sdk.constraints.txt').read_text(), re.M).group(1)
         self.manifest_hash = re.search(r'^# release-manifest-sha256 = ([0-9a-f]{64})$', (ROOT / 'builds/sdk.constraints.txt').read_text(), re.M).group(1)
-        self.release = f'https://github.com/numpde/nmr-provider-tools/releases/download/v{self.sdk}/'
+        self.release = release_url(self.sdk)
         self.tool = self.pool / f'wheelhouse-tool-{self.sdk}.pyz'
         self.hashes = self.pool / f'provider_core-{self.sdk}-sha256.json'
 
@@ -60,44 +61,21 @@ class Build:
 
     def sdk_artifacts(self, acquire=False):
         if acquire:
-            self.fetch(self.hashes.name, self.manifest_hash)
+            image = self.bake('provider')['args']['PYTHON_BASE']
+            self.require_image(image)
+            self.run(self.acquisition_command(image,
+                [(self.pool, '/pool'), (ROOT / 'make/fetch_sdk.py', '/fetch_sdk.py')],
+                ['-B', '/fetch_sdk.py', self.sdk, self.manifest_hash, '/pool'], writable_pool=True))
         if digest(self.hashes) != self.manifest_hash:
             raise ValueError('Cannot use the SDK checksum manifest: SHA-256 differs from builds/sdk.constraints.txt')
         hashes = json.loads(self.hashes.read_text())
-        names = [self.tool.name, f'provider_core-{self.sdk}-native-install.lock', f'provider_core-{self.sdk}-install.lock', f'provider_core-{self.sdk}-py3-none-any.whl']
-        for name in names:
+        for name in artifact_names(self.sdk):
             path = self.pool / name
-            if acquire and not path.exists():
-                self.fetch(name, hashes[name])
             if digest(path) != hashes[name]:
                 raise ValueError(f'Cannot use {path.name}: its SHA-256 differs from the selected SDK release')
 
-    def fetch(self, name, expected=None):
-        with tempfile.NamedTemporaryFile(dir=self.pool, prefix='.sdk-', delete=False) as output:
-            temporary = Path(output.name)
-            try:
-                with urllib.request.urlopen(self.release + name, timeout=120) as response:
-                    total = 0
-                    while block := response.read(65536):
-                        total += len(block)
-                        if total > 8 * 1024 * 1024:
-                            raise ValueError(f'Cannot acquire {name}: SDK support artifacts should fit within the 8 MiB download limit')
-                        output.write(block)
-                output.close()
-                if expected is not None and digest(temporary) != expected:
-                    raise ValueError(f'Cannot acquire {name}: downloaded bytes differ from the SDK release SHA-256')
-                temporary.chmod(0o644)
-                os.replace(temporary, self.pool / name)
-            finally:
-                temporary.unlink(missing_ok=True)
-
-    def container(self, image, mounts, network='none', writable_pool=False, scratch=None):
-        command = self.docker + ['run', '--rm', '--pull=never', '--network', network, '--read-only', '--user', '65532:65532', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '2', '--memory', '4g', '--tmpfs', '/tmp:rw,nosuid,nodev,size=3g', '-e', 'HOME=/tmp', '-e', 'PROVIDER_CORE_IN_CONTAINER=1']
-        if writable_pool or scratch is not None:
-            options = json.loads(self.run(self.docker + ['info', '--format', '{{json .SecurityOptions}}'], capture_output=True, text=True).stdout)
-            if 'name=rootless' not in options:
-                raise ValueError('Acquisition and resolver scratch require a rootless engine so host files retain the invoking user')
-            command[command.index('--user') + 1] = '0:0'
+    def container_options(self, mounts, writable_pool=False, scratch=None):
+        command = ['--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '2', '--memory', '4g', '--tmpfs', '/tmp:rw,nosuid,nodev,size=3g', '-e', 'HOME=/tmp', '-e', 'PROVIDER_CORE_IN_CONTAINER=1']
         if scratch is not None:
             mounts = [*mounts, (scratch, '/scratch')]
             command += ['-e', 'UV_CACHE_DIR=/scratch']
@@ -105,10 +83,31 @@ class Build:
             if ',' in str(source):
                 raise ValueError(f'Cannot mount {source}: Docker bind paths cannot contain commas')
             command += ['--mount', f'type=bind,src={source},dst={target}' + ('' if (writable_pool and target == '/pool') or target == '/scratch' else ',readonly')]
-        return command + ['--entrypoint', 'python', image]
+        return command
 
-    def sdk_tool(self, image, stage, *arguments, network='none'):
-        return self.run(self.container(image, [(self.pool, '/pool'), (stage, '/stage')], network, writable_pool=arguments[0] == 'acquire') + ['-B', '/pool/' + self.tool.name, *arguments], capture_output=True, text=True).stdout
+    def container(self, image, mounts, writable_pool=False, scratch=None):
+        user = '65532:65532'
+        if writable_pool or scratch is not None:
+            options = json.loads(self.run(self.docker + ['info', '--format', '{{json .SecurityOptions}}'], capture_output=True, text=True).stdout)
+            if 'name=rootless' not in options:
+                raise ValueError('Resolver scratch requires a rootless engine so host files retain the invoking user')
+            user = '0:0'
+        return self.docker + ['run', '--rm', '--pull=never', '--network', 'none', '--user', user] + self.container_options(mounts, writable_pool, scratch) + ['--entrypoint', 'python', image]
+
+    def acquisition_command(self, image, mounts, arguments, writable_pool=False):
+        if self.proxy is None:
+            raise ValueError('Acquisition requires explicit PROXY_URL=<url> or PROXY_URL=none')
+        return ['bash', str(ROOT / 'make/acquisition.sh'), self.host, image, self.proxy,
+                *self.container_options(mounts, writable_pool), '--entrypoint', 'python', '--', *arguments]
+
+    def sdk_tool(self, image, stage, *arguments, online=False):
+        mounts = [(self.pool, '/pool'), (stage, '/stage')]
+        application = ['-B', '/pool/' + self.tool.name, *arguments]
+        if online:
+            command = self.acquisition_command(image, mounts, application, writable_pool=arguments[0] == 'acquire')
+        else:
+            command = self.container(image, mounts) + application
+        return self.run(command, capture_output=True, text=True).stdout
 
     def prepare_lock_image(self, target):
         base = target['args']['PYTHON_BASE']
@@ -167,7 +166,7 @@ class Build:
                 arguments += ['--source', url + '#sha256=' + digest(wheel)]
             if 'antlr4-python3-runtime==' in resolved:
                 arguments += ['--require-source', 'antlr4-python3-runtime']
-            projected = self.sdk_tool(image, stage, *arguments, network='bridge')
+            projected = self.sdk_tool(image, stage, *arguments, online=True)
             # The SDK's PEP 751 projection is the complete artifact lock. The
             # .lock filename is copied to a pylock name when invoking the tool.
             output = projected + '\n[tool.chefnmr2]\ninputs-sha256 = ' + json.dumps(self.input_identity(profile, target)) + '\nresolution = ' + json.dumps(resolved) + '\n'
@@ -202,7 +201,7 @@ class Build:
                     if package['name'] != 'antlr4-python3-runtime':
                         raise ValueError(f"Cannot select source package {package['name']!r}: only antlr has an explicit offline build")
                     source_options += ['--require-sdist', package['name']]
-            self.sdk_tool(base, stage, 'acquire' if acquire else 'check', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', '--pool', '/pool', *source_options, network='bridge' if acquire else 'none')
+            self.sdk_tool(base, stage, 'acquire' if acquire else 'check', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', '--pool', '/pool', *source_options, online=acquire)
             selected = json.loads(self.sdk_tool(base, stage, 'select', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', *source_options))['artifacts']
             yield target, stage, selected
 
@@ -248,8 +247,9 @@ def main():
     parser.add_argument('--profile', default='')
     parser.add_argument('--host', required=True, help='Resolved local Unix socket for the selected Docker context')
     parser.add_argument('--pool', required=True)
+    parser.add_argument('--proxy')
     args = parser.parse_args()
-    build = Build(args.host, args.pool)
+    build = Build(args.host, args.pool, args.proxy)
     if args.action == 'sdk/acquire':
         build.sdk_artifacts(acquire=True)
     elif args.action == 'lock':

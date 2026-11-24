@@ -26,16 +26,18 @@ class MakefileNormativeTests(OperatorFixture):
         self.assertEqual(arguments[2:5], ['check', '--host', 'unix:///tmp/fake-docker.sock'])
         self.assertEqual(arguments[5:7], ['--category', 'all'])
 
-    def test_weights_workflows_use_expected_services_and_exclude_parallel_writers(self):
+    def test_weights_selects_acquisition_route_and_keeps_preparation_offline(self):
         result = self.run_make('weights/download', 'PROXY_URL=none', 'DOCKER_CONTEXT=local')
         self.assertEqual(result.returncode, 0, result.stderr)
         compose = [call for call in self.calls() if call[0] == '--host']
-        self.assertEqual(len(compose), 2)
-        self.assertEqual([call[-1] for call in compose], ['volume-init', 'download'])
+        self.assertEqual(len(compose), 1)
+        self.assertEqual(compose[0][-1], 'volume-init')
         for call in compose:
             self.assertEqual(call[call.index('--pull') + 1], 'missing')
         self.assertIn('--env-file', compose[0])
-        self.assertEqual(self.proxy_log.read_text().splitlines(), ['unset', 'none', 'none'])
+        arguments = self.python_arguments()
+        self.assertEqual(arguments[1], str(ROOT / 'make/weights.py'))
+        self.assertEqual(arguments[-2:], ['--proxy', 'none'])
 
         self.docker_log.unlink()
         sanitize = self.run_make('weights/sanitize', 'DOCKER_CONTEXT=local')

@@ -1,0 +1,647 @@
+{
+  "dependency_inputs": {
+    "linux_idmap-0.3.4-py3-none-any.whl": "a1f8aedcf56dd55b52f9224613ac2e92eead12227a599ec931a95da865ee4d75",
+    "pip-26.2.2-py3-none-any.whl": "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70",
+    "python_socks-3.2.2-py3-none-any.whl": "e0d464617bc24fb9511cf668ce67ea87efdcfec19d60ac149ad301065058f443",
+    "wheelhouse-tool-0.7.7.pyz": "3b29e00006347b558031d5a0c725473b87cf00745ac390a0d0aa8c2e2da275fa"
+  },
+  "payload_files": {
+    "acquisition_tool/__init__.py": {
+      "mode": 420,
+      "sha256": "7b5133133e741c8a916b04c13c35c31943c179225c4b123439bc0ca677a673d1",
+      "size": 73
+    },
+    "acquisition_tool/adapters/__init__.py": {
+      "mode": 420,
+      "sha256": "7ee15d4b4d641b43cd30283215c382dda44579ed297cf45a3a17b53a5f3bcf1d",
+      "size": 62
+    },
+    "acquisition_tool/adapters/docker_container.sh": {
+      "mode": 420,
+      "sha256": "3d25686f8d12ea7007cee61279b1c7e285aa6c597e72c8133eda20f4e133eed5",
+      "size": 733
+    },
+    "acquisition_tool/adapters/host_resolver.py": {
+      "mode": 420,
+      "sha256": "7a6fe48605e1ead23abb561962dda2fc5b07ea977c609965caeac00e28782094",
+      "size": 993
+    },
+    "acquisition_tool/adapters/public_release.py": {
+      "mode": 420,
+      "sha256": "7782c8740e9605bf79c7db6746c8031562d3666e0d982b4433db3a2519138263",
+      "size": 1252
+    },
+    "acquisition_tool/compose.sh": {
+      "mode": 420,
+      "sha256": "c7a46e3df3793895fc06009ea144ee259ec56b963706d2c4c8689e4e176954a4",
+      "size": 6084
+    },
+    "acquisition_tool/dns.py": {
+      "mode": 420,
+      "sha256": "ddc3971d3f5990a7231c8ec43fd0f5373a4bc2fbf9d0b85a136ce47eff115732",
+      "size": 3921
+    },
+    "acquisition_tool/gateway.py": {
+      "mode": 420,
+      "sha256": "cbf26735240e3a16de5dd3a76705c3353a30f41ff94e08656cfb3230563fdcc1",
+      "size": 3170
+    },
+    "acquisition_tool/identity.py": {
+      "mode": 420,
+      "sha256": "cceb23ba08b8d42feeda2029a6d93fd3795080ceec8405712993aecb684cba64",
+      "size": 396
+    },
+    "acquisition_tool/identity_main.py": {
+      "mode": 420,
+      "sha256": "a88f3dbec87250e54faf8f29c7226db46da444434ca2ee66625b514003953c0f",
+      "size": 6455
+    },
+    "acquisition_tool/installer/requirements/installer-release.json": {
+      "mode": 420,
+      "sha256": "43345680032c2bc8b02ce495bac98b14c72a523e8133451d3d29ccc7f6866ab0",
+      "size": 290
+    },
+    "acquisition_tool/installer/tools/adapters/__init__.py": {
+      "mode": 420,
+      "sha256": "18d84def68408ca77a2d40f2c3bd329c1c6a90e0de0a1dd9bbc346dbdd0f624c",
+      "size": 62
+    },
+    "acquisition_tool/installer/tools/adapters/pip_install.py": {
+      "mode": 420,
+      "sha256": "2a0ca7dccfda4c0495fcdc63e55dd8120be109f1aeaf7dfaf4411dc406d6dd36",
+      "size": 6957
+    },
+    "acquisition_tool/installer/tools/container_guard.py": {
+      "mode": 420,
+      "sha256": "3aa7e7162fdd3bba12cddaf1ff3bbc1c0d5a041e43c02b84dc124ad0ef5cc101",
+      "size": 706
+    },
+    "acquisition_tool/installer/tools/installer.py": {
+      "mode": 420,
+      "sha256": "3c208283a8f69b01bf859ea0fe54475619e60ea51777968e2212fd5ecddf4de4",
+      "size": 6342
+    },
+    "acquisition_tool/installer/wheels/pip-26.2.2-py3-none-any.whl": {
+      "mode": 420,
+      "sha256": "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70",
+      "size": 1819850
+    },
+    "acquisition_tool/maintain_source.sh": {
+      "mode": 420,
+      "sha256": "20313e84feb95af3a41440dedc07bf8092b8709ca7af12bedd6b229500155233",
+      "size": 711
+    },
+    "acquisition_tool/owner.sh": {
+      "mode": 420,
+      "sha256": "1a1c056aefdf51e68687dbc45771bc83b0bbaa832f1aed45822c06e1abf7ecb4",
+      "size": 38443
+    },
+    "acquisition_tool/source_download.py": {
+      "mode": 420,
+      "sha256": "54f57b0e619dc4d7f97eaad497c776ef68a60566b2514225c2bddce237ebf637",
+      "size": 2115
+    },
+    "acquisition_tool/source_update.py": {
+      "mode": 420,
+      "sha256": "affaca528742fd5da876cc900848a3b43375329d11b2822597f956cf2158970f",
+      "size": 18802
+    },
+    "acquisition_tool/validation/upstream/container_ids.sh": {
+      "mode": 420,
+      "sha256": "7183a22ac0567fe31832100c479eddfa02a85ce3e94593712637c25ac7f07ba7",
+      "size": 152
+    },
+    "acquisition_tool/validation/upstream/docker_container.sh": {
+      "mode": 420,
+      "sha256": "9ef0a65b1231bb346b90f9ae98a5033c24947f81535998832ae2a6299035fa4c",
+      "size": 303
+    },
+    "acquisition_tool/validation/upstream/host_resolver.py": {
+      "mode": 420,
+      "sha256": "f657db294b5ac410d7097707d566f86039bd7ab8783ce6180ef0e15b9cd6af97",
+      "size": 933
+    },
+    "acquisition_tool/validation/upstream/linux_idmap.py": {
+      "mode": 420,
+      "sha256": "b1cfa54fb13135628a4aef7e346b23efa2b6cd155d7202e9a7b2de7550e2ef20",
+      "size": 667
+    },
+    "compose/acquisition.yml": {
+      "mode": 420,
+      "sha256": "f0993400e5e94ab6c22abd4ec7901cd75051c05709d3d104ac7da4f4031e100a",
+      "size": 3041
+    },
+    "linux_idmap-0.3.4.dist-info/METADATA": {
+      "mode": 420,
+      "sha256": "7034abfe094c7bd37e1f6daf49100e9ff960fea944c17e3a7deadfcfe3023f93",
+      "size": 4982
+    },
+    "linux_idmap-0.3.4.dist-info/RECORD": {
+      "mode": 420,
+      "sha256": "f72cbb13b755dd43943eaf48c45fb88e560007d7458c9c1a5d1ef4f62093f747",
+      "size": 1616
+    },
+    "linux_idmap-0.3.4.dist-info/WHEEL": {
+      "mode": 420,
+      "sha256": "d7a7dcffd469f39e122dc761683123af4bbae69d1edc5859c6284d81c9c213df",
+      "size": 91
+    },
+    "linux_idmap-0.3.4.dist-info/entry_points.txt": {
+      "mode": 420,
+      "sha256": "2e8e446dd453eb528c7c95d34f92628e353c0a80c821096e97cbaf1673c4303d",
+      "size": 60
+    },
+    "linux_idmap-0.3.4.dist-info/top_level.txt": {
+      "mode": 420,
+      "sha256": "8b8b78a28949cf75bdbef6321369638eaed53ca04cc48c26463bb58fcfc801c4",
+      "size": 12
+    },
+    "linux_idmap/__init__.py": {
+      "mode": 420,
+      "sha256": "de0cc116449ae0a371e60bfbf88c30e6a5d119f412e1c2901247d8b1b1c317c9",
+      "size": 257
+    },
+    "linux_idmap/_cli.py": {
+      "mode": 420,
+      "sha256": "d487ec0498b1255c8a192e39083757f922504e2bb698066a2d38643dea035c45",
+      "size": 7019
+    },
+    "linux_idmap/_command.py": {
+      "mode": 420,
+      "sha256": "d2702fcbb0510569eba13bba3b5285c156415f4060a54b685514b0aa035ed5f2",
+      "size": 9481
+    },
+    "linux_idmap/_confinement.py": {
+      "mode": 420,
+      "sha256": "9637ea6fc97e7a36ffa4366ed9ee58c1d8ace9fe3b1c219b196ff5954864c510",
+      "size": 1431
+    },
+    "linux_idmap/_docker.py": {
+      "mode": 420,
+      "sha256": "ff323c184a61af7238cbc7f4768619c6e7083d6be5b55237ee5e21e41b86e752",
+      "size": 16609
+    },
+    "linux_idmap/_errors.py": {
+      "mode": 420,
+      "sha256": "6f866d02f1328857cab472ec2943e8f871fed2f2d2add0b20b19ebc20cb76a99",
+      "size": 212
+    },
+    "linux_idmap/_files.py": {
+      "mode": 420,
+      "sha256": "d94d7ddd549c1b9818d8a7756f0115f8a3594937a497b7e4b5aeb6298dec1424",
+      "size": 402
+    },
+    "linux_idmap/_probe_model.py": {
+      "mode": 420,
+      "sha256": "093ca48d601b68c6a104ae7321773a232cf39fa0ad7d0e8dde5a2e5d6d1b6c30",
+      "size": 5568
+    },
+    "linux_idmap/_probe_process.py": {
+      "mode": 420,
+      "sha256": "2464247f6ef02a3114d81a1931079ec6ebe1fbda68d1ebfaf11112d0d20edcc6",
+      "size": 4041
+    },
+    "linux_idmap/_probe_scope.py": {
+      "mode": 420,
+      "sha256": "433a4d4a20d25ae8c11b856a44de7fe9bd28d0edf5ce26a7a4a1a498c6f5b95f",
+      "size": 12824
+    },
+    "linux_idmap/_probe_spec.py": {
+      "mode": 420,
+      "sha256": "b53828d811d3d5b1b9d058be83adb7a857cfbeef808831efc0a20c36a0def2f4",
+      "size": 4382
+    },
+    "linux_idmap/_procfs.py": {
+      "mode": 420,
+      "sha256": "7df853be4dee50af246f99e138f307d3457a1801ee29383dae97bcbb26ce1edb",
+      "size": 9758
+    },
+    "linux_idmap/core.py": {
+      "mode": 420,
+      "sha256": "a77a8a2ad3821a568d935013fb4540a0acf1e0dda3819ee66ea2e117cd587efa",
+      "size": 3876
+    },
+    "linux_idmap/probe.py": {
+      "mode": 420,
+      "sha256": "ed83298d5e3fb5ae42fdd893905bd45c57976266205c1367b166483935b38bf2",
+      "size": 1591
+    },
+    "linux_idmap/process.py": {
+      "mode": 420,
+      "sha256": "054a5e06baea8cd9b21c56a8e89a021d30cfe70c9bb8fb1242ece83f50c3c46c",
+      "size": 1015
+    },
+    "provider_core/__init__.py": {
+      "mode": 420,
+      "sha256": "82c47bb1c50222557579ef8db095f3cb33c8ce43c8c2c0fb4b09e4e747578189",
+      "size": 83
+    },
+    "provider_core/_type_requirements.py": {
+      "mode": 420,
+      "sha256": "3996615c332b8f9b9dbdfa11810388fd5e2577544f651819b7f27bf2a0c207b1",
+      "size": 5495
+    },
+    "provider_core/adapters/__init__.py": {
+      "mode": 420,
+      "sha256": "3da69036c74455a8f6b733fcf69dcea34d09f9a18e8b8f16f53d03e7f0af4395",
+      "size": 69
+    },
+    "provider_core/adapters/dns.py": {
+      "mode": 420,
+      "sha256": "7c656dcda8d3fb31dcc3e70545ec14283b0a2976d537ffda88206ff2adb2ef3a",
+      "size": 896
+    },
+    "provider_core/adapters/http_proxy.py": {
+      "mode": 420,
+      "sha256": "fc148d234ff0c8ced70d344d549769e7180aa929ab3ae11a235086a265722aef",
+      "size": 2524
+    },
+    "provider_core/bound_http_proxy.py": {
+      "mode": 420,
+      "sha256": "e2ecc2c602fcc6aceaeb6ec28685b0af1f36fd58bb0dec845e4bcd2e215111cf",
+      "size": 29513
+    },
+    "provider_core/container_guard.py": {
+      "mode": 420,
+      "sha256": "2fa667daddd46186ec883f5fcff24d6e24627f4959cfb318cd7786f1ef634f57",
+      "size": 539
+    },
+    "provider_core/diagnostic_text.py": {
+      "mode": 420,
+      "sha256": "46a29fbbc2c4ff7ecf7b1aa765bc4f6163f8ba35894f9a443aed240456895ebc",
+      "size": 2331
+    },
+    "provider_core/type_requirements.py": {
+      "mode": 420,
+      "sha256": "d830c5513856454e373a85cf9f846fbebb316581a67551817ac525d135d0bfbf",
+      "size": 243
+    },
+    "provider_core/validation/__init__.py": {
+      "mode": 420,
+      "sha256": "0df9f3f7fbd663733f2025cd8bbddb7aaad746acf3dfa282179fa4bf7d54c9e1",
+      "size": 60
+    },
+    "provider_core/validation/upstream/__init__.py": {
+      "mode": 420,
+      "sha256": "0d7604fc5612c384058508433d6a18c829823bc7cb03d5a56319fc3d3e59782c",
+      "size": 73
+    },
+    "provider_core/validation/upstream/dns.py": {
+      "mode": 420,
+      "sha256": "89326cfcd4eab10fc3f91a7a665021abb2f63779cf46db341ab991416f91cfa7",
+      "size": 7543
+    },
+    "provider_core/validation/upstream/host_resolver.py": {
+      "mode": 420,
+      "sha256": "0c0b24f5091a534fbc862d8ecdc7e395a48873dcf512d6eb68c5039731efed83",
+      "size": 457
+    },
+    "provider_core/validation/upstream/http_proxy.py": {
+      "mode": 420,
+      "sha256": "bebf25d560bc8dc4154b4f575887d290145c23557af7b66bc74ff3f03678fd88",
+      "size": 2848
+    },
+    "python_socks-3.2.2.dist-info/METADATA": {
+      "mode": 420,
+      "sha256": "c280a9b9431806af46f0b00818f99d823529aa9dc04b0e8f407e7c00d1b16cce",
+      "size": 8923
+    },
+    "python_socks-3.2.2.dist-info/RECORD": {
+      "mode": 420,
+      "sha256": "3665354544ac10fc6b4fede492ac6a94c1ebd3a19c66701b0720a83f913dc8ee",
+      "size": 5867
+    },
+    "python_socks-3.2.2.dist-info/WHEEL": {
+      "mode": 420,
+      "sha256": "98e75747d0b7c0c568bfb71263c3d8f970b3a374a6996087bc642be5cb09a1aa",
+      "size": 91
+    },
+    "python_socks-3.2.2.dist-info/licenses/LICENSE.txt": {
+      "mode": 420,
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+      "size": 11357
+    },
+    "python_socks-3.2.2.dist-info/top_level.txt": {
+      "mode": 420,
+      "sha256": "eeac83015c234d9d2c2181b589ab456c4f922e95a138d8daa0c43421bd835f44",
+      "size": 13
+    },
+    "python_socks/__init__.py": {
+      "mode": 420,
+      "sha256": "e887a398b1d9241b98bede95e5f1519ac0dd13d048e121c9630e2f430052e275",
+      "size": 365
+    },
+    "python_socks/_abc.py": {
+      "mode": 420,
+      "sha256": "856c7483f6b50dfe69b88cd5227dc377dfd21c5e000f36b1e164197a8f98f1b6",
+      "size": 1207
+    },
+    "python_socks/_connectors/__init__.py": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "python_socks/_connectors/abc.py": {
+      "mode": 420,
+      "sha256": "15a2ee79ccde6ca8481f40af39fc36df6844fd294a73c058da159f097369c662",
+      "size": 435
+    },
+    "python_socks/_connectors/factory_async.py": {
+      "mode": 420,
+      "sha256": "9e2e36f6d0ee8cefb18efed0ee6bc9e32ab04f686b93db2a538ff60997b7d1c8",
+      "size": 1069
+    },
+    "python_socks/_connectors/factory_sync.py": {
+      "mode": 420,
+      "sha256": "b770b6a55e0d21291239ecf3232b2e9f2a7d5f3db02b22df4d23cae9e3f64284",
+      "size": 1056
+    },
+    "python_socks/_connectors/http_async.py": {
+      "mode": 420,
+      "sha256": "023952fcf80ac54d4cd44565603445225fdf33c1c6ddf4a59e0dee7aa652a906",
+      "size": 956
+    },
+    "python_socks/_connectors/http_sync.py": {
+      "mode": 420,
+      "sha256": "5b516b7254e0fb8b210b62a40da050eb5e814e98eb145133d35708c98ac11d44",
+      "size": 931
+    },
+    "python_socks/_connectors/socks4_async.py": {
+      "mode": 420,
+      "sha256": "392f9d0d740db52af3e588d9aa7f955d0e0f12a389c157553fa25f6791d0c91d",
+      "size": 1202
+    },
+    "python_socks/_connectors/socks4_sync.py": {
+      "mode": 420,
+      "sha256": "96743612e78dbcf952260f161d5d5994b96c7df32c64f144b7e7936b9283e8d6",
+      "size": 1171
+    },
+    "python_socks/_connectors/socks5_async.py": {
+      "mode": 420,
+      "sha256": "3568d462e6e30ae4fd2b1cf4d8b2d06e1828b7352e83f27e18ac486b11a099bb",
+      "size": 3091
+    },
+    "python_socks/_connectors/socks5_sync.py": {
+      "mode": 420,
+      "sha256": "fc0bbb1cb482dd43d5391c82e338853978acc5eb5322d22aa87ee212385247b8",
+      "size": 2907
+    },
+    "python_socks/_errors.py": {
+      "mode": 420,
+      "sha256": "81fa25aeb9b7574f3fbf91d32f3d08c8b96ad78964c976ce19afd7fa9a521734",
+      "size": 511
+    },
+    "python_socks/_helpers.py": {
+      "mode": 420,
+      "sha256": "3707983610f4f918a63f44cfcdfaa87e9dc4165db7596afaa4c3ffe20f93b247",
+      "size": 2743
+    },
+    "python_socks/_protocols/__init__.py": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "python_socks/_protocols/errors.py": {
+      "mode": 420,
+      "sha256": "aed428d9f33dd8e738d442cc04fbf2636cc76689860315d644bd3fdebce6f453",
+      "size": 269
+    },
+    "python_socks/_protocols/http.py": {
+      "mode": 420,
+      "sha256": "812be550ef41f1ce1e4f824e2a4822bd7d399ca5c334bbf8ccfba30ca036c55d",
+      "size": 4999
+    },
+    "python_socks/_protocols/socks4.py": {
+      "mode": 420,
+      "sha256": "176b0481661ed7d6ac307e00b43e21b6512746540137ae351d0aa814a8af569c",
+      "size": 3071
+    },
+    "python_socks/_protocols/socks5.py": {
+      "mode": 420,
+      "sha256": "82b5512a04559bac4c0605fd3305155d3279d79fad2ce6065d8c9f9c7ec02170",
+      "size": 10147
+    },
+    "python_socks/_types.py": {
+      "mode": 420,
+      "sha256": "1b83e4b6efb3f1e26676696deadf209cc4f9fa4b9942463b566cb5371d2b748c",
+      "size": 157
+    },
+    "python_socks/_version.py": {
+      "mode": 420,
+      "sha256": "9cfb2f2620574c920246dd08e526424a87ca34ad64c381481e02029f156317ef",
+      "size": 49
+    },
+    "python_socks/async_/__init__.py": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "python_socks/async_/anyio/__init__.py": {
+      "mode": 420,
+      "sha256": "e0cd25e08ef21f74cd8de0631ea41f6561190fbb8215ffb04335a4511126e477",
+      "size": 62
+    },
+    "python_socks/async_/anyio/_connect.py": {
+      "mode": 420,
+      "sha256": "cf652adbdd3d4664c7f68001a18a080578dd81b7c4017db017149674335c0f37",
+      "size": 305
+    },
+    "python_socks/async_/anyio/_proxy.py": {
+      "mode": 420,
+      "sha256": "1597ca078e1ec1463fbf65e2a8008ad19282894fd0ff14e384f278206f32db1b",
+      "size": 3779
+    },
+    "python_socks/async_/anyio/_resolver.py": {
+      "mode": 420,
+      "sha256": "568b490c2f9fb3f11634bce6ff1d20cacfa452f964c5e575c752587b3a4fba11",
+      "size": 711
+    },
+    "python_socks/async_/anyio/_stream.py": {
+      "mode": 420,
+      "sha256": "c4230c8ecb74ee0b036d533d716fe4cc207750b029a337cd396de4db1b355f06",
+      "size": 1301
+    },
+    "python_socks/async_/anyio/v2/__init__.py": {
+      "mode": 420,
+      "sha256": "e0cd25e08ef21f74cd8de0631ea41f6561190fbb8215ffb04335a4511126e477",
+      "size": 62
+    },
+    "python_socks/async_/anyio/v2/_connect.py": {
+      "mode": 420,
+      "sha256": "f57027417f165e9b1f118243270a6e743d242f0225e1aa67bac57d8db8510122",
+      "size": 352
+    },
+    "python_socks/async_/anyio/v2/_proxy.py": {
+      "mode": 420,
+      "sha256": "d494431f64757f113b567a27216ad21695ef57784fe00c6cac23bda6570a5bfe",
+      "size": 4237
+    },
+    "python_socks/async_/anyio/v2/_stream.py": {
+      "mode": 420,
+      "sha256": "963e12bdeb41e6cb54d0a13ab86d5fb96e6c1ab5bf199d57a4f5ff1a88ebc0a9",
+      "size": 1704
+    },
+    "python_socks/async_/asyncio/__init__.py": {
+      "mode": 420,
+      "sha256": "bebc8936d0aa0d8ae2c16866941dbbf5637b5c8d5d6c42d400eaec31758dd96c",
+      "size": 64
+    },
+    "python_socks/async_/asyncio/_connect.py": {
+      "mode": 420,
+      "sha256": "6cfd1a3146a8be1f3083e695528899d70924d3d900aa3f82061c0428c99d93ba",
+      "size": 1254
+    },
+    "python_socks/async_/asyncio/_proxy.py": {
+      "mode": 420,
+      "sha256": "b7438a5016bd310df14daacd448bee6126fcdcad95f64f790b452ea44c6a6b49",
+      "size": 4120
+    },
+    "python_socks/async_/asyncio/_resolver.py": {
+      "mode": 420,
+      "sha256": "f641cdac193c09ffe050bc428b1ff207b1b9c23b9e2d443f14fceadb90e3b03e",
+      "size": 871
+    },
+    "python_socks/async_/asyncio/_stream.py": {
+      "mode": 420,
+      "sha256": "a765cc4dbae75f0cf6de319de0d3d821ca60c759d99cd8e7edac3bc3447e0dc8",
+      "size": 1067
+    },
+    "python_socks/async_/asyncio/v2/__init__.py": {
+      "mode": 420,
+      "sha256": "bebc8936d0aa0d8ae2c16866941dbbf5637b5c8d5d6c42d400eaec31758dd96c",
+      "size": 64
+    },
+    "python_socks/async_/asyncio/v2/_connect.py": {
+      "mode": 420,
+      "sha256": "5b965a405fa3635cb10ff5a38ae154a2dd20003798f908821456979b935f8f92",
+      "size": 625
+    },
+    "python_socks/async_/asyncio/v2/_proxy.py": {
+      "mode": 420,
+      "sha256": "8aa9e05ed6180fbf721c09cc1c8739531b1397345066263ca4bdac7819f1608e",
+      "size": 4935
+    },
+    "python_socks/async_/asyncio/v2/_stream.py": {
+      "mode": 420,
+      "sha256": "cb8ea78b85652383c3c39ec1ee9147d002fdf8e143b5caf446ba72cfc01c17b8",
+      "size": 3110
+    },
+    "python_socks/async_/trio/__init__.py": {
+      "mode": 420,
+      "sha256": "f924358ae1a067703d614695285f10d769428ff7bee4acad77d3f7cc9c1aa32d",
+      "size": 61
+    },
+    "python_socks/async_/trio/_connect.py": {
+      "mode": 420,
+      "sha256": "d5d038452e8a286fbf4f7760afc05551704a16b5a325d19fcb52927f0099c98d",
+      "size": 903
+    },
+    "python_socks/async_/trio/_proxy.py": {
+      "mode": 420,
+      "sha256": "2e169c1dba849714992bd9d69b24c06db05ce5c02a67c32b9729640f9dbedcfa",
+      "size": 3793
+    },
+    "python_socks/async_/trio/_resolver.py": {
+      "mode": 420,
+      "sha256": "700166edf13083d946e5069e5c1161acb24a8eefa7a9313d82cfd58ac94ccd18",
+      "size": 755
+    },
+    "python_socks/async_/trio/_stream.py": {
+      "mode": 420,
+      "sha256": "743981a2a271985d43219151ce8cbceb0bbdd2f7b34fcf0ce53ab10ffab6cb31",
+      "size": 1138
+    },
+    "python_socks/async_/trio/v2/__init__.py": {
+      "mode": 420,
+      "sha256": "f924358ae1a067703d614695285f10d769428ff7bee4acad77d3f7cc9c1aa32d",
+      "size": 61
+    },
+    "python_socks/async_/trio/v2/_connect.py": {
+      "mode": 420,
+      "sha256": "d40232eb18efeb8043c99cc2adf13ed4077e193e7fce8307ee16e4acf7ce70e8",
+      "size": 365
+    },
+    "python_socks/async_/trio/v2/_proxy.py": {
+      "mode": 420,
+      "sha256": "8a0899db97bfce8ed467a4c235d094c68316f4f3f2cbb6e77cd36a5b56d24272",
+      "size": 4315
+    },
+    "python_socks/async_/trio/v2/_stream.py": {
+      "mode": 420,
+      "sha256": "2cdb84bf8727b56a41374ccb532bdd43be12921be4d8575a3882da22489cf539",
+      "size": 1620
+    },
+    "python_socks/py.typed": {
+      "mode": 420,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    "python_socks/sync/__init__.py": {
+      "mode": 420,
+      "sha256": "3bd958c9d9fa6b6cf4412cfc868663c4be8ea9043cef78bc672d727baee247c9",
+      "size": 61
+    },
+    "python_socks/sync/_connect.py": {
+      "mode": 420,
+      "sha256": "492926b9e9051062bb18c9b87df528fbedbd4ae3a47cb81e16fcadd0a0a98633",
+      "size": 339
+    },
+    "python_socks/sync/_proxy.py": {
+      "mode": 420,
+      "sha256": "baa2080db8269e4defd0d72a0bdebafe58d4e6a1c8fd47a6d15301f7c0f1b809",
+      "size": 3317
+    },
+    "python_socks/sync/_resolver.py": {
+      "mode": 420,
+      "sha256": "214a577ab04522139c88cfc227f236f4828c188e3dc84509283d3648e6ff0471",
+      "size": 750
+    },
+    "python_socks/sync/_stream.py": {
+      "mode": 420,
+      "sha256": "c2ea2734b670b4ab6ebce321800a04b0e34d2b4fed1f43186de9ff275b232c19",
+      "size": 922
+    },
+    "python_socks/sync/v2/__init__.py": {
+      "mode": 420,
+      "sha256": "3bd958c9d9fa6b6cf4412cfc868663c4be8ea9043cef78bc672d727baee247c9",
+      "size": 61
+    },
+    "python_socks/sync/v2/_connect.py": {
+      "mode": 420,
+      "sha256": "4d0183de3f2ac078c9aaaccb46e6e6c2620c864a1645f41de37e758a94d8e265",
+      "size": 416
+    },
+    "python_socks/sync/v2/_proxy.py": {
+      "mode": 420,
+      "sha256": "b03daf54abd711f4b0e48cf30dcc29e390c4964281df796c4fa642297728c4f9",
+      "size": 3815
+    },
+    "python_socks/sync/v2/_ssl_transport.py": {
+      "mode": 420,
+      "sha256": "cf77c1e76a47eeda8e003c880aea09175618293b35a2091e4772be27cbfa3f4c",
+      "size": 6123
+    },
+    "python_socks/sync/v2/_stream.py": {
+      "mode": 420,
+      "sha256": "db7b2bcf2c723fba3b2ad11d350965648bcf231059f280bfad5d1b91de23ba2f",
+      "size": 1744
+    },
+    "tools/docker_client.sh": {
+      "mode": 420,
+      "sha256": "2a20be2d68eec29c404262b87a3d39390406befb97ff8fa252b8965b219236ec",
+      "size": 5792
+    },
+    "tools/inference_native.sh": {
+      "mode": 420,
+      "sha256": "662428e243eb0d61b0c8de9d08a1e027bba01fa0384c4637fa2a39b6d93d8862",
+      "size": 23751
+    },
+    "type_requirements.py": {
+      "mode": 420,
+      "sha256": "3996615c332b8f9b9dbdfa11810388fd5e2577544f651819b7f27bf2a0c207b1",
+      "size": 5495
+    }
+  },
+  "release_version": "0.7.7",
+  "source_revision": "2b938d3af95e27b9c863e86bab5af0906971a639"
+}

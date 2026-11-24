@@ -121,15 +121,15 @@ selects the common SDK release. Bake owns pinned interpreters and build contexts
 Compose uses built images and never resolves packages.
 
 Select an existing external package pool explicitly with `WHEELHOUSE`. Prepare
-SDK tooling with `make sdk/acquire DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`.
-`make lock PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`
+SDK tooling with `make sdk/acquire DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE" PROXY_URL=<url|none>`.
+`make lock PROFILE=provider DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE" PROXY_URL=<url|none>`
 resolves against cached artifacts and reads package-index metadata to select
 published URLs; it does not download package archives. Repeat for `worker-cpu`.
 The CPU baseline constraints preserve captured scientific transitive versions.
 Direct versions live in requirements.in; SDK versions come from the selected
 release. Change the scientific baseline deliberately when qualifying a new environment.
 
-`make acquire PROFILE=<profile> DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`
+`make acquire PROFILE=<profile> DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE" PROXY_URL=<url|none>`
 is the separate networked package acquisition step. Builds require every selected
 artifact and all pinned base/tool images locally, fail on stale locks or missing
 inputs, and run without build networking. The worker builds the declared antlr
@@ -157,10 +157,17 @@ and `make weights/verify`, with `DOCKER_CONTEXT=science`. Acquisition requires
 explicit `PROXY_URL=<url>` or `PROXY_URL=none` for direct access; omitted values
 are prompted for. This setting controls checkpoint downloads, independently of
 the Docker daemon's image-pull proxy.
-Only the downloader uses host networking so it can reach a loopback proxy;
-rootless engines require Docker 29.5+ with RootlessKit's detached network namespace.
-The pinned curl image is pulled when missing. Verification and sanitization
-disable networking and never pull images.
+All artifact acquisition uses the shared SDK runner: only its temporary gateway
+has host networking. Download tools share an isolated loopback HTTP relay, which
+reaches the gateway through a private Unix socket. `PROXY_URL=none` selects the
+gateway's normal host route; a proxy failure never switches to that route.
+A loopback upstream proxy on a rootless engine requires Docker 29.5+ with
+RootlessKit's detached network namespace.
+The bootstrap source under `make/bootstrap/acquisition` is generated from the
+shared SDK source and verified before use. It needs the pinned provider Python
+base image locally, even for checkpoint downloads. The pinned curl image is
+pulled when missing. Verification and sanitization disable networking and never
+pull images.
 Build the independent sanitizer with `make build PROFILE=weights-sanitize
 DOCKER_CONTEXT=science WHEELHOUSE="$WHEELHOUSE"`. Its locked CPU Torch environment
 uses cached wheels and needs neither the inference image nor a GPU.

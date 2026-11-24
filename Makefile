@@ -72,15 +72,16 @@ endef
 
 .PHONY: sdk/acquire lock acquire build
 sdk/acquire: ## Verify or acquire pinned SDK tooling in WHEELHOUSE; requires DOCKER_CONTEXT.
-	@$(operator_inputs); pool=$$(choose WHEELHOUSE); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" sdk/acquire --host "$$docker_host" --pool "$$pool"
+	@$(operator_inputs); pool=$$(choose WHEELHOUSE); proxy=$$(choose PROXY_URL); select_docker; \
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" sdk/acquire --host "$$docker_host" --pool "$$pool" --proxy "$$proxy"
 
 lock: ## Resolve a profile lock from cached packages; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
 acquire: ## Acquire the profile's locked packages into WHEELHOUSE; requires PROFILE and DOCKER_CONTEXT.
 build: ## Build a selected profile offline; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
 lock acquire build:
-	@$(operator_inputs); profile=$$(choose PROFILE '$(PROFILES)'); pool=$$(choose WHEELHOUSE); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" "$@" --profile "$$profile" --host "$$docker_host" --pool "$$pool"
+	@$(operator_inputs); profile=$$(choose PROFILE '$(PROFILES)'); pool=$$(choose WHEELHOUSE); proxy_args=(); \
+	if [[ $@ != build ]]; then proxy_args=(--proxy "$$(choose PROXY_URL)"); fi; select_docker; \
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" "$@" --profile "$$profile" --host "$$docker_host" --pool "$$pool" "$${proxy_args[@]}"
 
 .PHONY: check test/provider test/provider/normative test/provider/adversarial
 check: test/provider ## Run all provider image tests; requires DOCKER_CONTEXT.
@@ -117,8 +118,9 @@ deploy: ## Promote a completed qualification with clean provider retirement; req
 
 .PHONY: weights/download weights/verify weights/sanitize
 weights/download: ## Acquire and verify checkpoints; requires PROXY_URL and DOCKER_CONTEXT.
-	@$(operator_inputs); proxy=$$(choose PROXY_URL); select_docker; export PROXY_URL="$$proxy"; \
-	weights_run --pull missing volume-init; weights_run --pull missing --name chefnmr2-weights-writer download
+	@$(operator_inputs); proxy=$$(choose PROXY_URL); select_docker; \
+	weights_run --pull missing volume-init; \
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/weights.py" --host "$$docker_host" --proxy "$$proxy"
 
 weights/verify: ## Verify the retained checkpoint volume offline; requires DOCKER_CONTEXT.
 weights/sanitize: ## Sanitize known checkpoint files in the retained volume; requires DOCKER_CONTEXT.

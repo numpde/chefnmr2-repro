@@ -72,11 +72,9 @@ services:
   download:
     <<: *contained
     user: "curl_user:curl_group"
-    environment:
-      PROXY_URL: ${PROXY_URL:-}
-    # Host networking lets curl reach a proxy bound to host loopback.
-    # Rootless engines need Docker 29.5+ with RootlessKit's detached network namespace.
-    network_mode: host
+    # make/weights.py gives this application the shared acquisition relay's
+    # isolated namespace. Direct Compose execution has no network access.
+    network_mode: none
     pids_limit: 64
     cpus: 1
     mem_limit: 256m
@@ -96,14 +94,7 @@ services:
     command:
       - |
         # Compose turns $$ into $ before the container shell expands variables
-        case "$$PROXY_URL" in
-          '')
-            printf '%s\n' 'Cannot download checkpoints: set PROXY_URL=<url> or PROXY_URL=none.' >&2
-            exit 2
-            ;;
-          none) download_proxy= ;;
-          *) download_proxy=$$PROXY_URL ;;
-        esac
+        download_proxy=$${HTTPS_PROXY:?Run make weights/download to acquire checkpoints through the selected route}
         checkpoint_release_url=https://huggingface.co/ziyux123/chefnmr2/resolve/38a741cce3e6f7e0d5a827a66f8d3dea0728daf5
         checksum_file=/checks/checkpoints.sha256
 
@@ -138,7 +129,7 @@ services:
           umask 077
           # Curl durations are seconds and the slow-transfer limit is bytes/second
           # --disable must be first to ignore curlrc. --continue-at - uses the local file size
-          # Empty --proxy selects direct routing; empty --noproxy prevents inherited bypasses
+          # The shared relay selects the route; empty --noproxy prevents inherited bypasses
           printf 'Downloading %s (resuming any partial file)\n' "$$checkpoint_file"
           curl --disable --fail --location --show-error --no-progress-meter \
             --proxy "$$download_proxy" --noproxy '' \
