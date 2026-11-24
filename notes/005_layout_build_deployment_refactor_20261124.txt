@@ -14,10 +14,12 @@ Completion contract
 - model/binding.py owns the scientific operation and lifecycle; model/wire.py
   owns its request/result types. Both images consume the same declaration.
   Scientific imports remain lazy so the provider needs no Torch installation.
-- docker-bake.hcl owns image targets, pinned bases, target platforms and named
-  build contexts. Each builds/<profile>/requirements.in owns direct dependency
-  intent; its generated requirements.lock selects the complete target-specific
-  artifact closure. builds/sdk.constraints.txt selects one SDK release.
+- compose/images.yaml owns image targets, pinned bases, target platforms and named
+  build contexts. Bake consumes its build definitions; images/pull uses native
+  Compose pull for its image-only services. Each builds/<profile>/requirements.in
+  owns direct dependency intent; its generated requirements.lock selects the
+  complete target-specific artifact closure. builds/sdk.constraints.txt selects
+  one SDK release.
 - Compose owns runtime topology and containment. Deployment overlays own host
   mounts, resource settings, selected image digests and GPU device grants.
   provider.toml owns SDK/scientific/API settings. No custom config merger.
@@ -60,7 +62,7 @@ Destination and removal map
 
 New build ownership:
   Makefile
-  docker-bake.hcl
+  compose/images.yaml
   builds/sdk.constraints.txt
   builds/{provider,worker-cpu,worker-cuda}/{requirements.in,requirements.lock}
 
@@ -142,9 +144,10 @@ Ordered implementation batches
     Reuse SDK/tooling helpers; extract a small repository helper only if actual
     shell lifecycle logic warrants it, rather than growing a Make framework.
 
-    Remove Dockerfile dependency extraction and Compose build sections once
-    Bake owns those facts. Compose consumes built images. Make owns invocation
-    order and cleanup, not another copy of build definitions.
+    Keep build definitions in compose/images.yaml, consumed directly by Bake.
+    Runtime Compose files consume built images; do not duplicate build sections
+    there or extract dependencies from Dockerfiles. Make owns invocation order
+    and cleanup, not another copy of build definitions.
 
     Acceptance: provider and CPU worker build offline from locked inputs;
     pip check and provider tests pass in those images; installed CPU packages
@@ -659,6 +662,10 @@ them without replacing their retry/verification consumers coherently.
 
 Joint target tree after direct Chef/MolDeTr challenge, 2026-11-24
 --------------------------------------------------------------
+
+ChefNMR2 update, commit 286e866: compose/images.yaml replaces the docker-bake.hcl
+entry below with one declaration shared by Bake and native Compose image pulls.
+This historical joint tree does not establish MolDeTr's current layout.
 
 This is the agreed end state, not a statement that either checkout already
 implements it. Equivalent roles use the same paths in both repositories.
