@@ -30,11 +30,11 @@ def open_provider(deployment: dict) -> AbstractAsyncContextManager[Provider]:
     execution = ExecutionSettings(deployment["execution"])
 
     inference = execution.open_process_call(
-            runner=deployment["runner"],
-            contribution_type=Inference,
-            constructor=construct,
-            startup=deployment["model"],
-            method=Inference.elucidate_batch,
+        runner=deployment["runner"],
+        contribution_type=Inference,
+        constructor=construct,
+        startup=deployment["model"],
+        method=Inference.elucidate_batch,
     )
 
     batches = batch_requests(inference, policy=BatchPolicy(**deployment["batch"]))

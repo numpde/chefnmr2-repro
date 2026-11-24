@@ -47,6 +47,7 @@ class ElucidationSession:
 
     def preparation_failure(self, code, message, error, *, evidence, instructions):
         """Retain the causal graph alongside its input digest, without the input bytes."""
+
         # todo: Review partial input echoes in endpoint diagnostics; exact source
         # text and configured credentials are removed before the SDK bounds text.
         diagnostic = failure_evidence_json(
@@ -57,7 +58,9 @@ class ElucidationSession:
             secrets=(*self.diagnostic_secrets, instructions.specification_bytes.decode("utf-8", errors="replace")),
             maximum_bytes=MAX_EVIDENCE_BYTES,
         )
+
         protected = ProtectedEvidence("chefnmr2.preparation_failure.v1", diagnostic)
+
         self.report_failure(code, protected)
 
         return AnalysisFailure(code, message, protected)
@@ -65,6 +68,7 @@ class ElucidationSession:
     def report_failure(self, code, evidence):
         """Emit the protected record with the API identities that locate its Attempt."""
         admission = self.acknowledged.admission
+
         # todo: Logs rotate; provide an SDK-owned durable evidence sink before
         # treating this record as an archive independent of the live Attempt.
         log.error(
@@ -152,6 +156,7 @@ class ElucidationSession:
             failure_codec = JsonDataclassCodec(format="chefnmr2.model_failure.v2", value_type=ModelFailure)
 
             evidence = ProtectedEvidence(failure_codec.format, failure_codec.encode(elucidation_result))
+
             self.report_failure("model_failed", evidence)
 
             return AnalysisFailure(

@@ -29,6 +29,7 @@ def verified_weights(path, companions=()):
     path = pathlib.Path(path)
     paths = [path, *(pathlib.Path(companion) for companion in companions)]
     marker = path.with_name(path.name + ".sanitized.json")
+
     with ExitStack() as opened:
         try:
             receipt_stream = opened.enter_context(marker.open())
@@ -36,20 +37,31 @@ def verified_weights(path, companions=()):
             raise FileNotFoundError(
                 f"Cannot load {path}: its sanitization receipt is missing; run make weights/sanitize."
             ) from error
+
         receipt = json.load(receipt_stream)
-        if (receipt["schema"] != 1 or receipt["policy"] != "torch-weights-only-v1" or
-                not {item.name for item in paths}.issubset(receipt["files"])):
+
+        if (
+            (receipt["schema"] != 1) or
+            (receipt["policy"] != "torch-weights-only-v1") or
+            not {item.name for item in paths}.issubset(receipt["files"])
+        ):
             raise ValueError(f"Cannot load {path}: its sanitization receipt does not cover the selected files and policy")
+
         streams = {item: opened.enter_context(item.open("rb")) for item in paths}
-        for item, stream in streams.items():
+
+        for (item, stream) in streams.items():
             digest = hashlib.file_digest(stream, "sha256").hexdigest()
+
             if digest != receipt["files"][item.name]:
                 raise ValueError(f"Cannot load {item}: SHA-256 {digest} differs from its sanitization receipt")
+
             stream.seek(0)
+
         # Managed writers invalidate the receipt before replacing covered files.
         # Recheck after opening and hashing; the retained descriptors then stay fixed.
         if not os.path.samestat(os.fstat(receipt_stream.fileno()), marker.stat()):
             raise ValueError(f"Cannot load {path}: sanitization changed while opening the checkpoint")
+
         yield streams
 
 
@@ -67,11 +79,14 @@ class Inference(sdk.Contribution):
 
     def initialize(self, *, assets: sdk.AssetAccess) -> None:
         """Load the checkpoints before the SDK acknowledges model readiness."""
+
         with ExitStack() as opened:
             checkpoints = []
+
             for directory in map(pathlib.Path, self.checkpoint_dirs):
-                weights, config = directory / "model.pt", directory / "config.yaml"
+                (weights, config) = (directory / "model.pt", directory / "config.yaml")
                 streams = opened.enter_context(verified_weights(weights, companions=(config,)))
+
                 checkpoints.append((directory.name, streams[weights], streams[config]))
 
             log.info(f"Loading {len(checkpoints)=} on {self.device=} with {self.recon_workers=}")
@@ -115,13 +130,17 @@ class Inference(sdk.Contribution):
                             json.dumps(elucidation.peaks.h),
                         ),
                         maximum_bytes=MAX_EVIDENCE_BYTES // 2,
-                        describe_owner=lambda failure, text, window: {
+                        describe_owner=lambda failure,
+                        text,
+                        window: {
                             **describe_core_failure(failure, text, window),
                             "message": str(failure),
                         },
                     ),
                 )["failure"]
+
                 log.error(f"Batch entry failed; {index=}; diagnostic={json.dumps(diagnostic)}")
+
                 elucidation_reply = ModelFailure(
                     exception_type=diagnostic["exception_type"],
                     message=diagnostic["message"],

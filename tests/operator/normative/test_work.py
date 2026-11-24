@@ -12,13 +12,18 @@ class ScratchLifetimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             record = create_run_directory(root, 'rollback')
+
             (record / 'provider.toml').write_text('retained configuration')
+
             with temporary_run_directory(root, 'build') as first:
                 (first / 'install.txt').write_text('first build')
+
                 with temporary_run_directory(root, 'build') as second:
                     (second / 'install.txt').write_text('second build')
+
                 self.assertFalse(second.exists())
                 self.assertEqual((first / 'install.txt').read_text(), 'first build')
+
             self.assertFalse(first.exists())
             self.assertEqual((record / 'provider.toml').read_text(), 'retained configuration')
 
@@ -27,10 +32,12 @@ class ScratchLifetimeTests(unittest.TestCase):
             for exception in (RuntimeError, KeyboardInterrupt):
                 with self.subTest(exception=exception):
                     failure = exception('operation interrupted')
+
                     with self.assertRaises(exception) as caught:
                         with temporary_run_directory(Path(temporary), 'lock') as stage:
                             (stage / 'scratch').mkdir()
                             (stage / 'scratch' / 'resolver.txt').write_text('unfinished')
                             raise failure
+
                     self.assertIs(caught.exception, failure)
                     self.assertFalse(stage.exists())

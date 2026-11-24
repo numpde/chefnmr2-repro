@@ -61,6 +61,7 @@ class ProviderCase(unittest.IsolatedAsyncioTestCase):
         self.new_interpreter = Mock(side_effect=AssertionError("Structured input should not call an interpreter"))
         self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
         self.condition = SimpleNamespace(require_execution=Mock())
+
         self.acknowledged = SimpleNamespace(
             start=SimpleNamespace(input="verified-input"),
             admission=SimpleNamespace(job_ref="job:fixture", execution_attempt_ref="attempt:fixture"),
@@ -186,9 +187,11 @@ class ControlledInference(Contribution):
 
         return ElucidationBatchResult(
             replies=[
-                ModelFailure("ValueError", "fixture bad formula", {})
-                if request.formula == "BAD"
-                else replace(self.elucidation_result, params={"batch_index": index})
+                (
+                    ModelFailure("ValueError", "fixture bad formula", {})
+                    if request.formula == "BAD"
+                    else replace(self.elucidation_result, params={"batch_index": index})
+                )
                 for (index, request) in enumerate(batch.requests)
             ],
         )

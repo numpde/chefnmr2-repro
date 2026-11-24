@@ -12,8 +12,12 @@ log = logging.getLogger(__name__)
 
 
 def artifact_names(version):
-    return (f'wheelhouse-tool-{version}.pyz', f'provider_core-{version}-native-install.lock',
-            f'provider_core-{version}-install.lock', f'provider_core-{version}-py3-none-any.whl')
+    return (
+        f'wheelhouse-tool-{version}.pyz',
+        f'provider_core-{version}-native-install.lock',
+        f'provider_core-{version}-install.lock',
+        f'provider_core-{version}-py3-none-any.whl',
+    )
 
 
 def release_url(version):
@@ -22,26 +26,39 @@ def release_url(version):
 
 def fetch(pool, release, name, checksum):
     destination = pool / name
+
     if destination.exists():
         log.info('Checking cached %s', name)
+
         if hashlib.sha256(destination.read_bytes()).hexdigest() != checksum:
             raise ValueError(f"Cached SDK artifact has a different SHA-256: {name}")
+
         log.info('Verified cached %s', name)
+
         return
+
     with tempfile.NamedTemporaryFile(dir=pool, prefix='.sdk-', delete=False) as output:
         temporary = Path(output.name)
+
         try:
             log.info('Downloading %s', name)
+
             with urlopen(release + name, timeout=120) as response:
                 total = 0
+
                 while block := response.read(65536):
                     total += len(block)
-                    if total > 8 * 1024 * 1024:
+
+                    if total > (8 * 1024 * 1024):
                         raise ValueError(f"SDK support artifact exceeds 8 MiB: {name}")
+
                     output.write(block)
+
             output.close()
+
             if hashlib.sha256(temporary.read_bytes()).hexdigest() != checksum:
                 raise ValueError(f"Downloaded SDK artifact has a different SHA-256: {name}")
+
             temporary.chmod(0o644)
             temporary.replace(destination)
             log.info('Downloaded and verified %s (%d bytes)', name, total)
@@ -50,12 +67,14 @@ def fetch(pool, release, name, checksum):
 
 
 def main():
-    version, manifest_hash, directory = sys.argv[1:]
+    (version, manifest_hash, directory) = sys.argv[1:]
     pool = Path(directory)
     release = release_url(version)
     manifest = f'provider_core-{version}-sha256.json'
+
     fetch(pool, release, manifest, manifest_hash)
     hashes = json.loads((pool / manifest).read_text())
+
     for name in artifact_names(version):
         fetch(pool, release, name, hashes[name])
 

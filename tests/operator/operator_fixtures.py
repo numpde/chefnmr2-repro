@@ -15,15 +15,20 @@ ROOT = Path(__file__).resolve().parents[2]
 class OperatorFixture(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix='chefnmr2-make-')
+
         self.addCleanup(self.temporary.cleanup)
         self.directory = Path(self.temporary.name)
         self.bin = self.directory / 'bin'
+
         self.bin.mkdir()
         self.docker_log = self.directory / 'docker.log'
         self.docker_environment_log = self.directory / 'docker-environment.log'
         self.python_log = self.directory / 'python.log'
         self.proxy_log = self.directory / 'proxy.log'
-        self.write_executable('docker', '''#!/bin/bash
+
+        self.write_executable(
+            'docker',
+            '''#!/bin/bash
 printf '%s\\0' "$@" >> "$TEST_DOCKER_LOG"
 printf '\\n' >> "$TEST_DOCKER_LOG"
 printf '%s|%s|%s|%s\\n' "${DOCKER_HOST-unset}" "${DOCKER_CONFIG-unset}" "${COMPOSE_FILE-unset}" "${BUILDX_METADATA_PROVENANCE-unset}" >> "$TEST_DOCKER_ENV_LOG"
@@ -33,13 +38,19 @@ if [[ $1 == context && $2 == inspect ]]; then
 elif [[ $1 == context && $2 == ls ]]; then
   printf '%s\\n' default science
 fi
-''')
-        self.write_executable('python3', '''#!/bin/bash
+'''
+        )
+
+        self.write_executable(
+            'python3',
+            '''#!/bin/bash
 printf '%s\\0' "$@" > "$PYTHON_LOG"
-''')
+'''
+        )
 
     def write_executable(self, name, contents):
         path = self.bin / name
+
         path.write_text(contents)
         path.chmod(0o755)
 
@@ -71,22 +82,39 @@ printf '%s\\0' "$@" > "$PYTHON_LOG"
     def calls(self):
         if not self.docker_log.exists():
             return []
+
         return [line.rstrip('\n').split('\0')[:-1] for line in self.docker_log.read_text().splitlines()]
 
     def run_choose(self, name, reply):
         # A disposable checkout keeps prompt history out of the real checkout.
         helper = self.directory / 'repo/make/operator.sh'
+
         helper.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / 'make/operator.sh', helper)
-        command = shlex.join([
-            'bash', '-eu', '-o', 'pipefail', '-c', 'source "$1"; choose "$2" > "$3"',
-            'bash', str(helper), name, str(self.directory / 'selected'),
-        ])
+
+        command = shlex.join(
+            [
+                'bash',
+                '-eu',
+                '-o',
+                'pipefail',
+                '-c',
+                'source "$1"; choose "$2" > "$3"',
+                'bash',
+                str(helper),
+                name,
+                str(self.directory / 'selected'),
+            ]
+        )
+
         return subprocess.run(
             ['script', '--quiet', '--return', '--command', command, '/dev/null'],
-            input=reply + '\n', cwd=self.directory,
+            input=reply + '\n',
+            cwd=self.directory,
             env=self.environment(REPRO_EXPLICIT_INPUTS=''),
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
 
     def python_arguments(self):

@@ -94,10 +94,12 @@ settle_seconds = 2
                 )
 
                 diagnostic_secrets = ("configured-interpreter-secret",)
+
                 interpreter_settings = SimpleNamespace(
                     new_interpreter=Mock(),
                     diagnostic_secrets=diagnostic_secrets,
                 )
+
                 service = SimpleNamespace(serve=serve)
 
                 try:
@@ -113,9 +115,11 @@ settle_seconds = 2
                         elif failing_phase is None:
                             await provider_main.serve(config=config)
                             service_arguments = job_service.call_args.kwargs
+
                             self.assertEqual(service_arguments["diagnostic_secrets"], diagnostic_secrets)
-                            offering, = service_arguments["offerings"]
+                            (offering,) = service_arguments["offerings"]
                             session = offering.new_session()
+
                             self.assertEqual(session.diagnostic_secrets, diagnostic_secrets)
                         else:
                             with self.assertRaises(RuntimeError) as caught:
@@ -184,6 +188,7 @@ class ProviderAdversarialTests(ProviderCase):
             outcome = await self.prepare_prose()
 
         encoded = outcome.evidence.content.decode()
+
         self.assertIn("ChatFailed", encoded)
         self.assertIn("Endpoint refused", encoded)
         self.assertNotIn(secret, encoded)
@@ -196,6 +201,7 @@ class ProviderAdversarialTests(ProviderCase):
     async def test_model_cause_reaches_attempt_through_batch_wire_without_private_input(self):
         def failed_model(*args, **kwargs):
             private_local = "PRIVATE-FRAME-LOCAL"
+
             try:
                 raise ValueError("token=hidden-token")
             except ValueError as error:
@@ -211,8 +217,10 @@ class ProviderAdversarialTests(ProviderCase):
                 encoded = codec.encode(worker.elucidate_batch(batch=batch))
 
         decoded = codec.decode(encoded).replies[0]
+
         self.assertEqual("RuntimeError", decoded.exception_type)
         self.assertIn("could not reconstruct", decoded.message)
+
         cause = next(
             (
                 relationship["failure"]
@@ -220,11 +228,13 @@ class ProviderAdversarialTests(ProviderCase):
                 if relationship["relationship"] == "cause"
             ),
         )
+
         self.assertEqual("ValueError", cause["exception_type"])
         self.assertTrue(decoded.diagnostic["frames"])
 
         self.provider.inference.return_value = codec.decode(encoded)
         prepared = await self.prepare_input({"formula": "CH4", "peaks": {"c": [123.456, 234.567]}})
+
         with self.assertLogs("application", level="ERROR") as attempt_logs:
             outcome = await self.session.execute(prepared, report_condition=self.condition)
 
@@ -234,6 +244,7 @@ class ProviderAdversarialTests(ProviderCase):
         self.assertIn("job:fixture", attempt_logs.output[0])
         self.assertIn("attempt:fixture", attempt_logs.output[0])
         self.provider.inference.assert_awaited_once()
+
         for secret in ("hidden-token", "CH4", "123.456", "234.567", "PRIVATE-FRAME-LOCAL"):
             self.assertNotIn(secret, encoded.decode())
             self.assertNotIn(secret, worker_logs.output[0])
@@ -329,6 +340,7 @@ class ProviderAdversarialTests(ProviderCase):
         self.assertEqual(first, decoded.replies[0])
         self.assertEqual(last, decoded.replies[2])
         failure = decoded.replies[1]
+
         self.assertEqual("bad formula", failure.message)
         self.assertEqual("ValueError", failure.diagnostic["exception_type"])
         self.assertTrue(failure.diagnostic["frames"])
