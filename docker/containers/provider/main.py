@@ -41,18 +41,22 @@ async def serve(*, config: pathlib.Path) -> None:
 
     with termination_signals(stopping.set):
         lifetime = ProviderLifetime(pathlib.Path(deployment["service"]["lifetime_directory"])).open()
-        async with configured_provider as provider:
+
+        async with configured_provider as provider, provider.batches:
             service = JobService(
                 provider_ref=clients.provider_ref,
-                offerings=(JobOffering(
-                    announcement=offering,
-                    host=provider.inference.host,
-                    consumer_id="chefnmr2",
-                    generation=generation,
-                    new_session=lambda: ElucidationSession(provider, new_interpreter=new_interpreter),
-                ),),
+                offerings=(
+                    JobOffering(
+                        announcement=offering,
+                        host=provider.inference.host,
+                        consumer_id="chefnmr2",
+                        generation=generation,
+                        new_session=lambda: ElucidationSession(provider, new_interpreter=new_interpreter),
+                    ),
+                ),
                 host_failure_policy=HostFailurePolicy.STOP,
-                limits=LiveAttemptLimits(1, 262144, 131072),
+                limits=LiveAttemptLimits(**deployment["service"]["limits"]),
+                maximum_preparations=deployment["service"]["maximum_preparations"],
                 display_name="ChefNMR2",
                 description=provider_description,
                 policy=policy,
@@ -62,6 +66,7 @@ async def serve(*, config: pathlib.Path) -> None:
             )
 
             await service.serve()
+
         # Release only after both the service and model contexts complete.
         # A failed cleanup retains exclusion until this process exits.
         lifetime.close()

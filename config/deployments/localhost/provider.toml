@@ -20,12 +20,20 @@ checkpoint_dirs = ["/checkpoints/chefnmr2-epoch949"]
 device = "cpu"
 recon_workers = 2
 
+# Collect at most four jobs for one sequential worker call, waiting up to 50 ms.
+# These bytes cover queued and running encoded entries; the host caps whole frames.
+[batch]
+maximum_entries = 4
+collection_seconds = 0.05
+maximum_queued_input_bytes = 32768
+maximum_entry_input_bytes = 8192
+
 [execution]
 backend = "process"
 
 [execution.host]
-input_bytes = 8192
-result_bytes = 65536
+input_bytes = 65536
+result_bytes = 262144
 state_values = 1
 progress_records = 1
 initialization_seconds = 120
@@ -35,13 +43,13 @@ retirement_seconds = 30
 queue_stop_request_seconds = 5
 execution_stop_request_seconds = 60
 cleanup_overdue_flag_seconds = 30
-reject_encoded_input_over_bytes = 8192
-reject_encoded_result_over_bytes = 65536
+reject_encoded_input_over_bytes = 65536
+reject_encoded_result_over_bytes = 262144
 
-# Make at most three attempts when the SDK confirms a retryable refusal.
-# Failed calculations propagate; enabling their retry would repeat the science.
+# A shared batch is never replayed: its membership can change on cancellation.
+# Delivery retries retain the original result and do not rerun science.
 [execution.error_policy]
-max_attempts = 3
+max_attempts = 1
 backoff_initial_seconds = 0.1
 backoff_max_seconds = 1
 retry_admission_codes = ["capacity", "unavailable"]
@@ -71,6 +79,14 @@ gid = 1000
 
 [service]
 lifetime_directory = "/run/chefnmr2-provider"
+maximum_preparations = 2
+
+# Reserve before START; slow science, retirement or delivery retains its claim.
+[service.limits]
+maximum_attempts = 4
+maximum_control_bytes = 524288
+maximum_pending_terminal_bytes = 524288
+maximum_input_bytes = 262144
 
 [service.policy]
 feed_seconds = 5

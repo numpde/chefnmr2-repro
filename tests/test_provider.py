@@ -3,7 +3,7 @@
 import asyncio
 from copy import deepcopy
 from contextlib import asynccontextmanager, nullcontext
-from dataclasses import asdict
+from dataclasses import asdict, replace
 import json
 from pathlib import Path
 import sys
@@ -14,12 +14,14 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, AnalysisSuccess
+from provider_core.batch_call import BatchPolicy
 from provider_core.chat_errors import ChatFailed
 from provider_core.embedded_host import InProcessExecutionHost
-from provider_core.hosting import OperationPolicy
+from provider_core.hosting import CleanupObservation, OperationPolicy
 from provider_core.interpreter_settings import ManagedInterpreter
 from provider_core.lifetime import ProviderLifetime
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
+from provider_core.process_call import ProcessCall
 from provider_core.scientific import Analysis, Contribution, operation
 from provider_core.scientific_call import ErrorPolicy, ScientificCall
 
@@ -27,7 +29,7 @@ from application import ElucidationSession, ElucidationReport
 from binding import Inference
 from wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ElucidationResult, ModelFailure, Peaks
 import main as provider_main
-from provider import open_provider as configured_provider
+from provider import open_provider as configured_provider, batch_requests
 
 
 class ProviderLifetimeTests(unittest.IsolatedAsyncioTestCase):
@@ -41,29 +43,35 @@ class ProviderLifetimeTests(unittest.IsolatedAsyncioTestCase):
 
                 def observe_exclusion(phase):
                     phases.append(phase)
+
                     with self.assertRaises(BlockingIOError):
                         ProviderLifetime(root).open()
+
                     if failing_phase == phase:
                         raise failure
 
                 @asynccontextmanager
                 async def started_provider(deployment):
                     observe_exclusion("model_start")
+
                     try:
-                        yield SimpleNamespace(inference=SimpleNamespace(host=object()))
+                        yield SimpleNamespace(inference=SimpleNamespace(host=object()), batches=nullcontext())
                     finally:
                         observe_exclusion("model_cleanup")
 
                 def open_provider(deployment):
                     if failing_phase == "execution":
                         return configured_provider(deployment)
+
                     return started_provider(deployment)
 
                 async def serve():
                     observe_exclusion("service")
 
                 config = root / "provider.toml"
-                config.write_text(f'''
+
+                config.write_text(
+                    f'''
 [api]
 [interpreter]
 [shared]
@@ -77,6 +85,12 @@ n_samples = 8
 seed = 0
 [service]
 lifetime_directory = {json.dumps(str(root))}
+maximum_preparations = 2
+[service.limits]
+maximum_attempts = 4
+maximum_control_bytes = 524288
+maximum_pending_terminal_bytes = 524288
+maximum_input_bytes = 262144
 [service.policy]
 feed_seconds = {0 if failing_phase == "policy" else 1}
 hello_seconds = 60
@@ -84,7 +98,9 @@ observation_seconds = 1
 recovery_seconds = 10
 retry_max_seconds = 2
 settle_seconds = 2
-''', encoding="utf-8")
+''',
+                    encoding="utf-8",
+                )
 
                 try:
                     with patch.object(provider_main.ProviderClients, "from_config", return_value=Mock()), \
@@ -101,12 +117,16 @@ settle_seconds = 2
                         else:
                             with self.assertRaises(RuntimeError) as caught:
                                 await provider_main.serve(config=config)
+
                             self.assertIs(caught.exception, failure)
 
                     expected = [] if failing_phase in ("policy", "execution") else ["model_start", "service", "model_cleanup"]
+
                     self.assertEqual(expected, phases)
+
                     if failing_phase in ("policy", "execution"):
                         self.assertFalse((root / ".checkpoint-owner.lock").exists())
+
                     if failing_phase in (None, "policy", "execution"):
                         ProviderLifetime(root).open().close()
                     else:
@@ -135,13 +155,39 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
         self.provider = SimpleNamespace(
             offering={"n_samples": 8, "seed": 0},
-            inference=AsyncMock(return_value=ElucidationBatchResult(replies=[self.scientific_result])),
+            inference=AsyncMock(spec=ProcessCall, return_value=ElucidationBatchResult(replies=[self.scientific_result])),
         )
+
+        self.provider.inference.error_policy = ErrorPolicy()
+        self.provider.inference._claim_batch = Mock()
+        self.provider.inference._release_batch = Mock()
+        retirement = SimpleNamespace(observe=AsyncMock(return_value=CleanupObservation(0, True, False, ())))
+        self.provider.inference.host = SimpleNamespace(retire=lambda: retirement)
+        self.batch_failure = None
+
+        self.batch_policy = BatchPolicy(
+            maximum_entries=4,
+            collection_seconds=0.01,
+            maximum_queued_input_bytes=32768,
+            maximum_entry_input_bytes=8192,
+        )
+
+        self.provider.batches = batch_requests(self.provider.inference, policy=self.batch_policy)
 
         self.new_interpreter = Mock(side_effect=AssertionError("Structured input should not call an interpreter"))
         self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
         self.condition = SimpleNamespace(require_execution=Mock())
         self.acknowledged = SimpleNamespace(start=SimpleNamespace(input="verified-input"))
+
+    async def asyncSetUp(self):
+        await self.provider.batches.__aenter__()
+
+    async def asyncTearDown(self):
+        if self.batch_failure is None:
+            await self.provider.batches.close()
+        else:
+            with self.assertRaises(self.batch_failure):
+                await self.provider.batches.close()
 
     async def prepare_input(self, specification):
         instructions = SimpleNamespace(identity="verified-input", specification_bytes=json.dumps(specification).encode())
@@ -163,7 +209,7 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         (elucidation,) = invocation.kwargs["scientific_input"].requests
 
         self.assertEqual((8, 0, "CH4"), (elucidation.n_samples, elucidation.seed, elucidation.formula))
-        self.assertIs(self.condition.require_execution, invocation.kwargs["require_execution"])
+        self.condition.require_execution.assert_called()
 
         await self.session.retire()
 
@@ -302,6 +348,8 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         await self.session.retire()
 
     async def test_missing_batch_reply_is_unresolved_not_a_success(self):
+        self.batch_failure = ValueError
+
         self.provider.inference.return_value = ElucidationBatchResult(replies=[])
         prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
 
@@ -345,7 +393,9 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(PayloadRejected):
             request_codec.decode(b'{"formula":"CH4","peaks":{}}')
 
-    def use_scientific_call(self):
+    async def use_scientific_call(self):
+        await self.provider.batches.close()
+
         host = InProcessExecutionHost(
             input_bytes=8192,
             result_bytes=65536,
@@ -358,18 +408,32 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
         science = ControlledInference(self.scientific_result)
         hosted = host.adopt(contribution=science, requirements=frozenset())
 
-        self.provider.inference = ScientificCall(
+        scientific_call = ScientificCall(
             host=host,
             allocation=hosted.allocation,
             binding=hosted.call(method=ControlledInference.elucidate_batch),
             operation_policy=OperationPolicy(5, 5, 5, 8192, 65536),
-            error_policy=ErrorPolicy(max_attempts=3),
+            error_policy=ErrorPolicy(max_attempts=1),
         )
+
+        # This fixture owns its embedded host and presents the ProcessCall port;
+        # SDK native tests establish the real process owner's custody boundary.
+        async def invoke_fixture(*, scientific_input, require_execution, _batch_owner):
+            return await scientific_call(scientific_input=scientific_input, require_execution=require_execution)
+
+        self.provider.inference = AsyncMock(spec=ProcessCall, side_effect=invoke_fixture)
+        self.provider.inference.error_policy = scientific_call.error_policy
+        self.provider.inference.host = host
+        self.provider.inference._claim_batch = Mock()
+        self.provider.inference._release_batch = Mock()
+        self.provider.batches = batch_requests(self.provider.inference, policy=self.batch_policy)
+
+        await self.provider.batches.__aenter__()
 
         return (host, science)
 
     async def test_cancellation_settles_original_science_and_keeps_model_reusable(self):
-        (host, science) = self.use_scientific_call()
+        (host, science) = await self.use_scientific_call()
 
         science.release.clear()
         prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
@@ -380,12 +444,18 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
             try:
                 self.assertTrue(await asyncio.to_thread(science.entered.wait, timeout=2))
                 execution.cancel()
+
+                with self.assertRaises(asyncio.CancelledError):
+                    await execution
+
+                retiring = asyncio.create_task(self.session.retire())
+
                 await asyncio.sleep(0)
 
-                self.assertFalse(execution.done())
+                self.assertFalse(retiring.done())
             finally:
                 science.release.set()
-                await asyncio.wait_for(asyncio.gather(execution, return_exceptions=True), timeout=5)
+                await asyncio.wait_for(retiring, timeout=5)
 
             with self.assertRaises(asyncio.CancelledError):
                 execution.result()
@@ -403,12 +473,15 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
 
             self.assertIsInstance(outcome, AnalysisSuccess)
             self.assertEqual((2, 2), (science.calls, science.closed_analyses))
+            await self.provider.batches.close()
 
         self.assertTrue(science.closed)
 
     async def test_failed_call_is_unresolved_and_outer_context_retires_model(self):
-        (host, science) = self.use_scientific_call()
+        (host, science) = await self.use_scientific_call()
         failure = OSError("Scientific call failed")
+        self.batch_failure = OSError
+
         science.failure = failure
         prepared = await self.prepare_input({"formula": "CH4", "peaks": {}})
 
@@ -419,11 +492,45 @@ class ElucidationSessionTests(unittest.IsolatedAsyncioTestCase):
                 finally:
                     await self.session.retire()
 
+                    with self.assertRaises(OSError):
+                        await self.provider.batches.close()
+
                     self.assertEqual((1, 1), (science.calls, science.closed_analyses))
-                    self.assertFalse(science.closed)
+                    self.assertTrue(science.closed)
 
         self.assertIs(failure, raised.exception.__cause__)
         self.assertTrue(science.closed)
+
+    async def test_three_jobs_share_a_call_and_keep_their_own_results(self):
+        (host, science) = await self.use_scientific_call()
+        sessions = [ElucidationSession(self.provider, new_interpreter=self.new_interpreter) for _ in range(3)]
+        codec = JsonDataclassCodec(format="chefnmr2.elucidation_report.v1", value_type=ElucidationReport)
+
+        async with host:
+            prepared = []
+
+            for (session, formula) in zip(sessions, ("CH4", "CH4", "BAD"), strict=True):
+                instructions = SimpleNamespace(
+                    identity="verified-input",
+                    specification_bytes=json.dumps({"formula": formula, "peaks": {}}).encode(),
+                )
+
+                prepared.append(await session.prepare(self.acknowledged, instructions, report_condition=self.condition))
+
+            outcomes = await asyncio.gather(
+                *(
+                    session.execute(handle, report_condition=self.condition)
+                    for (session, handle) in zip(sessions, prepared, strict=True)
+                ),
+            )
+
+            self.assertEqual([0, 1], [codec.decode(outcome.content).elucidation.params["batch_index"] for outcome in outcomes[:2]])
+            self.assertIsInstance(outcomes[2], AnalysisFailure)
+            self.assertEqual("model_failed", outcomes[2].code)
+            self.assertEqual((1, 1), (science.calls, science.closed_analyses))
+            self.assertEqual([["CH4", "CH4", "BAD"]], science.batch_inputs)
+            await asyncio.gather(*(session.retire() for session in sessions))
+            await self.provider.batches.close()
 
 
 class ControlledAnalysis(Analysis):
@@ -446,12 +553,15 @@ class ControlledInference(Contribution):
         self.release.set()
         self.failure = None
         self.calls = 0
+        self.batch_inputs = []
         self.closed_analyses = 0
         self.closed = False
 
     @operation()
     def elucidate_batch(self, *, batch: ElucidationBatch) -> ElucidationBatchResult:
         self.calls += 1
+
+        self.batch_inputs.append([request.formula for request in batch.requests])
 
         self.entered.set()
 
@@ -461,7 +571,14 @@ class ControlledInference(Contribution):
         if self.failure is not None:
             raise self.failure
 
-        return ElucidationBatchResult(replies=[self.elucidation_result for elucidation in batch.requests])
+        return ElucidationBatchResult(
+            replies=[
+                ModelFailure("ValueError", "fixture bad formula")
+                if request.formula == "BAD"
+                else replace(self.elucidation_result, params={"batch_index": index})
+                for (index, request) in enumerate(batch.requests)
+            ],
+        )
 
     def close(self) -> None:
         self.closed = True

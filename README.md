@@ -82,9 +82,19 @@ The worker accepts `{"requests": [...]}` and returns `{"replies": [...]}`. Entri
 run sequentially, and reply positions match request positions. A model exception
 produces an `exception_type`/`message` diagnostic for that entry; later entries
 still run. A lost worker or connection can lose the entire reply and does not
-authorize replay. SDK byte and execution limits apply to the whole batch. The API
-service still processes one job at a time, sending a one-entry batch; concurrent
-discovery and automatic batch assembly are not implemented.
+authorize replay. SDK byte and execution limits apply to the whole batch.
+
+The API service admits up to four jobs and prepares up to two concurrently.
+It collects at most four prepared, permitted jobs per call, waiting up to 50 ms
+from the first activation. Deployment `[batch]` and `[service.limits]` settings
+bound collection and retained work. Slow delivery retains its Attempt capacity
+without immediately blocking other jobs.
+
+Cancelling a queued job removes it. After dispatch, its sequential entry may still
+run; the SDK keeps its participation until the batch settles and suppresses its
+publication. Sibling jobs retain their own results. A malformed or lost whole
+reply stops the dispatcher and retires the shared host, with no automatic replay.
+Unconfirmed retirement retains ownership; shutdown does not claim success.
 
 The SDK dependency files in `requirements/` are generated for CPython 3.13 on
 Linux/amd64. Each package has one selected wheel URL and hash. To update them,

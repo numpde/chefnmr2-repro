@@ -6,14 +6,15 @@ import logging
 
 from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, AnalysisSuccess, PreparedAnalysis
 from provider_core.attempt_record import ProtectedEvidence
+from provider_core.failure_collection import FailureCollector
 from provider_core.interpreter import InterpretationFailed, InterpretationInputRejected
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
 
 if __package__:
-    from .._shared.wire import ElucidationBatch, ElucidationRequest, ElucidationResult, ModelFailure
+    from .._shared.wire import ElucidationRequest, ElucidationResult, ModelFailure
     from .job_input import JobInput, interpret
 else:
-    from wire import ElucidationBatch, ElucidationRequest, ElucidationResult, ModelFailure
+    from wire import ElucidationRequest, ElucidationResult, ModelFailure
     from job_input import JobInput, interpret
 
 
@@ -38,7 +39,7 @@ class ElucidationSession:
         self.supplied = None
         self.codec = JsonDataclassCodec(format="chefnmr2.job_input.v1", value_type=JobInput)
         self.prepared = None
-        self.elucidation_input = None
+        self.participation = None
 
     async def prepare(self, acknowledged, instructions, *, report_condition):
         """Route JSON directly; interpret prose before allocating scientific work."""
@@ -83,19 +84,20 @@ class ElucidationSession:
         report_condition.require_execution()
         self.supplied = supplied
 
-        self.elucidation_input = ElucidationRequest(
+        elucidation_input = ElucidationRequest(
             formula=supplied.formula,
             peaks=supplied.peaks,
             n_samples=self.provider.offering["n_samples"],
             seed=self.provider.offering["seed"],
         )
 
+        self.participation = await self.provider.batches.prepare(elucidation_input)
         self.prepared = PreparedAnalysis(evidence)
 
         return self.prepared
 
     async def execute(self, prepared, *, report_condition):
-        """Call the loaded model once; the SDK rechecks permission before retries."""
+        """Activate this job in the shared batch; map only its verified entry result."""
 
         if (prepared is None) or (prepared is not self.prepared):
             raise ValueError(f"{prepared=} should be this session's unused prepared input")
@@ -103,12 +105,7 @@ class ElucidationSession:
         self.prepared = None
 
         try:
-            batch_result = await self.provider.inference(
-                scientific_input=ElucidationBatch(requests=[self.elucidation_input]),
-                require_execution=report_condition.require_execution,
-            )
-
-            (elucidation_result,) = batch_result.replies
+            elucidation_result = await self.participation.execute(require_execution=report_condition.require_execution)
         except Exception as error:
             # An arbitrary worker/transport exception does not establish a public
             # scientific failure. The SDK retains the Attempt without inventing FAIL
@@ -130,8 +127,17 @@ class ElucidationSession:
         return AnalysisSuccess(result_codec.format, content, evidence)
 
     async def retire(self):
-        """Retire interpretation; the SDK owns scientific call and host cleanup."""
+        """Join this job's participation; siblings retain their shared calculation."""
         self.prepared = None
 
-        if self.interpreter is not None:
-            await self.interpreter.retire()
+        failures = FailureCollector(message="ChefNMR2 job resources did not settle")
+
+        with failures.capture():
+            if self.interpreter is not None:
+                await self.interpreter.retire()
+
+        with failures.capture():
+            if self.participation is not None:
+                await self.participation.retire()
+
+        failures.raise_if_any()
