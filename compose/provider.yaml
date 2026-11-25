@@ -1,6 +1,9 @@
 services:
   provider:
-    image: ${CHEFNMR2_PROVIDER_IMAGE:?Select a qualified provider image}
+    extends:
+      file: compose/images.yaml
+      service: provider
+    build: !reset null
     platform: linux/amd64
     command:
     - --config
@@ -56,7 +59,10 @@ services:
         nocopy: true
     pull_policy: never
   interpreter-proxy:
-    image: ${CHEFNMR2_PROVIDER_IMAGE:?Select a qualified provider image}
+    extends:
+      file: compose/images.yaml
+      service: provider
+    build: !reset null
     platform: linux/amd64
     entrypoint:
     - python

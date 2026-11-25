@@ -92,16 +92,10 @@ hashes and restricted loading, then writes a receipt covering `model.pt` and
 the selected checkpoints against those receipts. After replacing checkpoint
 files, run sanitization again.
 
-**Select the built images.** Compose uses immutable IDs from
-`deployments/localhost/images.env`, not the build tags. Replace its two values
-with the IDs printed below; the checked-in IDs belong to an earlier build.
-
-```bash
-docker --context "$CONTEXT" image inspect chefnmr2/provider:local \
-    --format 'CHEFNMR2_PROVIDER_IMAGE={{.Id}}'
-docker --context "$CONTEXT" image inspect chefnmr2/worker-cpu:local \
-    --format 'CHEFNMR2_WORKER_IMAGE={{.Id}}'
-```
+Runtime services inherit the local image tags from `compose/images.yaml`.
+The localhost deployment selects `worker-cpu`; `nmr-dapp32-com` selects
+`worker-cuda`. Runtime definitions clear the inherited build settings and
+never pull images, so the selected images must already exist on the engine.
 
 **Test and qualify.** Manual runs need no API services or credentials. They use
 an isolated Compose project, share checkpoints read-only, and retire the model
@@ -121,10 +115,9 @@ deployment; building an image alone does not qualify it.
 
 **GPU:** Build `worker-cuda` instead of `worker-cpu`; `images/pull` includes its
 Python base. `deployments/nmr-dapp32-com` selects one Ada GPU by UUID and uses
-`cuda:0` inside the worker. On another host, select its GPU explicitly. Update
-that deployment's `images.env` with the built IDs, then qualify it with
+`cuda:0` inside the worker. On another host, select its GPU explicitly. Qualify it with
 `make qualify DEPLOYMENT=nmr-dapp32-com DOCKER_CONTEXT="$CONTEXT"` before enabling
-API jobs. Checked-in candidate IDs are not evidence of qualification.
+API jobs.
 
 ## API deployment
 

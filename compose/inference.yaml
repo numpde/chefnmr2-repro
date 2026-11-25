@@ -1,6 +1,9 @@
 services:
   manual:
-    image: ${CHEFNMR2_PROVIDER_IMAGE:?Select a qualified provider image}
+    extends:
+      file: compose/images.yaml
+      service: provider
+    build: !reset null
     platform: linux/amd64
     profiles:
     - manual
@@ -39,7 +42,6 @@ services:
     - runner:/run/chefnmr2:ro
     pull_policy: never
   worker:
-    image: ${CHEFNMR2_WORKER_IMAGE:?Select a qualified worker image}
     platform: linux/amd64
     command:
     - --role

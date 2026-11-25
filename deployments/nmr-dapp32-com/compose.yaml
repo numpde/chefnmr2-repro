@@ -6,6 +6,10 @@ services:
     memswap_limit: 512m
     pids_limit: 32
   worker:
+    extends:
+      file: compose/images.yaml
+      service: worker-cuda
+    build: !reset null
     cpus: 2
     mem_limit: 8g
     memswap_limit: 8g

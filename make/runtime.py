@@ -24,7 +24,7 @@ class Runtime:
         if not host:
             raise ValueError('Select a local Docker host socket explicitly for runtime operations')
 
-        self.environment = {key: value for (key, value) in os.environ.items() if not key.startswith(('COMPOSE_', 'BUILDX_')) and (key not in ('DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_TLS_VERIFY', 'DOCKER_CERT_PATH', 'CHEFNMR2_PROVIDER_IMAGE', 'CHEFNMR2_WORKER_IMAGE'))}
+        self.environment = {key: value for (key, value) in os.environ.items() if not key.startswith(('COMPOSE_', 'BUILDX_')) and (key not in ('DOCKER_HOST', 'DOCKER_CONTEXT', 'DOCKER_TLS_VERIFY', 'DOCKER_CERT_PATH'))}
         self.docker = ['docker', '--host', host]
         self.deployment = deployment
         self.directory = ROOT / 'deployments' / deployment
@@ -113,7 +113,7 @@ class Runtime:
         if not self.deployment:
             raise ValueError('Select DEPLOYMENT explicitly for Compose operations')
 
-        command = self.docker + ['compose', '--project-directory', str(ROOT), '--env-file', str(self.directory / 'images.env'), '-f', str(ROOT / 'compose/inference.yaml'), '-f', str(self.directory / 'compose.yaml')]
+        command = self.docker + ['compose', '--project-directory', str(ROOT), '--env-file', '/dev/null', '-f', str(ROOT / 'compose/inference.yaml'), '-f', str(self.directory / 'compose.yaml')]
 
         if not api:
             command += ['--profile', 'manual']

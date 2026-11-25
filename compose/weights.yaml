@@ -161,7 +161,10 @@ services:
 
   verify:
     <<: *contained
-    image: chefnmr2/weights-sanitizer:local
+    extends:
+      file: compose/images.yaml
+      service: weights-sanitize
+    build: !reset null
     pull_policy: never
     user: "100:101"
     network_mode: none
@@ -184,7 +187,10 @@ services:
   sanitize:
     <<: *contained
     # Preparation is independent of the selected CPU/CUDA inference image.
-    image: chefnmr2/weights-sanitizer:local
+    extends:
+      file: compose/images.yaml
+      service: weights-sanitize
+    build: !reset null
     pull_policy: never
     user: "100:101"
     network_mode: none
