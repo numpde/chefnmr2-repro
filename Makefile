@@ -2,6 +2,7 @@ override SHELL := /bin/bash
 override .SHELLFLAGS := -eu -o pipefail -c
 override .DEFAULT_GOAL := help
 override REPOSITORY_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+include $(REPOSITORY_ROOT)/project.mk
 override HOST_PYTHON := python3 -B
 override DEPLOYMENTS := $(notdir $(patsubst %/,%,$(wildcard $(REPOSITORY_ROOT)/deployments/*/)))
 override PROFILES := $(notdir $(patsubst %/,%,$(wildcard $(REPOSITORY_ROOT)/builds/*/)))
@@ -88,13 +89,13 @@ weights/sanitize: ## Sanitize known checkpoint files in the retained volume; req
 weights/verify weights/sanitize:
 	@$(weights_inputs); select_docker; \
 	printf 'Starting %s\n' '$@' >&2; \
-	if [[ $@ == weights/verify ]]; then weights_run --pull never verify; else weights_run --pull never --name chefnmr2-weights-writer sanitize; fi; \
+	if [[ $@ == weights/verify ]]; then weights_run --pull never verify; else weights_run --pull never --name "$${IMAGE_NAMESPACE}-weights-writer" sanitize; fi; \
 	printf '%s complete\n' '$@' >&2
 
 .PHONY: weights/watch
 weights/watch: ## Watch checkpoint file sizes during a download; requires DOCKER_CONTEXT. Ctrl+C stops watching.
 	@$(operator_inputs); select_docker; \
-	writer=$$("$${docker[@]}" ps --filter 'name=^/chefnmr2-weights-writer$$' --format '{{.ID}}'); \
+	writer=$$("$${docker[@]}" ps --filter "name=^/$${IMAGE_NAMESPACE}-weights-writer$$" --format '{{.ID}}'); \
 	if [[ -z $$writer ]]; then printf '%s\n' 'Cannot watch checkpoints: no weights download is running on this engine.' >&2; exit 2; fi; \
 	watch --interval 2 --exec "$${docker[@]}" exec "$$writer" find /checkpoints -type f -exec ls -lh '{}' +
 

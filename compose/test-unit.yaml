@@ -1,4 +1,4 @@
-name: chefnmr2-unit
+name: "${IMAGE_NAMESPACE:?Set IMAGE_NAMESPACE}-unit"
 
 x-test: &test
   build: !reset null

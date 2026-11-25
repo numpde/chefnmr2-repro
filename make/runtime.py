@@ -95,7 +95,7 @@ class Runtime:
 
     @contextmanager
     def isolated(self, model_test=False):
-        project = 'chefnmr2-run-' + uuid.uuid4().hex[:12]
+        project = self.environment['IMAGE_NAMESPACE'] + '-run-' + uuid.uuid4().hex[:12]
         command = self.compose(project=project, model_test=model_test)
         failure = None
 

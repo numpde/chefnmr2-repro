@@ -1,5 +1,6 @@
 """Normative Make workflow behavior with no real Docker engine."""
 
+import os
 import shlex
 import subprocess
 
@@ -27,7 +28,7 @@ class MakefileNormativeTests(OperatorFixture):
         self.assertFalse((self.directory / 'UNEXPECTED').exists())
 
     def test_image_pull_uses_native_compose_without_building(self):
-        result = self.run_make('images/pull', 'DOCKER_CONTEXT=local', cwd='/tmp')
+        result = self.run_make('images/pull', 'DOCKER_CONTEXT=local', 'IMAGE_NAMESPACE=foreign', cwd='/tmp', IMAGE_NAMESPACE='ambient')
 
         self.assertEqual(result.returncode, 0, result.stderr)
 
@@ -49,6 +50,7 @@ class MakefileNormativeTests(OperatorFixture):
         )
 
         self.assertFalse(self.python_log.exists())
+        self.assertEqual(self.docker_environment_log.read_text().splitlines()[-1].split('|')[-1], os.environ['IMAGE_NAMESPACE'])
 
     def test_unit_suites_use_compose_on_the_selected_engine_from_another_directory(self):
         for category in ('normative', 'adversarial'):
@@ -136,7 +138,7 @@ class MakefileNormativeTests(OperatorFixture):
             ]
         )
 
-        self.assertEqual(self.docker_environment_log.read_text().strip(), 'unset|unset|unset|unset')
+        self.assertEqual(self.docker_environment_log.read_text().strip(), 'unset|unset|unset|unset|' + os.environ['IMAGE_NAMESPACE'])
         arguments = self.python_arguments()
 
         self.assertEqual(arguments[1], str(ROOT / 'make/runtime.py'))
@@ -169,7 +171,7 @@ class MakefileNormativeTests(OperatorFixture):
 
         self.assertEqual(len(compose), 1)
         self.assertEqual(compose[0][-1], 'sanitize')
-        self.assertIn('chefnmr2-weights-writer', compose[0])
+        self.assertIn(os.environ['IMAGE_NAMESPACE'] + '-weights-writer', compose[0])
         self.assertEqual(compose[0][compose[0].index('--pull') + 1], 'never')
 
         self.docker_log.unlink()

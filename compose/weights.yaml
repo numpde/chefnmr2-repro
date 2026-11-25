@@ -1,4 +1,4 @@
-name: chefnmr2-weights
+name: "${IMAGE_NAMESPACE:?Set IMAGE_NAMESPACE}-weights"
 
 # Acquire the pinned ChefNMR2 ensemble into one persistent Docker volume
 # volume-init grants downloader ownership, download installs verified files,

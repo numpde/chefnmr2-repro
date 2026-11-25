@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Translate ChefNMR2's artifact command into the shared acquisition lifecycle.
+# Translate an artifact command into the shared acquisition lifecycle.
 set -euo pipefail
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
 endpoint=$1 image=$2 route=$3

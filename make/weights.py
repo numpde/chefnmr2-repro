@@ -3,6 +3,7 @@
 import argparse
 import json
 import logging
+import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -69,7 +70,7 @@ def main():
 
     image = bake['target']['provider']['args']['PYTHON_BASE']
 
-    with tempfile.TemporaryDirectory(prefix='chefnmr2-weights-') as directory:
+    with tempfile.TemporaryDirectory(prefix='weights-') as directory:
         overlay = Path(directory) / 'worker.json'
 
         overlay.write_text(json.dumps(caller))
@@ -85,7 +86,7 @@ def main():
                 '--compose',
                 str(overlay),
                 'worker-online',
-                'chefnmr2-weights-writer'
+                os.environ['IMAGE_NAMESPACE'] + '-weights-writer'
             ],
             check=True
         )

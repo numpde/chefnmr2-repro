@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 
 class OperatorFixture(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix='chefnmr2-make-')
+        self.temporary = tempfile.TemporaryDirectory(prefix='provider-make-')
 
         self.addCleanup(self.temporary.cleanup)
         self.directory = Path(self.temporary.name)
@@ -31,7 +31,7 @@ class OperatorFixture(unittest.TestCase):
             '''#!/bin/bash
 printf '%s\\0' "$@" >> "$TEST_DOCKER_LOG"
 printf '\\n' >> "$TEST_DOCKER_LOG"
-printf '%s|%s|%s|%s\\n' "${DOCKER_HOST-unset}" "${DOCKER_CONFIG-unset}" "${COMPOSE_FILE-unset}" "${BUILDX_METADATA_PROVENANCE-unset}" >> "$TEST_DOCKER_ENV_LOG"
+printf '%s|%s|%s|%s|%s\\n' "${DOCKER_HOST-unset}" "${DOCKER_CONFIG-unset}" "${COMPOSE_FILE-unset}" "${BUILDX_METADATA_PROVENANCE-unset}" "${IMAGE_NAMESPACE-unset}" >> "$TEST_DOCKER_ENV_LOG"
 printf '%s\\n' "${PROXY_URL-unset}" >> "$PROXY_LOG"
 if [[ $1 == context && $2 == inspect ]]; then
   printf '%s\\n' "${FAKE_DOCKER_ENDPOINT:-unix:///tmp/fake-docker.sock}"

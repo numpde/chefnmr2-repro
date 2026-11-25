@@ -62,6 +62,7 @@ failure.
 )
 ```
 
+`project.mk` exports the repository's image namespace for Make workflows.
 `compose/images.yaml` declares the pinned Python bases, curl downloader and local
 builds. Bake uses its build definitions; `images/pull` uses Compose to pull only
 the prebuilt inputs. It needs no wheelhouse or `PROXY_URL`; Docker uses its engine
