@@ -50,6 +50,35 @@ class MakefileNormativeTests(OperatorFixture):
 
         self.assertFalse(self.python_log.exists())
 
+    def test_unit_suites_use_compose_on_the_selected_engine_from_another_directory(self):
+        for category in ('normative', 'adversarial'):
+            with self.subTest(category=category):
+                self.docker_log.unlink(missing_ok=True)
+                result = self.run_make('test/unit/' + category, 'DOCKER_CONTEXT=science', cwd='/tmp')
+
+                self.assertEqual(result.returncode, 0, result.stderr)
+                calls = self.calls()
+                selections = [call for call in calls if call[:2] == ['context', 'inspect']]
+                self.assertEqual(len(selections), 1)
+                self.assertEqual(selections[0][2], 'science')
+                self.assertEqual(len(calls), 3)
+
+                for command, service, pattern in zip(
+                    calls[1:], ('checkpoints', 'binding'), ('test_checkpoints.py', 'test_binding.py'), strict=True
+                ):
+                    self.assertEqual(command[:3], ['--host', 'unix:///tmp/fake-docker.sock', 'compose'])
+                    self.assertEqual(command[command.index('--project-directory') + 1], str(ROOT))
+                    self.assertEqual(command[command.index('--env-file') + 1], '/dev/null')
+                    self.assertEqual(command[command.index('-f') + 1], str(ROOT / 'compose/test-unit.yaml'))
+                    self.assertIn('run', command)
+                    self.assertEqual(command[command.index('--pull') + 1], 'never')
+                    for option in ('--rm', '--no-deps', '--interactive=false', '-T'):
+                        self.assertIn(option, command)
+                    self.assertEqual(
+                        command[command.index(service) + 1:],
+                        ['-B', '-m', 'unittest', 'discover', '-s', '/tests/unit/' + category, '-p', pattern, '-v'],
+                    )
+
     def test_context_menu_selects_a_discovered_context_by_number(self):
         command = shlex.join(['make', '-f', str(ROOT / 'Makefile'), 'check'])
 

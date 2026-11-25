@@ -104,19 +104,8 @@ test/unit/normative: ## Run normative checkpoint tests in the sanitizer and work
 test/unit/adversarial: ## Run adversarial checkpoint tests in the sanitizer and worker; requires DOCKER_CONTEXT.
 test/unit/normative test/unit/adversarial:
 	@$(operator_inputs); select_docker; \
-	"$${docker[@]}" run --rm --pull=never --network none --read-only \
-		--cap-drop ALL --security-opt no-new-privileges --pids-limit 64 --cpus 1 --memory 1g \
-		--tmpfs /tmp:rw,nosuid,nodev,noexec,size=64m -e PYTHONPATH=/tests/unit:/opt/sanitize \
-		--mount "type=bind,src=$(REPOSITORY_ROOT)/tests/unit,dst=/tests/unit,readonly" \
-		--mount "type=bind,src=$(REPOSITORY_ROOT)/containers/weights-sanitize/sanitize.py,dst=/opt/sanitize/sanitize.py,readonly" \
-		--entrypoint python chefnmr2/weights-sanitizer:local \
+	compose=("$${docker[@]}" compose --project-directory "$(REPOSITORY_ROOT)" --env-file /dev/null -f "$(REPOSITORY_ROOT)/compose/test-unit.yaml"); \
+	"$${compose[@]}" run --rm --no-deps --pull never --interactive=false -T checkpoints \
 		-B -m unittest discover -s "/tests/unit/$(@F)" -p 'test_checkpoints.py' -v; \
-	"$${docker[@]}" run --rm --pull=never --network none --read-only \
-		--cap-drop ALL --security-opt no-new-privileges --pids-limit 64 --cpus 1 --memory 1g \
-		--tmpfs /tmp:rw,nosuid,nodev,noexec,size=64m -e PROVIDER_CORE_IN_CONTAINER=1 \
-		-e PYTHONPATH=/tests/unit:/opt/inference:/opt/sanitize \
-		--mount "type=bind,src=$(REPOSITORY_ROOT)/tests/unit,dst=/tests/unit,readonly" \
-		--mount "type=bind,src=$(REPOSITORY_ROOT)/model/binding.py,dst=/opt/inference/binding.py,readonly" \
-		--mount "type=bind,src=$(REPOSITORY_ROOT)/containers/weights-sanitize/sanitize.py,dst=/opt/sanitize/sanitize.py,readonly" \
-		--entrypoint python chefnmr2/worker-cpu:local \
+	"$${compose[@]}" run --rm --no-deps --pull never --interactive=false -T binding \
 		-B -m unittest discover -s "/tests/unit/$(@F)" -p 'test_binding.py' -v
