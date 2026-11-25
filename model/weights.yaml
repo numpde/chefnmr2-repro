@@ -1,0 +1,12 @@
+# Pinned source and checkpoint preparation for this model.
+x-selection: &selection [--pattern, "*/model.pt", --companion, config.yaml]
+
+services:
+  download:
+    environment:
+      CHECKPOINT_RELEASE_URL: https://huggingface.co/ziyux123/chefnmr2/resolve/38a741cce3e6f7e0d5a827a66f8d3dea0728daf5
+      CHECKPOINT_RECEIPT_FILE: model.pt.sanitized.json
+  verify:
+    command: *selection
+  sanitize:
+    command: *selection

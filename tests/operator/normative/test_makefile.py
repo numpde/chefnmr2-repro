@@ -153,6 +153,7 @@ class MakefileNormativeTests(OperatorFixture):
 
         self.assertEqual(len(compose), 1)
         self.assertEqual(compose[0][-1], 'volume-init')
+        self.assertIn(str(ROOT / 'model/weights.yaml'), compose[0])
 
         for call in compose:
             self.assertEqual(call[call.index('--pull') + 1], 'missing')
@@ -171,6 +172,7 @@ class MakefileNormativeTests(OperatorFixture):
 
         self.assertEqual(len(compose), 1)
         self.assertEqual(compose[0][-1], 'sanitize')
+        self.assertIn(str(ROOT / 'model/weights.yaml'), compose[0])
         self.assertIn(os.environ['IMAGE_NAMESPACE'] + '-weights-writer', compose[0])
         self.assertEqual(compose[0][compose[0].index('--pull') + 1], 'never')
 
@@ -182,4 +184,5 @@ class MakefileNormativeTests(OperatorFixture):
 
         self.assertEqual(len(compose), 1)
         self.assertEqual(compose[0][-1], 'verify')
+        self.assertIn(str(ROOT / 'model/weights.yaml'), compose[0])
         self.assertEqual(compose[0][compose[0].index('--pull') + 1], 'never')

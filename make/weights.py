@@ -32,6 +32,8 @@ def main():
                 '/dev/null',
                 '-f',
                 str(ROOT / 'compose/weights.yaml'),
+                '-f',
+                str(ROOT / 'model/weights.yaml'),
                 'config',
                 '--format',
                 'json'
