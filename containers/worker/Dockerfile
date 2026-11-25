@@ -2,24 +2,28 @@
 ARG PYTHON_BASE
 FROM ${PYTHON_BASE} AS source_wheels
 ENV SOURCE_DATE_EPOCH=315532800
+# Build locked source distributions only when the selected profile has them.
 RUN --network=none --mount=from=wheels,target=/wheels \
     --mount=from=installation,target=/installation \
-    python -m pip install --no-index --no-deps --require-hashes -r /installation/build.txt
-# OmegaConf has one source-only dependency. Build it separately with the locked
-# setuptools input; retain its wheel hash as build evidence in the final image.
-RUN --network=none --mount=from=wheels,target=/wheels \
-    --mount=from=installation,target=/installation \
-    python -m pip wheel --no-index --no-deps --no-build-isolation --require-hashes \
-        -r /installation/sources.txt --wheel-dir /built \
-    && cd /built && sha256sum *.whl > SHA256SUMS
+    mkdir -p /built \
+    && if [ -s /installation/sources.txt ]; then \
+        python -m pip install --no-index --no-deps --require-hashes -r /installation/build.txt \
+        && python -m pip wheel --no-index --no-deps --no-build-isolation --require-hashes \
+            -r /installation/sources.txt --wheel-dir /built \
+        && cd /built && sha256sum *.whl > SHA256SUMS; \
+    else \
+        touch /built/SHA256SUMS; \
+    fi
 
 FROM ${PYTHON_BASE}
 RUN --network=none --mount=from=wheels,target=/wheels \
     --mount=from=installation,target=/installation \
     --mount=from=source_wheels,source=/built,target=/built \
     python -m pip install --no-index --no-deps --require-hashes -r /installation/install.txt \
-    && cd /built && sha256sum --check SHA256SUMS \
-    && python -m pip install --no-index --no-deps /built/*.whl \
+    && if [ -s /built/SHA256SUMS ]; then \
+        cd /built && sha256sum --check SHA256SUMS \
+        && python -m pip install --no-index --no-deps /built/*.whl; \
+    fi \
     && python -m pip check
 COPY --from=source_wheels /built/SHA256SUMS /opt/inference/source-wheel-sha256.txt
 
@@ -37,7 +41,8 @@ WORKDIR /opt/inference
 RUN install -d -m 700 -o 65532 -g 65532 /run/runner \
     && install -m 600 -o 65532 -g 65532 /dev/null /run/runner/.owner-session.lock
 
-COPY --from=upstream chefnmr2/ ./chefnmr2/
+ARG UPSTREAM_PACKAGE
+COPY --from=upstream ${UPSTREAM_PACKAGE}/ ./${UPSTREAM_PACKAGE}/
 COPY --from=model binding.py wire.py ./
 
 USER 65532:65532

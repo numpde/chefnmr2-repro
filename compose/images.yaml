@@ -34,6 +34,7 @@ services:
       args:
         <<: *python313
         TORCH_INDEX: https://download.pytorch.org/whl/cpu
+        UPSTREAM_PACKAGE: "${UPSTREAM_PACKAGE:?Set UPSTREAM_PACKAGE}"
       additional_contexts:
         model: ./model
         upstream: ./model/upstream
@@ -45,6 +46,7 @@ services:
       args:
         <<: *python312
         TORCH_INDEX: https://download.pytorch.org/whl/cu130
+        UPSTREAM_PACKAGE: "${UPSTREAM_PACKAGE:?Set UPSTREAM_PACKAGE}"
       additional_contexts:
         model: ./model
         upstream: ./model/upstream

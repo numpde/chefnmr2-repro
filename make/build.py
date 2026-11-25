@@ -177,7 +177,9 @@ class Build:
         release_lock = f'provider_core-{self.sdk}-install.lock'
         inputs['sdk-release-lock'] = digest(self.pool / release_lock)
         inputs['sdk-tool'] = digest(self.tool)
-        inputs['target'] = {'args': target['args'], 'platforms': target['platforms']}
+        # The copied upstream package is a build input, not a dependency-resolution input.
+        resolution_args = {key: value for (key, value) in target['args'].items() if key != 'UPSTREAM_PACKAGE'}
+        inputs['target'] = {'args': resolution_args, 'platforms': target['platforms']}
         inputs['uv'] = self.bake('lock')['contexts']['uv']
 
         return hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest()
