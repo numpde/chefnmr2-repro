@@ -8,14 +8,13 @@ override PROFILES := $(notdir $(patsubst %/,%,$(wildcard $(REPOSITORY_ROOT)/buil
 
 # Capture literal command-line inputs before Make or the shell can interpret them.
 # Omitted inputs are selected at the terminal by the function below.
-override export REPRO_EXPLICIT_INPUTS := $(foreach name,DOCKER_CONTEXT PROXY_URL WHEELHOUSE PROFILE DEPLOYMENT QUALIFICATION,$(if $(filter command line,$(origin $(name))),$(name)))
+override export REPRO_EXPLICIT_INPUTS := $(foreach name,DOCKER_CONTEXT PROXY_URL WHEELHOUSE PROFILE DEPLOYMENT,$(if $(filter command line,$(origin $(name))),$(name)))
 override export REPRO_DOCKER_CONTEXT := $(value DOCKER_CONTEXT)
 override export REPRO_PROXY_URL := $(value PROXY_URL)
 override export REPRO_WHEELHOUSE := $(value WHEELHOUSE)
 override export REPRO_PROFILE := $(value PROFILE)
 override export REPRO_DEPLOYMENT := $(value DEPLOYMENT)
-override export REPRO_QUALIFICATION := $(value QUALIFICATION)
-unexport DOCKER_CONTEXT PROXY_URL WHEELHOUSE PROFILE DEPLOYMENT QUALIFICATION
+unexport DOCKER_CONTEXT PROXY_URL WHEELHOUSE PROFILE DEPLOYMENT
 
 .PHONY: help
 help: ## List workflows; inputs may prompt on a terminal and environment values never select them.
@@ -66,21 +65,16 @@ test/operator/adversarial: ## Run adversarial host operator tests.
 test/operator/normative test/operator/adversarial:
 	@PYTHONPATH="$(REPOSITORY_ROOT)/tests/operator:$(REPOSITORY_ROOT)/make" $(HOST_PYTHON) -m unittest discover -s "$(REPOSITORY_ROOT)/tests/operator/$(@F)" -p 'test_*.py' -v
 
-.PHONY: qualify config manual/config status logs manual
-qualify: ## Run actual-image scientific and SDK qualification; requires DEPLOYMENT and DOCKER_CONTEXT.
+.PHONY: test/model config manual/config status logs manual
+test/model: ## Run real inference and SDK batch tests; requires DEPLOYMENT and DOCKER_CONTEXT.
 config: ## Render the API Compose configuration; requires DEPLOYMENT and DOCKER_CONTEXT.
 manual/config: ## Render the manual Compose configuration; requires DEPLOYMENT and DOCKER_CONTEXT.
 status: ## Show API service state; requires DEPLOYMENT and DOCKER_CONTEXT.
 logs: ## Follow bounded provider and worker logs; requires DEPLOYMENT and DOCKER_CONTEXT.
 manual: ## Run the selected provider image as a manual model client; requires DEPLOYMENT and DOCKER_CONTEXT.
-qualify config manual/config status logs manual:
+test/model config manual/config status logs manual:
 	@$(operator_inputs); deployment=$$(choose DEPLOYMENT '$(DEPLOYMENTS)'); select_docker; \
 	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/runtime.py" "$@" --host "$$docker_host" --deployment "$$deployment"
-
-.PHONY: deploy
-deploy: ## Promote a completed qualification with clean provider retirement; requires DEPLOYMENT, QUALIFICATION and DOCKER_CONTEXT.
-	@$(operator_inputs); deployment=$$(choose DEPLOYMENT '$(DEPLOYMENTS)'); qualification=$$(choose QUALIFICATION); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/runtime.py" deploy --host "$$docker_host" --deployment "$$deployment" --qualification "$$qualification"
 
 .PHONY: weights/download weights/verify weights/sanitize
 weights/download: ## Acquire and verify checkpoints; requires PROXY_URL and DOCKER_CONTEXT.

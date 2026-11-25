@@ -1,4 +1,4 @@
-# Only the isolated qualification project receives public test inputs.
+# Only the isolated model test project receives public test inputs.
 services:
   worker:
     configs:
@@ -8,13 +8,8 @@ services:
         target: /checks/checkpoints.sha256
     volumes:
       - type: bind
-        source: ${CHEFNMR2_QUALIFICATION_DIRECTORY:?Select the owned qualification evidence directory}
-        target: /evidence
-        read_only: true
-        bind: {create_host_path: false}
-      - type: bind
         source: tests/model
-        target: /qualification
+        target: /tests/model
         read_only: true
         bind: {create_host_path: false}
 configs:

@@ -97,7 +97,7 @@ The localhost deployment selects `worker-cpu`; `nmr-dapp32-com` selects
 `worker-cuda`. Runtime definitions clear the inherited build settings and
 never pull images, so the selected images must already exist on the engine.
 
-**Test and qualify.** Manual runs need no API services or credentials. They use
+**Test the images.** Manual runs need no API services or credentials. They use
 an isolated Compose project, share checkpoints read-only, and retire the model
 session when stdin closes. One input line produces one JSON batch reply.
 
@@ -105,19 +105,20 @@ session when stdin closes. One input line produces one JSON batch reply.
 make check DOCKER_CONTEXT="$CONTEXT"
 printf '%s\n' '{"requests":[{"formula":"CH4","peaks":{"h":[[1.0,4,"s"]]}}]}' |
   make manual DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
-make qualify DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
+make test/model DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
 ```
 
-Qualification checks cold/warm ten-sample morphine inference, ordered eight-sample
-SDK batches, scientific validity and retirement. It prints an evidence directory
-under `tmp/qualification/`. A failed qualification must be resolved before API
-deployment; building an image alone does not qualify it.
+The model test checks cold/warm ten-sample morphine inference, ordered
+eight-sample SDK batches, scientific validity and retirement. Results and timings
+go to stdout, progress goes to stderr, and a failed check returns a nonzero exit
+status. Redirect output when a saved test log is useful. Test projects are
+removed on completion or failure.
 
 **GPU:** Build `worker-cuda` instead of `worker-cpu`; `images/pull` includes its
 Python base. `deployments/nmr-dapp32-com` selects one Ada GPU by UUID and uses
-`cuda:0` inside the worker. On another host, select its GPU explicitly. Qualify it with
-`make qualify DEPLOYMENT=nmr-dapp32-com DOCKER_CONTEXT="$CONTEXT"` before enabling
-API jobs.
+`cuda:0` inside the worker. On another host, select its GPU explicitly. Run
+`make test/model DEPLOYMENT=nmr-dapp32-com DOCKER_CONTEXT="$CONTEXT"` to exercise
+that deployment's images and device.
 
 ## API deployment
 
@@ -145,22 +146,12 @@ Keep credentials outside Git. Manual operations load only the science overlay;
 the API overlay adds credentials and delivery sockets. Localhost also supplies
 its private CA and resolver configuration.
 
-Set `QUALIFICATION` to the evidence directory printed by the successful run:
-
-Use `DEPLOYMENT=nmr-dapp32-com` instead for the production deployment.
+Inspect the API configuration before starting services. Use
+`DEPLOYMENT=nmr-dapp32-com` for the production deployment.
 
 ```bash
 make config DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
-make deploy DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT" QUALIFICATION="$QUALIFICATION"
-make status DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
-make logs DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
 ```
-
-Deployment checks that images and scientific configuration still match the
-qualification, saves rollback state, and requires clean SDK retirement before
-replacement. Startup never builds or pulls. Failed promotion attempts restore
-previous images and configuration; uncertain retirement stops replacement and
-retains recovery evidence.
 
 ## Requests and execution
 
@@ -198,8 +189,6 @@ cleanup allowances. Unconfirmed retirement is reported, not treated as success.
 | --- | --- |
 | `$WHEELHOUSE` | Persistent wheels, source archives and SDK tooling; reusable across checkouts and profiles |
 | `tmp/{build,lock}/YYYYMMDDTHHMMSSZ-xxxxxxxx/` | Installation lists and resolver scratch; removed on scope exit, including exceptions; abrupt termination can leave residue |
-| `tmp/qualification/` | Three newest completed runs per deployment; incomplete records retained |
-| `tmp/rollback/` | Two newest completed snapshots per deployment/engine; mounted snapshots and unresolved records retained |
 | Docker/BuildKit storage | Imported wheelhouse context and cached layers; managed by Docker's cache lifecycle |
 | Final images | Installed packages; dependency archives are mounted during installation, not copied into the final image |
 | `chefnmr2-weights_checkpoints` volume | Persistent checkpoints and preparation receipts |
@@ -212,8 +201,8 @@ this is not a zero-copy host mount. The base image bundles pip's wheel, and the
 pinned pip wheel. ANTLR is built into a wheel in an intermediate Docker stage;
 its hash is retained at `/opt/inference/source-wheel-sha256.txt`.
 
-All run-directory deletion uses `make/work.py`. Scratch is cleaned on exit;
-qualification and promotion prune eligible records under a shared checkout lock.
+`make/work.py` removes build and resolver scratch on scope exit. Model tests and
+manual runs remove their isolated Compose projects when they finish.
 
 For dependency changes, edit `builds/<profile>/requirements.in` or its constraints,
 then run `make lock` with explicit `PROFILE`, `WHEELHOUSE`, `DOCKER_CONTEXT` and
@@ -229,6 +218,8 @@ Prompts and offering text live in `containers/provider/prompts/` and
 | Host operator workflows with fake Docker (uses util-linux `script`) | `make test/operator` |
 | Checkpoint preparation and model admission in cached images | `make test/unit DOCKER_CONTEXT="$CONTEXT"` |
 | Provider behavior with real SDK and controlled science/HTTP | `make test/provider DOCKER_CONTEXT="$CONTEXT"` |
+| Real inference and SDK batches on the selected deployment | `make test/model DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"` |
 
-Append `/normative` or `/adversarial` for one category. `tests/model/` supplies the
-scientific cases and checker used by `make qualify`.
+The operator, unit and provider targets accept `/normative` or `/adversarial`
+for one category. `tests/model/` supplies the scientific cases and checker used
+by `make test/model`.

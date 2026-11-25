@@ -4,9 +4,9 @@ import argparse
 import hashlib
 import importlib.metadata
 import json
-import os
 from pathlib import Path
 import platform
+import sys
 import time
 import tomllib
 
@@ -14,8 +14,6 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 import torch
 from chefnmr2.infer import Peaks
-import binding
-import wire
 from binding import Inference
 
 
@@ -39,18 +37,18 @@ def main():
     parser.add_argument('--manifest', type=Path, required=True)
     parser.add_argument('--case', type=Path, required=True)
     parser.add_argument('--repeats', type=int, default=2)
-    parser.add_argument('--batch-results', type=Path)
+    parser.add_argument('--batch-results', action='store_true', help='Validate batch replies read as JSON from stdin')
     args = parser.parse_args()
 
     if args.repeats < 1:
-        parser.error(f'{args.repeats=} should be positive so qualification executes an inference request')
+        parser.error(f'{args.repeats=} should be positive so the test executes an inference request')
 
     config = tomllib.loads(args.config.read_text())
     settings = config['model']
     case = json.loads(args.case.read_text())
 
-    if args.batch_results is not None:
-        results = json.loads(args.batch_results.read_text())
+    if args.batch_results:
+        results = json.load(sys.stdin)
 
         assert len(results) == len(case['batches']), 'Every SDK batch should return one ordered result'
         entries = 0
@@ -69,7 +67,7 @@ def main():
     expected_device = torch.device(settings['device']).type
 
     if expected_device == 'cuda':
-        assert torch.cuda.is_available(), 'CUDA qualification requires an available CUDA device'
+        assert torch.cuda.is_available(), 'CUDA tests require an available CUDA device'
         torch.cuda.reset_peak_memory_stats()
 
     hashes = {}
@@ -110,7 +108,7 @@ def main():
         actual_devices = {next(member['chef'].model.parameters()).device.type for member in model.members}
 
         assert actual_devices == {expected_device}, f'{actual_devices=} should contain only {expected_device=}'
-        assert model.recon_pool is not None, 'Qualification requires the owned reconstruction pool'
+        assert model.recon_pool is not None, 'Inference requires the owned reconstruction pool'
 
         for index in range(args.repeats):
             started = time.monotonic()
@@ -122,12 +120,9 @@ def main():
         contribution.close()
 
     report = {
-        'worker_image': os.environ['CHEFNMR2_WORKER_IMAGE_ID'],
-        'upstream_revision': os.environ['CHEFNMR2_UPSTREAM_REVISION'],
         'python': platform.python_version(),
         'torch': torch.__version__,
         'sdk': importlib.metadata.version('provider-core'),
-        'model_source_sha256': {Path(module.__file__).name: hashlib.sha256(Path(module.__file__).read_bytes()).hexdigest() for module in (binding, wire)},
         'device': settings['device'],
         'checkpoints': checkpoint_evidence,
         'case': args.case.name,
