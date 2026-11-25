@@ -1,4 +1,4 @@
-"""Operate selected deployments with Compose and isolated manual runner state."""
+"""Run selected deployments and isolated model tests with Compose."""
 
 import argparse
 from contextlib import contextmanager
@@ -60,6 +60,27 @@ class Runtime:
 
     def config(self, api=False):
         return json.loads(self.run(self.compose(api=api) + ['config', '--format', 'json'], capture_output=True, text=True).stdout)
+
+    def up(self):
+        command = self.compose(api=True)
+        providers = self.run(command + ['ps', '--all', '--quiet', 'provider'], capture_output=True, text=True).stdout.split()
+
+        if len(providers) > 1:
+            raise ValueError('Cannot replace the worker: more than one provider container owns the selected deployment')
+
+        if providers:
+            provider = providers[0]
+
+            log.info('Stopping the current provider and waiting for SDK retirement')
+            self.run(command + ['stop', 'provider'])
+            state = json.loads(self.run(self.docker + ['container', 'inspect', '--format', '{{json .State}}', provider], capture_output=True, text=True).stdout)
+
+            if state['Running'] or (state['ExitCode'] != 0):
+                raise RuntimeError(f"Cannot replace the worker: provider {provider} did not confirm SDK retirement; {state['ExitCode']=}")
+
+        log.info('Starting provider, worker and interpreter proxy')
+        self.run(command + ['up', '-d', '--no-build', '--pull', 'never', '--wait', '--wait-timeout', '150', 'worker', 'interpreter-proxy', 'provider'])
+        log.info('Services started for %s', self.deployment)
 
     def check(self, category='all'):
         definition = json.loads(self.run(self.docker + ['buildx', 'bake', '-f', 'compose/images.yaml', '--print', 'provider'], capture_output=True, text=True).stdout)
@@ -127,7 +148,7 @@ class Runtime:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('action', choices=('check', 'test/model', 'config', 'manual/config', 'status', 'logs', 'manual'))
+    parser.add_argument('action', choices=('check', 'test/model', 'up', 'config', 'manual/config', 'status', 'logs', 'manual'))
     parser.add_argument('--host', required=True, help='Resolved local Unix socket for the selected Docker context')
     parser.add_argument('--deployment', default='')
     parser.add_argument('--category', choices=('all', 'normative', 'adversarial'), default='all')
@@ -140,6 +161,8 @@ def main():
         runtime.check(args.category)
     elif args.action == 'test/model':
         runtime.test_model()
+    elif args.action == 'up':
+        runtime.up()
     elif args.action in ('config', 'manual/config'):
         print(json.dumps(runtime.config(api=args.action == 'config'), indent=2))
     elif args.action == 'status':

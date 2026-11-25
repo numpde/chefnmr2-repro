@@ -146,11 +146,27 @@ Keep credentials outside Git. Manual operations load only the science overlay;
 the API overlay adds credentials and delivery sockets. Localhost also supplies
 its private CA and resolver configuration.
 
-Inspect the API configuration before starting services. Use
-`DEPLOYMENT=nmr-dapp32-com` for the production deployment.
+Run builds, tests and startup sequentially on the same selected engine. Inspect
+the API configuration, test the built images, then start them. Use
+`DEPLOYMENT=nmr-dapp32-com` instead for the production deployment.
 
 ```bash
-make config DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
+make config DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT" &&
+make test/provider DOCKER_CONTEXT="$CONTEXT" &&
+make test/model DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT" &&
+make up DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT" &&
+make status DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
+```
+
+`make up` uses the current local image tags and deployment configuration. It
+stops an existing provider with its configured signal and grace period, requires
+exit code zero, then lets Compose start or replace services. Startup never
+builds or pulls and does not rerun tests. A startup failure returns an error;
+there is no automatic rollback. Inspect service state and logs before retrying:
+
+```bash
+make status DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT" &&
+make logs DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
 ```
 
 ## Requests and execution

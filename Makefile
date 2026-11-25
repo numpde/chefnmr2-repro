@@ -65,14 +65,15 @@ test/operator/adversarial: ## Run adversarial host operator tests.
 test/operator/normative test/operator/adversarial:
 	@PYTHONPATH="$(REPOSITORY_ROOT)/tests/operator:$(REPOSITORY_ROOT)/make" $(HOST_PYTHON) -m unittest discover -s "$(REPOSITORY_ROOT)/tests/operator/$(@F)" -p 'test_*.py' -v
 
-.PHONY: test/model config manual/config status logs manual
+.PHONY: test/model up config manual/config status logs manual
 test/model: ## Run real inference and SDK batch tests; requires DEPLOYMENT and DOCKER_CONTEXT.
+up: ## Start built services after clean provider retirement; requires DEPLOYMENT and DOCKER_CONTEXT.
 config: ## Render the API Compose configuration; requires DEPLOYMENT and DOCKER_CONTEXT.
 manual/config: ## Render the manual Compose configuration; requires DEPLOYMENT and DOCKER_CONTEXT.
 status: ## Show API service state; requires DEPLOYMENT and DOCKER_CONTEXT.
 logs: ## Follow bounded provider and worker logs; requires DEPLOYMENT and DOCKER_CONTEXT.
 manual: ## Run the selected provider image as a manual model client; requires DEPLOYMENT and DOCKER_CONTEXT.
-test/model config manual/config status logs manual:
+test/model up config manual/config status logs manual:
 	@$(operator_inputs); deployment=$$(choose DEPLOYMENT '$(DEPLOYMENTS)'); select_docker; \
 	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/runtime.py" "$@" --host "$$docker_host" --deployment "$$deployment"
 
