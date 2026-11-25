@@ -285,7 +285,7 @@ class Build:
             selected = json.loads(self.sdk_tool(base, stage, 'select', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', *source_options))['artifacts']
 
             log.info('Selected %d locked artifacts for %s', len(selected), profile)
-            yield (target, stage, selected)
+            yield (stage, selected)
 
     def acquire(self, profile):
         with self.selected(profile, acquire=True):
@@ -294,7 +294,7 @@ class Build:
         log.info('Dependencies ready for %s', profile)
 
     def build(self, profile):
-        with self.selected(profile) as (target, stage, artifacts):
+        with self.selected(profile) as (stage, artifacts):
             (install, sources, build) = ([], [], [])
 
             for artifact in artifacts:
@@ -335,9 +335,6 @@ class Build:
                 ]
             )
 
-            image = json.loads(self.run(self.docker + ['image', 'inspect', target['tags'][0]], capture_output=True, text=True).stdout)[0]['Id']
-
-        print(json.dumps({'profile': profile, 'image': image}))
         log.info('Build complete: %s', profile)
 
 

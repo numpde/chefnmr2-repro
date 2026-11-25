@@ -204,7 +204,7 @@ cleanup allowances. Unconfirmed retirement is reported, not treated as success.
 | Location | Contents and lifetime |
 | --- | --- |
 | `$WHEELHOUSE` | Persistent wheels, source archives and SDK tooling; reusable across checkouts and profiles |
-| `tmp/{build,lock}/YYYYMMDDTHHMMSSZ-xxxxxxxx/` | Installation lists and resolver scratch; removed on scope exit, including exceptions; abrupt termination can leave residue |
+| `tmp/{build,lock}/run-*/` | Installation lists and resolver scratch; removed on scope exit, including exceptions; abrupt termination can leave residue |
 | Docker/BuildKit storage | Imported wheelhouse context and cached layers; managed by Docker's cache lifecycle |
 | Final images | Installed packages; dependency archives are mounted during installation, not copied into the final image |
 | `chefnmr2-weights_checkpoints` volume | Persistent checkpoints and preparation receipts |
