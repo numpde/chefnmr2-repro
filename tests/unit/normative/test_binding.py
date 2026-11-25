@@ -38,6 +38,21 @@ class BindingNormativeTests(CheckpointCase):
         self.assertTrue(torch.equal(state["weights"]["weight"], torch.tensor([1., 2.])))
         self.assertEqual(configuration, config.read_bytes())
 
+    def test_initializer_expands_checkpoint_globs_in_sorted_order(self):
+        for tag in ("epoch2", "epoch1", "selected"):
+            self.make_bundle(tag=tag)
+
+        worker = binding.Inference(
+            checkpoint_dirs=[str(self.directory / "selected"), str(self.directory / "epoch*")],
+            device="cpu",
+            recon_workers=1,
+        )
+
+        with patch("chefnmr2.infer.ChefNMR2") as constructor:
+            worker.initialize(assets=None)
+
+        self.assertEqual([tag for (tag, _, _) in constructor.call_args.args[0]], ["selected", "epoch1", "epoch2"])
+
     def test_receipt_does_not_require_opening_unselected_members(self):
         (weights, config) = self.make_bundle()
         marker = sanitize.marker_path(weights)

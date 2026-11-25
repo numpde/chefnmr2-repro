@@ -16,7 +16,7 @@ startup_seconds = 30
 retirement_seconds = 30
 
 [model]
-checkpoint_dirs = ["/checkpoints/chefnmr2-epoch949"]
+checkpoint_dirs = ["/checkpoints/chefnmr2-epoch*"]
 device = "cuda:0"
 recon_workers = 2
 

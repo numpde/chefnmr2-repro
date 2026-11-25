@@ -6,6 +6,7 @@ import logging
 import os
 import pathlib
 from contextlib import contextmanager, ExitStack
+from glob import glob
 from typing import TYPE_CHECKING
 
 import provider_core.scientific as sdk
@@ -21,6 +22,11 @@ if TYPE_CHECKING:
     from chefnmr2.infer import ChefNMR2
 
 log = logging.getLogger(__name__)
+
+
+def expand_checkpoint_dirs(patterns):
+    for pattern in patterns:
+        yield from map(pathlib.Path, sorted(glob(pattern)))
 
 
 @contextmanager
@@ -83,7 +89,7 @@ class Inference(sdk.Contribution):
         with ExitStack() as opened:
             checkpoints = []
 
-            for directory in map(pathlib.Path, self.checkpoint_dirs):
+            for directory in expand_checkpoint_dirs(self.checkpoint_dirs):
                 (weights, config) = (directory / "model.pt", directory / "config.yaml")
                 streams = opened.enter_context(verified_weights(weights, companions=(config,)))
 

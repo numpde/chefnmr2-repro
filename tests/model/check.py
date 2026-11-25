@@ -14,7 +14,7 @@ from rdkit import Chem
 from rdkit.Chem import rdMolDescriptors
 import torch
 from chefnmr2.infer import Peaks
-from binding import Inference
+from binding import Inference, expand_checkpoint_dirs
 
 
 def validate(result, request, members):
@@ -45,6 +45,7 @@ def main():
 
     config = tomllib.loads(args.config.read_text())
     settings = config['model']
+    directories = list(expand_checkpoint_dirs(settings['checkpoint_dirs']))
     case = json.loads(args.case.read_text())
 
     if args.batch_results:
@@ -57,7 +58,7 @@ def main():
             assert len(result['replies']) == len(batch['requests']), 'Every SDK batch entry should retain its reply position'
 
             for (request, reply) in zip(batch['requests'], result['replies'], strict=True):
-                validate(reply, {**request, 'n_samples': config['offering']['n_samples']}, len(settings['checkpoint_dirs']))
+                validate(reply, {**request, 'n_samples': config['offering']['n_samples']}, len(directories))
                 entries += 1
 
         print(json.dumps({'validated_batches': len(results), 'validated_entries': entries}))
@@ -80,9 +81,7 @@ def main():
     checkpoint_evidence = {}
     members = []
 
-    for name in settings['checkpoint_dirs']:
-        directory = Path(name)
-
+    for directory in directories:
         for filename in ('model.pt', 'config.yaml'):
             path = directory / filename
 
