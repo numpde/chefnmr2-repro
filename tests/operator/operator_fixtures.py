@@ -75,6 +75,8 @@ printf '%s\\0' "$@" > "$PYTHON_LOG"
             ['make', '-f', str(ROOT / 'Makefile'), *arguments],
             cwd=cwd or self.directory,
             env=self.environment(**environment),
+            # Output capture does not detach the controlling terminal (/dev/tty).
+            start_new_session=True,
             capture_output=True,
             text=True,
         )
