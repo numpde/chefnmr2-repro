@@ -1,5 +1,8 @@
 """Adversarial Make inputs and authority rejection behavior."""
 
+import os
+from unittest.mock import patch
+
 from operator_fixtures import OperatorFixture, ROOT
 
 
@@ -25,6 +28,22 @@ class MakefileAdversarialTests(OperatorFixture):
 
     def test_ambient_context_does_not_select_a_noninteractive_operation(self):
         result = self.run_make('check', DOCKER_CONTEXT='ambient-context')
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('a terminal is required', result.stderr)
+        self.assertEqual(self.calls(), [['context', 'ls', '--format', '{{.Name}}']])
+        self.assertFalse(self.python_log.exists())
+
+    def test_nested_make_does_not_inherit_parent_options(self):
+        makefile = self.directory / 'ambient.mk'
+        makefile.write_text('$(error Unexpected inherited makefile)\n')
+
+        with patch.dict(os.environ, {
+            'MAKEFLAGS': ' -- DOCKER_CONTEXT=science',
+            'GNUMAKEFLAGS': '-n',
+            'MAKEFILES': str(makefile),
+        }):
+            result = self.run_make('check', DOCKER_CONTEXT='ambient-context')
 
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('a terminal is required', result.stderr)

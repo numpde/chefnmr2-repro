@@ -55,8 +55,15 @@ printf '%s\\0' "$@" > "$PYTHON_LOG"
         path.chmod(0o755)
 
     def environment(self, **values):
+        # Nested Make invocations must not inherit the outer test runner's options.
+        ambient = os.environ.copy()
+
+        for name in ('MAKEFLAGS', 'MFLAGS', 'GNUMAKEFLAGS', 'MAKEOVERRIDES', 'MAKEFILES', 'MAKELEVEL', 'BASH_ENV', 'ENV'):
+            ambient.pop(name, None)
+
         return {
-            **os.environ,
+            **ambient,
+            'SHELL': '/bin/bash',
             'PATH': str(self.bin) + os.pathsep + os.environ['PATH'],
             'TEST_DOCKER_LOG': str(self.docker_log),
             'TEST_DOCKER_ENV_LOG': str(self.docker_environment_log),
@@ -67,6 +74,7 @@ printf '%s\\0' "$@" > "$PYTHON_LOG"
             'COMPOSE_FILE': '/ambient/compose.yaml',
             'BUILDX_METADATA_PROVENANCE': 'ambient',
             'PROXY_URL': 'ambient',
+            'FAKE_DOCKER_ENDPOINT': 'unix:///tmp/fake-docker.sock',
             **values,
         }
 
@@ -77,8 +85,10 @@ printf '%s\\0' "$@" > "$PYTHON_LOG"
             env=self.environment(**environment),
             # Output capture does not detach the controlling terminal (/dev/tty).
             start_new_session=True,
+            stdin=subprocess.DEVNULL,
             capture_output=True,
             text=True,
+            timeout=30,
         )
 
     def calls(self):
