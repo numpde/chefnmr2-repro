@@ -36,12 +36,12 @@ services:
     - source: deployment_provider
       target: /config/provider.toml
     volumes:
-    - runner:/run/chefnmr2:ro
-    - provider-lifetime:/run/chefnmr2-provider
-    - interpreter-socket:/run/chefnmr2-interpreter:ro
+    - runner:/run/runner:ro
+    - provider-lifetime:/run/provider-lifetime
+    - interpreter-socket:/run/interpreter:ro
     - type: volume
       source: credentials
-      target: /run/chefnmr2-credentials
+      target: /run/credentials
       read_only: true
       volume:
         nocopy: true
@@ -76,9 +76,9 @@ services:
     - --authority
     - api.openai.com:443
     - --socket
-    - /run/chefnmr2-interpreter/proxy.sock
+    - /run/interpreter/proxy.sock
     - --ready-file
-    - /run/chefnmr2-interpreter/ready
+    - /run/interpreter/ready
     - --status-directory
     - /run/status
     - --log-level
@@ -99,13 +99,13 @@ services:
     tmpfs:
     - /run/status:rw,nosuid,nodev,noexec,size=1m,uid=65532,gid=65532,mode=0700
     volumes:
-    - interpreter-socket:/run/chefnmr2-interpreter
+    - interpreter-socket:/run/interpreter
     healthcheck:
       test:
       - CMD
       - python
       - -c
-      - from pathlib import Path; assert Path('/run/chefnmr2-interpreter/ready').is_file()
+      - from pathlib import Path; assert Path('/run/interpreter/ready').is_file()
       interval: 2s
       timeout: 2s
       retries: 15

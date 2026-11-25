@@ -28,14 +28,14 @@ COPY --from=source_wheels /built/SHA256SUMS /opt/inference/source-wheel-sha256.t
 ENV HOME=/tmp PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 
 # The runner starts model processes in private session scratch directories.
-# Keep the copied binding and ChefNMR2 importable independently of that cwd.
+# Keep the copied binding and model package importable independently of that cwd.
 ENV PYTHONPATH=/opt/inference
 WORKDIR /opt/inference
 
 # The SDK runner requires a private endpoint directory and lease file owned by
 # its runtime user. Docker copies these into a newly created runner volume.
-RUN install -d -m 700 -o 65532 -g 65532 /run/chefnmr2 \
-    && install -m 600 -o 65532 -g 65532 /dev/null /run/chefnmr2/.owner-session.lock
+RUN install -d -m 700 -o 65532 -g 65532 /run/runner \
+    && install -m 600 -o 65532 -g 65532 /dev/null /run/runner/.owner-session.lock
 
 COPY --from=upstream chefnmr2/ ./chefnmr2/
 COPY --from=model binding.py wire.py ./

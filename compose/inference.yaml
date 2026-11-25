@@ -39,19 +39,19 @@ services:
     - source: deployment_provider
       target: /config/provider.toml
     volumes:
-    - runner:/run/chefnmr2:ro
+    - runner:/run/runner:ro
     pull_policy: never
   worker:
     platform: linux/amd64
     command:
     - --role
-    - chefnmr2
+    - "${IMAGE_NAMESPACE:?Set IMAGE_NAMESPACE}"
     - --socket
-    - /run/chefnmr2/runner.sock
+    - /run/runner/runner.sock
     - --scratch
-    - /run/chefnmr2-scratch
+    - /run/runner-scratch
     - --status-directory
-    - /run/chefnmr2-status
+    - /run/runner-status
     - --owner-session-lifetime
     - --startup-seconds
     - '30'
@@ -86,11 +86,11 @@ services:
       MKL_NUM_THREADS: '2'
     tmpfs:
     - /tmp:rw,nosuid,nodev,noexec,size=64m
-    - /run/chefnmr2-scratch:rw,nosuid,nodev,noexec,size=64m,uid=65532,gid=65532,mode=0700
-    - /run/chefnmr2-status:rw,nosuid,nodev,noexec,size=1m,uid=65532,gid=65532,mode=0700
+    - /run/runner-scratch:rw,nosuid,nodev,noexec,size=64m,uid=65532,gid=65532,mode=0700
+    - /run/runner-status:rw,nosuid,nodev,noexec,size=1m,uid=65532,gid=65532,mode=0700
     volumes:
     - checkpoints:/checkpoints:ro
-    - runner:/run/chefnmr2
+    - runner:/run/runner
     pull_policy: never
 volumes:
   runner: {}

@@ -9,8 +9,8 @@ seed = 0
 role = "chefnmr2"
 # Match the runner's --socket in compose/inference.yaml and the lease file
 # created by containers/worker/Dockerfile, both on the runner volume.
-socket = "/run/chefnmr2/runner.sock"
-lease_file = "/run/chefnmr2/.owner-session.lock"
+socket = "/run/runner/runner.sock"
+lease_file = "/run/runner/.owner-session.lock"
 # Connection/greeting allowance. Model loading happens after worker launch.
 startup_seconds = 30
 retirement_seconds = 30
@@ -72,7 +72,7 @@ origin = "https://nmr.localhost:10443"
 profile = "dev-local"
 topology = "dev-local"
 provider_ref = "provider:chefnmr2-fw-a"
-credential_file = "/run/chefnmr2-credentials/credential.json"
+credential_file = "/run/credentials/credential.json"
 ca_file = "/run/config/api-ca.pem"
 exchange_seconds = 30
 retirement_seconds = 10
@@ -82,7 +82,7 @@ project = "nmr-api-delivery"
 gid = 1000
 
 [service]
-lifetime_directory = "/run/chefnmr2-provider"
+lifetime_directory = "/run/provider-lifetime"
 maximum_preparations = 2
 
 # Reserve before START; slow science, retirement or delivery retains its claim.
@@ -115,11 +115,11 @@ retain_history_up_to_records = 16
 retirement_seconds = 10
 request_bytes = 65536
 response_bytes = 32768
-proxy_socket = "/run/chefnmr2-interpreter/proxy.sock"
+proxy_socket = "/run/interpreter/proxy.sock"
 
 [[interpreter.endpoints]]
 configuration_id = "localhost-primary"
 url = "https://api.openai.com/v1/chat/completions"
 model = "gpt-5.6-luna"
 reasoning_effort = "none"
-key_file = "/run/chefnmr2-credentials/interpreter.key"
+key_file = "/run/credentials/interpreter.key"

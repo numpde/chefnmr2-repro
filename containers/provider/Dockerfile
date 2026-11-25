@@ -13,7 +13,7 @@ WORKDIR /opt/provider
 
 # Prepare private mount points for the SDK lifetime lock and runtime credential.
 # Credentials are supplied at deployment; no key material enters the build.
-RUN install -d -m 700 -o 65532 -g 65532 /run/chefnmr2-provider /run/chefnmr2-credentials /run/chefnmr2-interpreter
+RUN install -d -m 700 -o 65532 -g 65532 /run/provider-lifetime /run/credentials /run/interpreter
 
 # Both containers use these declarations to agree on scientific inputs, outputs,
 # and operation identity. The provider adapter connects API jobs to that contract.
