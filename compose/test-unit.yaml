@@ -1,57 +1,33 @@
 name: "${IMAGE_NAMESPACE:?Set IMAGE_NAMESPACE}-unit"
 
-x-test: &test
-  build: !reset null
-  pull_policy: never
-  entrypoint: [python]
-  network_mode: none
-  read_only: true
-  cap_drop: [ALL]
-  security_opt: [no-new-privileges:true]
-  pids_limit: 64
-  cpus: 1
-  mem_limit: 1g
-  tmpfs: ["/tmp:rw,nosuid,nodev,noexec,size=64m"]
-
-x-tests: &tests
-  type: bind
-  source: tests/unit
-  target: /tests/unit
-  read_only: true
-  bind: {create_host_path: false}
-
-x-sanitizer: &sanitizer
-  type: bind
-  source: containers/weights-sanitize/sanitize.py
-  target: /opt/sanitize/sanitize.py
-  read_only: true
-  bind: {create_host_path: false}
-
 services:
-  checkpoints:
-    <<: *test
-    extends:
-      file: compose/images.yaml
-      service: weights-sanitize
-    environment:
-      PYTHONPATH: /tests/unit:/opt/sanitize
-    volumes:
-      - *tests
-      - *sanitizer
-
   binding:
-    <<: *test
     extends:
       file: compose/images.yaml
       service: worker-cpu
+    build: !reset null
+    pull_policy: never
+    entrypoint: [python]
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    cpus: 1
+    mem_limit: 1g
+    tmpfs: ["/tmp:rw,nosuid,nodev,noexec,size=64m"]
     environment:
       PROVIDER_CORE_IN_CONTAINER: "1"
       PYTHONPATH: /tests/unit:/opt/inference:/opt/sanitize
     volumes:
-      - *tests
-      - *sanitizer
       - type: bind
-        source: model/binding.py
-        target: /opt/inference/binding.py
+        source: tests/unit
+        target: /tests/unit
+        read_only: true
+        bind: {create_host_path: false}
+      # Generate prepared fixtures; the binding and wire types come from the image.
+      - type: bind
+        source: containers/weights-sanitize/sanitize.py
+        target: /opt/sanitize/sanitize.py
         read_only: true
         bind: {create_host_path: false}

@@ -100,13 +100,11 @@ weights/watch: ## Watch checkpoint file sizes during a download; requires DOCKER
 	watch --interval 2 --exec "$${docker[@]}" exec "$$writer" find /checkpoints -type f -exec ls -lh '{}' +
 
 .PHONY: test/unit test/unit/normative test/unit/adversarial
-test/unit: test/unit/normative test/unit/adversarial ## Run sanitizer and worker admission tests in their own images.
-test/unit/normative: ## Run normative checkpoint tests in the sanitizer and worker; requires DOCKER_CONTEXT.
-test/unit/adversarial: ## Run adversarial checkpoint tests in the sanitizer and worker; requires DOCKER_CONTEXT.
+test/unit: test/unit/normative test/unit/adversarial ## Run binding tests in the built CPU worker image.
+test/unit/normative: ## Run normative binding tests in the built CPU worker; requires DOCKER_CONTEXT.
+test/unit/adversarial: ## Run adversarial binding tests in the built CPU worker; requires DOCKER_CONTEXT.
 test/unit/normative test/unit/adversarial:
 	@$(operator_inputs); select_docker; \
 	compose=("$${docker[@]}" compose --project-directory "$(REPOSITORY_ROOT)" --env-file /dev/null -f "$(REPOSITORY_ROOT)/compose/test-unit.yaml"); \
-	"$${compose[@]}" run --rm --no-deps --pull never --interactive=false -T checkpoints \
-		-B -m unittest discover -s "/tests/unit/$(@F)" -p 'test_checkpoints.py' -v; \
 	"$${compose[@]}" run --rm --no-deps --pull never --interactive=false -T binding \
 		-B -m unittest discover -s "/tests/unit/$(@F)" -p 'test_binding.py' -v

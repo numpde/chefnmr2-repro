@@ -235,7 +235,7 @@ Prompts and offering text live in `containers/provider/prompts/` and
 | Tests | Command |
 | --- | --- |
 | Host operator workflows with fake Docker (uses util-linux `script`) | `make test/operator` |
-| Checkpoint preparation and model admission in cached images | `make test/unit DOCKER_CONTEXT="$CONTEXT"` |
+| Model binding and checkpoint admission in the built CPU worker image | `make test/unit DOCKER_CONTEXT="$CONTEXT"` |
 | Provider behavior with real SDK and controlled science/HTTP | `make test/provider DOCKER_CONTEXT="$CONTEXT"` |
 | Real inference and SDK batches on the selected deployment | `make test/model DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"` |
 

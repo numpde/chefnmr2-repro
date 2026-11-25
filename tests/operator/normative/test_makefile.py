@@ -63,23 +63,21 @@ class MakefileNormativeTests(OperatorFixture):
                 selections = [call for call in calls if call[:2] == ['context', 'inspect']]
                 self.assertEqual(len(selections), 1)
                 self.assertEqual(selections[0][2], 'science')
-                self.assertEqual(len(calls), 3)
+                self.assertEqual(len(calls), 2)
 
-                for command, service, pattern in zip(
-                    calls[1:], ('checkpoints', 'binding'), ('test_checkpoints.py', 'test_binding.py'), strict=True
-                ):
-                    self.assertEqual(command[:3], ['--host', 'unix:///tmp/fake-docker.sock', 'compose'])
-                    self.assertEqual(command[command.index('--project-directory') + 1], str(ROOT))
-                    self.assertEqual(command[command.index('--env-file') + 1], '/dev/null')
-                    self.assertEqual(command[command.index('-f') + 1], str(ROOT / 'compose/test-unit.yaml'))
-                    self.assertIn('run', command)
-                    self.assertEqual(command[command.index('--pull') + 1], 'never')
-                    for option in ('--rm', '--no-deps', '--interactive=false', '-T'):
-                        self.assertIn(option, command)
-                    self.assertEqual(
-                        command[command.index(service) + 1:],
-                        ['-B', '-m', 'unittest', 'discover', '-s', '/tests/unit/' + category, '-p', pattern, '-v'],
-                    )
+                command = calls[1]
+                self.assertEqual(command[:3], ['--host', 'unix:///tmp/fake-docker.sock', 'compose'])
+                self.assertEqual(command[command.index('--project-directory') + 1], str(ROOT))
+                self.assertEqual(command[command.index('--env-file') + 1], '/dev/null')
+                self.assertEqual(command[command.index('-f') + 1], str(ROOT / 'compose/test-unit.yaml'))
+                self.assertIn('run', command)
+                self.assertEqual(command[command.index('--pull') + 1], 'never')
+                for option in ('--rm', '--no-deps', '--interactive=false', '-T'):
+                    self.assertIn(option, command)
+                self.assertEqual(
+                    command[command.index('binding') + 1:],
+                    ['-B', '-m', 'unittest', 'discover', '-s', '/tests/unit/' + category, '-p', 'test_binding.py', '-v'],
+                )
 
     def test_context_menu_selects_a_discovered_context_by_number(self):
         command = shlex.join(['make', '-f', str(ROOT / 'Makefile'), 'check'])

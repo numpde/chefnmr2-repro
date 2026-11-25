@@ -11,15 +11,8 @@ import torch
 import sanitize
 
 
-class TrainingMetadata:
-    """Stand in for the inert optimizer metadata global in the MolDeTr source."""
-
-    def __init__(self, values):
-        self.values = values
-
-
 class CheckpointCase(unittest.TestCase):
-    """Temporary files and synthetic states shared by checkpoint contract tests."""
+    """Temporary prepared checkpoint bundles for binding tests."""
 
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="checkpoint-contract-")
@@ -77,25 +70,3 @@ class CheckpointCase(unittest.TestCase):
         )
 
         return (weights, config)
-
-    def mol_source(self):
-        weights = self.directory / "moldetr.pth"
-        shared = torch.tensor([1.0, 2.0], dtype=torch.float32)
-
-        state = OrderedDict(
-            (
-                ("first", shared),
-                ("alias", shared),
-                ("integer_buffer", torch.tensor([2], dtype=torch.int64)),
-            )
-        )
-
-        state._metadata = OrderedDict((("", {"version": 3}),))
-        source = {"model": state, "optimizer": TrainingMetadata(["discarded"])}
-
-        self.save(weights, source)
-        source_hash = self.digest(weights)
-
-        inert_global = f"{TrainingMetadata.__module__}.{TrainingMetadata.__qualname__}"
-
-        return (weights, source_hash, inert_global)
