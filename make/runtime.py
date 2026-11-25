@@ -131,8 +131,8 @@ class Runtime:
         with self.isolated(model_test=True) as command:
             checker = command + ['run', '--rm', '--no-deps', '-T', '--entrypoint', 'python', 'worker', '-B', '/tests/model/check.py', '--config', '/config/provider.toml', '--manifest', '/checks/checkpoints.sha256']
 
-            log.info('Checking cold and warm upstream morphine inference')
-            self.run(checker + ['--case', '/tests/model/cases/morphine.json'])
+            log.info('Checking cold and warm upstream inference')
+            self.run(checker + ['--case', '/tests/model/cases/single.json'])
             log.info('Cold and warm inference completed; starting SDK worker')
             self.run(command + ['up', '-d', '--no-build', '--pull', 'never', 'worker'])
             log.info('Checking ordered SDK batches and retirement')

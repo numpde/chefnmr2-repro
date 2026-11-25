@@ -77,6 +77,8 @@ class RuntimeNormativeTests(unittest.TestCase):
         commands = [call.args[0] for call in calls]
         projects = {command[command.index('--project-name') + 1] for command in commands}
 
+        self.assertEqual(commands[0][-2:], ['--case', '/tests/model/cases/single.json'])
+        self.assertTrue((ROOT / 'tests/model/cases/single.json').is_file())
         self.assertEqual(len(projects), 1)
         self.assertIn('down', commands[-1])
         self.assertIn('--remove-orphans', commands[-1])

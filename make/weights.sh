@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
 # Checkpoint recipes share the same Compose project, volume and selected engine.
 
-weights_root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
-source "$weights_root/make/operator.sh"
+source "$(dirname -- "${BASH_SOURCE[0]}")/operator.sh"
 
 weights_compose() {
-    "${docker[@]}" compose --project-directory "$weights_root" --env-file /dev/null \
-        -f "$weights_root/compose/weights.yaml" "$@"
+    "${docker[@]}" compose --project-directory "$operator_root" --env-file /dev/null \
+        -f "$operator_root/compose/weights.yaml" "$@"
 }
 
 weights_run() {
