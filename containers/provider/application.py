@@ -13,14 +13,16 @@ from provider_core.interpreter import InterpretationFailed, InterpretationInputR
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
 
 if __package__:
-    from model.wire import ElucidationRequest, ElucidationResult, ModelFailure
+    from model.wire import ElucidationRequest, ElucidationResult, ModelFailure, request_defaults
     from .job_input import JobInput, interpret
 else:
-    from wire import ElucidationRequest, ElucidationResult, ModelFailure
+    from wire import ElucidationRequest, ElucidationResult, ModelFailure, request_defaults
     from job_input import JobInput, interpret
 
 
 log = logging.getLogger(__name__)
+DISPLAY_NAME = "ChefNMR2"
+CONSUMER_ID = "chefnmr2"
 
 
 @dataclass
@@ -31,7 +33,7 @@ class ElucidationReport:
     elucidation: ElucidationResult
 
 
-class ElucidationSession:
+class Session:
     """Own one Attempt's input and call while the provider retains the model."""
 
     def __init__(self, provider, *, new_interpreter, diagnostic_secrets=()):
@@ -128,8 +130,7 @@ class ElucidationSession:
         elucidation_input = ElucidationRequest(
             formula=supplied.formula,
             peaks=supplied.peaks,
-            n_samples=self.provider.offering["n_samples"],
-            seed=self.provider.offering["seed"],
+            **request_defaults(self.provider.offering),
         )
 
         self.participation = await self.provider.batches.prepare(elucidation_input)

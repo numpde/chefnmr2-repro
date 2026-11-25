@@ -15,7 +15,7 @@ from provider_core.payload import JsonDataclassCodec
 from provider_core.process_call import ProcessCall
 from provider_core.scientific import Analysis, Contribution, operation
 from provider_core.scientific_call import ErrorPolicy, ScientificCall
-from application import ElucidationSession
+from application import Session
 from wire import ElucidationBatch, ElucidationBatchResult, ElucidationResult, ModelFailure
 from provider import batch_requests
 
@@ -59,7 +59,7 @@ class ProviderCase(unittest.IsolatedAsyncioTestCase):
         self.provider.batches = batch_requests(self.provider.inference, policy=self.batch_policy)
 
         self.new_interpreter = Mock(side_effect=AssertionError("Structured input should not call an interpreter"))
-        self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
+        self.session = Session(self.provider, new_interpreter=self.new_interpreter)
         self.condition = SimpleNamespace(require_execution=Mock())
 
         self.acknowledged = SimpleNamespace(

@@ -53,6 +53,10 @@ class ElucidationRequest:
     seed: int | None = 0
 
 
+def request_defaults(offering):
+    """Select the scientific defaults owned by the offering."""
+    return {"n_samples": offering["n_samples"], "seed": offering["seed"]}
+
 
 class CandidateVotes(TypedDict):
     """A reconstructed structure and its vote count.

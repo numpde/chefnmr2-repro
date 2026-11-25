@@ -1,4 +1,4 @@
-"""Run ChefNMR2 operations through the SDK's native scientific host."""
+"""Run the model operations through the SDK's native scientific host."""
 
 from collections.abc import AsyncIterator
 from contextlib import AbstractAsyncContextManager, asynccontextmanager
@@ -6,15 +6,12 @@ from dataclasses import dataclass
 
 from provider_core.batch_call import BatchCall, BatchPolicy
 from provider_core.execution_setup import ExecutionSettings
-from provider_core.payload import JsonDataclassCodec
 from provider_core.process_call import ProcessCall
 
 if __package__:
-    from model.binding import Inference, construct
-    from model.wire import ElucidationBatch, ElucidationRequest
+    from model.binding import Inference, construct, batch_operation, batch_type, batch_entry_codec
 else:
-    from binding import Inference, construct
-    from wire import ElucidationBatch, ElucidationRequest
+    from binding import Inference, construct, batch_operation, batch_type, batch_entry_codec
 
 
 @dataclass
@@ -34,7 +31,7 @@ def open_provider(deployment: dict) -> AbstractAsyncContextManager[Provider]:
         contribution_type=Inference,
         constructor=construct,
         startup=deployment["model"],
-        method=Inference.elucidate_batch,
+        method=batch_operation,
     )
 
     batches = batch_requests(inference, policy=BatchPolicy(**deployment["batch"]))
@@ -43,13 +40,13 @@ def open_provider(deployment: dict) -> AbstractAsyncContextManager[Provider]:
 
 
 def batch_requests(inference, *, policy):
-    """Chef owns the wire schema; the SDK owns collection, routing and settlement."""
+    """The binding owns the wire schema; the SDK owns collection, routing and settlement."""
 
     return BatchCall(
         call=inference,
         policy=policy,
-        entry_codec=JsonDataclassCodec(format="chefnmr2.request.v1", value_type=ElucidationRequest),
-        pack=lambda requests: ElucidationBatch(requests=list(requests)),
+        entry_codec=batch_entry_codec(),
+        pack=lambda requests: batch_type(requests=list(requests)),
         unpack=lambda batch_result: batch_result.replies,
     )
 

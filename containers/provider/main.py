@@ -1,4 +1,4 @@
-"""Run the ChefNMR2 NMR API provider using the selected deployment."""
+"""Run the NMR API provider using the selected deployment."""
 
 import argparse
 import asyncio
@@ -17,10 +17,10 @@ from provider_core.shared_grants import SharedGrants
 from provider_core.validation.upstream.nmr.v1.hello import AnalysisOffering
 
 if __package__:
-    from .application import ElucidationSession
+    from .application import Session, DISPLAY_NAME, CONSUMER_ID
     from .provider import open_provider
 else:
-    from application import ElucidationSession
+    from application import Session, DISPLAY_NAME, CONSUMER_ID
     from provider import open_provider
 
 
@@ -50,9 +50,9 @@ async def serve(*, config: pathlib.Path) -> None:
                     JobOffering(
                         announcement=offering,
                         host=provider.inference.host,
-                        consumer_id="chefnmr2",
+                        consumer_id=CONSUMER_ID,
                         generation=generation,
-                        new_session=lambda: ElucidationSession(
+                        new_session=lambda: Session(
                             provider,
                             new_interpreter=new_interpreter,
                             diagnostic_secrets=interpreter_settings.diagnostic_secrets,
@@ -62,7 +62,7 @@ async def serve(*, config: pathlib.Path) -> None:
                 host_failure_policy=HostFailurePolicy.STOP,
                 limits=LiveAttemptLimits(**deployment["service"]["limits"]),
                 maximum_preparations=deployment["service"]["maximum_preparations"],
-                display_name="ChefNMR2",
+                display_name=DISPLAY_NAME,
                 description=provider_description,
                 policy=policy,
                 new_api=clients.new_api,

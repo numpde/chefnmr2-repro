@@ -15,7 +15,7 @@ from provider_core.analysis import AnalysisFailure, AnalysisOutcomeUnresolved, A
 from provider_core.chat_errors import ChatFailed
 from provider_core.lifetime import ProviderLifetime
 from provider_core.payload import JsonDataclassCodec, PayloadRejected
-from application import ElucidationSession, ElucidationReport
+from application import Session, ElucidationReport
 from binding import Inference
 from wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ModelFailure, Peaks
 import main as provider_main
@@ -117,7 +117,9 @@ settle_seconds = 2
                             service_arguments = job_service.call_args.kwargs
 
                             self.assertEqual(service_arguments["diagnostic_secrets"], diagnostic_secrets)
+                            self.assertEqual(service_arguments["display_name"], "ChefNMR2")
                             (offering,) = service_arguments["offerings"]
+                            self.assertEqual(offering.consumer_id, "chefnmr2")
                             session = offering.new_session()
 
                             self.assertEqual(session.diagnostic_secrets, diagnostic_secrets)
@@ -390,7 +392,7 @@ class ProviderAdversarialTests(ProviderCase):
             self.assertEqual({}, host.analyses)
             self.assertFalse(science.closed)
 
-            self.session = ElucidationSession(self.provider, new_interpreter=self.new_interpreter)
+            self.session = Session(self.provider, new_interpreter=self.new_interpreter)
 
             prepared = await self.prepare_input({"formula": "C2H6", "peaks": {}})
             outcome = await self.session.execute(prepared, report_condition=self.condition)
@@ -427,7 +429,7 @@ class ProviderAdversarialTests(ProviderCase):
 
     async def test_three_jobs_share_a_call_and_keep_their_own_results(self):
         (host, science) = await self.use_scientific_call()
-        sessions = [ElucidationSession(self.provider, new_interpreter=self.new_interpreter) for _ in range(3)]
+        sessions = [Session(self.provider, new_interpreter=self.new_interpreter) for _ in range(3)]
         codec = JsonDataclassCodec(format="chefnmr2.elucidation_report.v1", value_type=ElucidationReport)
 
         async with host:

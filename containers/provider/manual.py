@@ -9,8 +9,10 @@ import sys
 import tomllib
 
 if __package__:
+    from model.wire import request_defaults
     from .provider import open_provider
 else:
+    from wire import request_defaults
     from provider import open_provider
 
 
@@ -27,8 +29,8 @@ async def main(*, config: pathlib.Path) -> None:
             batch_document = json.loads(line)
 
             for request_document in batch_document["requests"]:
-                request_document.setdefault("n_samples", provider.offering["n_samples"])
-                request_document.setdefault("seed", provider.offering["seed"])
+                for (name, value) in request_defaults(provider.offering).items():
+                    request_document.setdefault(name, value)
 
             batch = call.input_codec.decode(json.dumps(batch_document).encode())
 

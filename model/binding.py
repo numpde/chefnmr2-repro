@@ -12,11 +12,12 @@ from typing import TYPE_CHECKING
 import provider_core.scientific as sdk
 from provider_core.attempt_record import MAX_EVIDENCE_BYTES
 from provider_core.diagnostics import describe_core_failure, failure_evidence_json
+from provider_core.payload import JsonDataclassCodec
 
 if __package__:
-    from .wire import ElucidationBatch, ElucidationBatchResult, ElucidationResult, ModelFailure
+    from .wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ElucidationResult, ModelFailure
 else:
-    from wire import ElucidationBatch, ElucidationBatchResult, ElucidationResult, ModelFailure
+    from wire import ElucidationBatch, ElucidationBatchResult, ElucidationRequest, ElucidationResult, ModelFailure
 
 if TYPE_CHECKING:
     from chefnmr2.infer import ChefNMR2
@@ -174,3 +175,12 @@ class Inference(sdk.Contribution):
 
 def construct(*, startup: dict) -> Inference:
     return Inference(**startup)
+
+
+# Scientific operation and wire contract consumed by the shared provider adapter.
+batch_operation = Inference.elucidate_batch
+batch_type = ElucidationBatch
+
+
+def batch_entry_codec():
+    return JsonDataclassCodec(format="chefnmr2.request.v1", value_type=ElucidationRequest)
