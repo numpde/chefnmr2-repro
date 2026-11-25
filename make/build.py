@@ -235,7 +235,7 @@ class Build:
 
             # The SDK's PEP 751 projection is the complete artifact lock.
             # The .lock filename is copied to a pylock name when invoking the tool.
-            output = projected + '\n[tool.chefnmr2]\ninputs-sha256 = ' + json.dumps(self.input_identity(profile, target)) + '\nresolution = ' + json.dumps(resolved) + '\n'
+            output = projected + '\n[tool.repro]\ninputs-sha256 = ' + json.dumps(self.input_identity(profile, target)) + '\nresolution = ' + json.dumps(resolved) + '\n'
 
             with tempfile.NamedTemporaryFile(mode='w', dir=directory, prefix='.requirements-', delete=False) as generated:
                 temporary_lock = Path(generated.name)
@@ -264,10 +264,10 @@ class Build:
             shutil.copyfile(ROOT / 'builds' / profile / 'requirements.lock', stage / 'pylock.profile.toml')
             document = tomllib.loads((stage / 'pylock.profile.toml').read_text())
 
-            if document['tool']['chefnmr2']['inputs-sha256'] != self.input_identity(profile, target):
+            if document['tool']['repro']['inputs-sha256'] != self.input_identity(profile, target):
                 raise ValueError(f'Cannot use the {profile} lock: build inputs changed; regenerate it with make lock')
 
-            (stage / 'resolution.lock').write_text(document['tool']['chefnmr2']['resolution'])
+            (stage / 'resolution.lock').write_text(document['tool']['repro']['resolution'])
             source_options = []
 
             for package in document['packages']:
