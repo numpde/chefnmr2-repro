@@ -38,8 +38,13 @@ class Peaks:
 class ElucidationRequest:
     """Arguments for ChefNMR2.elucidate().
 
-    Method signature and defaults:
-    https://github.com/numpde/fork-of-chefnmr2/blob/29374e57952684533d266832288413ba87c5d809/chefnmr2/infer/api.py#L583-L599
+    An integer n_samples is the total ensemble budget, not a per-checkpoint budget.
+    ChefNMR2 rounds it up to an equal positive number of draws per checkpoint.
+    The result's n_samples reports the actual total after rounding.
+    With ten checkpoints, requesting eight draws therefore produces ten.
+
+    Method signature and budget:
+    https://github.com/numpde/fork-of-chefnmr2/blob/9922b6c571428757c37f127225a62f2070d6ddc0/chefnmr2/infer/api.py#L580-L600
     """
 
     peaks: Peaks

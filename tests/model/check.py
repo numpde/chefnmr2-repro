@@ -18,7 +18,11 @@ from binding import Inference, expand_checkpoint_dirs
 
 
 def validate(result, request, members):
-    assert result['n_samples'] == (request['n_samples'] * members), 'All requested draws should complete'
+    # ChefNMR2.elucidate() treats n_samples as the total ensemble budget.
+    # Each checkpoint draws at least one sample and receives the same rounded-up share.
+    # See the pinned upstream implementation in model/upstream/chefnmr2/infer/api.py.
+    expected = members * max(1, -(-request['n_samples'] // members))
+    assert result['n_samples'] == expected, f"Expected {expected} draws, got {result['n_samples']}"
     assert result['candidates'], 'Real inference should return reconstructed candidate structures'
 
     for candidate in result['candidates']:

@@ -108,8 +108,10 @@ printf '%s\n' '{"requests":[{"formula":"CH4","peaks":{"h":[[1.0,4,"s"]]}}]}' |
 make test/model DEPLOYMENT=localhost DOCKER_CONTEXT="$CONTEXT"
 ```
 
-The model test checks cold/warm ten-sample morphine inference, ordered
-eight-sample SDK batches, scientific validity and retirement. Results and timings
+The model test checks cold/warm morphine inference requesting ten draws, ordered
+SDK batches requesting eight draws per entry, scientific validity and retirement.
+Sample budgets apply to the whole ensemble and round up to an equal positive
+number of draws per checkpoint. Results and timings
 go to stdout, progress goes to stderr, and a failed check returns a nonzero exit
 status. Redirect output when a saved test log is useful. Test projects are
 removed on completion or failure.
