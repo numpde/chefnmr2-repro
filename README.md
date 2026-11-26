@@ -204,7 +204,7 @@ result is not published; sibling results remain independent. A malformed or lost
 whole reply retires the shared host without replay. Provider restart does not
 resume an existing API Attempt.
 
-With SDK 0.7.7, the localhost execution policy requests a stop after 60 seconds,
+With SDK 0.7.9, the localhost execution policy requests a stop after 60 seconds,
 including initialization and the whole batch. The first stop request starts a
 10-second grace; unfinished work then triggers worker retirement with separate
 cleanup allowances. Unconfirmed retirement is reported, not treated as success.

@@ -2,8 +2,7 @@
   "dependency_inputs": {
     "linux_idmap-0.3.4-py3-none-any.whl": "a1f8aedcf56dd55b52f9224613ac2e92eead12227a599ec931a95da865ee4d75",
     "pip-26.2.2-py3-none-any.whl": "fd7f4dfa8190e014013b9f08f3e973f4e4c26ffd179a204895533a7254813a70",
-    "python_socks-3.2.2-py3-none-any.whl": "e0d464617bc24fb9511cf668ce67ea87efdcfec19d60ac149ad301065058f443",
-    "wheelhouse-tool-0.7.7.pyz": "3b29e00006347b558031d5a0c725473b87cf00745ac390a0d0aa8c2e2da275fa"
+    "python_socks-3.2.2-py3-none-any.whl": "e0d464617bc24fb9511cf668ce67ea87efdcfec19d60ac149ad301065058f443"
   },
   "payload_files": {
     "acquisition_tool/__init__.py": {
@@ -35,6 +34,11 @@
       "mode": 420,
       "sha256": "c7a46e3df3793895fc06009ea144ee259ec56b963706d2c4c8689e4e176954a4",
       "size": 6084
+    },
+    "acquisition_tool/context.py": {
+      "mode": 420,
+      "sha256": "2b7b1b285c2c9b6592f71ac28fa3ead2c5447bfafa3225f3d981243ecdcffd67",
+      "size": 8483
     },
     "acquisition_tool/dns.py": {
       "mode": 420,
@@ -642,6 +646,6 @@
       "size": 5495
     }
   },
-  "release_version": "0.7.7",
-  "source_revision": "2b938d3af95e27b9c863e86bab5af0906971a639"
+  "release_version": "0.7.9",
+  "source_revision": "3d95b7224e03642ca843ffa49422b4986a977831"
 }

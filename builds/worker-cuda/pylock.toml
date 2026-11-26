@@ -17,6 +17,7 @@
     "42d63be3af4f9b951b199b0a9d23365d37ab14687e6d77b74940432c8515c4ca": "dba7fdfe24e302f46bae562f55d66cc367c0618abae9894a1ebec93dc8f0e511",
     "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8": "b05084ca1d50879865178d9fff9fabeab61bdfb1f361bfbde95421ffc8f9be46",
     "4936d1d6780fbe68db454f5e72a42ff64d1fd6397df9f363ae786930fd5c1cd4": "4777c4d7b040cdead515e13febe9da861052e4690bdfc2c67664b13aaf605be5",
+    "4a3aa87f7d00c4510721acea6f5aa724285d9a26877ab58212eb3533259653a9": "a5c43bc28b8a8c6fd4d3c1944e718f150233084097d056c80751af1f94c61903",
     "4eb01c08e859bf924d222250d2e8f8b8ff6d3db4721288cf35d14252a4d933c8": "ae42b56aa16feaa9994af204b6c82ac546fed7d67cf584cc10d1f2b7119b5eac",
     "51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80": "e3a74c846648bb55f4f907284b745e2003b87b96d9c9d17a8a50cf37804541c9",
     "54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193": "0bd65db043688a44f4a29608c1cba521c932f7ff76f238bbd869441e15012653",
@@ -44,7 +45,6 @@
     "cf41d9e69019939aa15296fa66ea7d3fdb8d2c6383f729f4b1156c8b37808a06": "5659a955aa1bc509a7c06b939502271fe49acaf4f79adb58c0f73b3f0791a235",
     "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad": "febb9b0f8f3e80d57c8199c304f35c4336e8581d1d18d7983c92766b82793b25",
     "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5": "b756c2fbfd5be05ac5bdb0ebca61f55618f30f633ed92d88a5687429313a7595",
-    "e0aaec06ee3c0378adce92c6c477db6da82562832d276b250f83edc78622f99c": "e57bebfd670fe427634919caf25c72231ea3ebabe94e8f58c195f30ae850b8b4",
     "e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0": "ffcf42a343af6ffc54ff9cc4c09cf9638cd73b131370f395abd11b630186c90c",
     "e4553a30f34195f3fa1da02a6da3d6337d28f2003943aa0a3d247bbc25fefc42": "9fbf54b4aa156fef26145838fc99abb2024046e98a2776efbf4f5bc6bd242cb0",
     "e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1": "e463e38f7fe7da36a11e6d3fecc5dfa5b97be8c8022620400750d79ae7d842bc",
@@ -52,7 +52,7 @@
     "ee8722c1f0145ab246bccb9e452153b5e0515fd094c3678df50b2a0888b8b171": "561b0e547a2da463a0a6e4f7715fb4965c578627faa5790be12db26e5c7c9b03",
     "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0": "614985b278f601b8ef863f82783b991cc3ada4b89f592eb71c7c48c5f2ef2298"
   },
-  "project-sha256": "53b66db3d48399cd20f7cad237e74c059bbe0e97e93f2f77164ae4986761f1ce",
+  "project-sha256": "9b5d43c67cd8ae3de6bb58a5ab910a131050ac4a6e321d34b05545dd6de2b19d",
   "resolution": {
     "created-by": "uv",
     "lock-version": "1.0",
@@ -607,16 +607,16 @@
         ]
       },
       {
-        "index": "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.7/provider_core-0.7.7-py3-none-any.whl",
+        "index": "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.9/provider_core-0.7.9-py3-none-any.whl",
         "name": "provider-core",
-        "version": "0.7.7",
+        "version": "0.7.9",
         "wheels": [
           {
             "hashes": {
-              "sha256": "e0aaec06ee3c0378adce92c6c477db6da82562832d276b250f83edc78622f99c"
+              "sha256": "4a3aa87f7d00c4510721acea6f5aa724285d9a26877ab58212eb3533259653a9"
             },
-            "name": "provider_core-0.7.7-py3-none-any.whl",
-            "url": "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.7/provider_core-0.7.7-py3-none-any.whl"
+            "name": "provider_core-0.7.9-py3-none-any.whl",
+            "url": "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.9/provider_core-0.7.9-py3-none-any.whl"
           }
         ]
       },

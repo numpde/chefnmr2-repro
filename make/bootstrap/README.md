@@ -4,12 +4,18 @@
 Do not edit it here. `acquisition-manifest.json` records the exact source revision,
 member hashes and dependency wheels; the launcher verifies it before use.
 
-This snapshot combines SDK source commit
-`2b938d3af95e27b9c863e86bab5af0906971a639` with the published provider-core 0.7.7
-wheel. It adds explicit upstream HTTP/SOCKS routes. It is not the published 0.7.7
-acquisition archive, and does not change the runtime SDK pin.
+`release.json` pins the published SDK 0.7.9 acquisition archive by version and
+SHA-256. The imported manifest identifies its SDK source commit and bundled
+dependencies. Runtime SDK wheels are independently pinned in the three SDK role
+declarations under `builds/`.
 
-For a subsequent released archive, use the bundled
-`acquisition_tool/source_update.py import --source-dir ... --pin-file ... --archive ...`
-with a reviewed release pin. Keep source changes and qualification in the SDK;
-replace this generated tree as a unit.
+After reviewing a subsequent release pin, update the generated tree as a unit:
+
+```sh
+bash make/bootstrap/acquisition/acquisition_tool/maintain_source.sh update \
+  --source-dir "$PWD/make/bootstrap/acquisition" \
+  --pin-file "$PWD/make/bootstrap/release.json"
+```
+
+The updater verifies the existing snapshot and downloaded archive before
+replacing source. Keep source changes and qualification in the SDK repository.

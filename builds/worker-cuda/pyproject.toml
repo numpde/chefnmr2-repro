@@ -6,7 +6,7 @@ dependencies = [
     # Preserve the prior SDK closure during this tool migration.
     "anyio==4.15.1",
     "pycparser==3.11",
-    "provider-core[api]==0.7.7",
+    "provider-core[api]==0.7.9",
     "torch==2.10.0+cu130",
     "numpy==2.3.5",
     "rdkit==2025.9.6",
@@ -23,7 +23,7 @@ dependencies = [
 index = "https://pypi.org/simple"
 
 [tool.wheelhouse.sources]
-provider-core = {wheel = "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.7/provider_core-0.7.7-py3-none-any.whl", sha256 = "e0aaec06ee3c0378adce92c6c477db6da82562832d276b250f83edc78622f99c"}
+provider-core = {wheel = "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.9/provider_core-0.7.9-py3-none-any.whl", sha256 = "4a3aa87f7d00c4510721acea6f5aa724285d9a26877ab58212eb3533259653a9"}
 torch = {wheel = "https://download.pytorch.org/whl/cu130/torch-2.10.0%2Bcu130-cp312-cp312-manylinux_2_28_x86_64.whl", sha256 = "858f0cbcc78d726fea9499eb3464faa98392fa093845a3262209bd226b7844d6"}
 # Chef publishes this prepared wheel independently of runtime images.
 antlr4-python3-runtime = {wheel = "https://github.com/numpde/chefnmr2-repro/releases/download/dependencies-antlr4-4.9.3-1/antlr4_python3_runtime-4.9.3-py3-none-any.whl", sha256 = "8513a7a1d31fe8a4b4a8d6285af8f7f9ecc863f47a8e4fe0fd28ca5c6d770835"}

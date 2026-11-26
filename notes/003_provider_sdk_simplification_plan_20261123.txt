@@ -2044,3 +2044,34 @@ plus per-job signed API exchanges and decoded reports under job-1/ through job-4
 This establishes live concurrent acquisition, preparation and result delivery for
 the deployed single-checkpoint CPU configuration. Timeout escalation remains
 deferred in 004_deferred_execution_timeout_20261124.txt.
+
+SDK 0.7.9 consumer qualification — 2026-11-26
+------------------------------------------
+
+The provider, CPU worker and CUDA worker now pin the published provider-core
+0.7.9 wheel. Regenerating their complete locks changed only provider-core;
+scientific package versions and artifact identities stayed unchanged.
+The acquisition snapshot was imported through its authenticated updater from
+SDK release 0.7.9, source 3d95b7224e03642ca843ffa49422b4986a977831.
+make/bootstrap/release.json records the reviewed archive checksum.
+
+Local science-engine checks passed:
+- Explicit preparation, lock regeneration and acquisition for the SDK roles.
+- Offline builds of provider, worker-cpu, worker-cuda and weights-sanitize.
+- Installed SDK 0.7.9 verified in each provider/worker image's site-packages.
+- make test/operator: 33 tests; make test/provider: 18 tests; make test/unit: 9 tests.
+- make test/model DEPLOYMENT=localhost: cold/warm epoch949 CPU inference and
+  two ordered SDK batches containing three entries passed; the isolated project
+  and its runner volume retired successfully.
+
+The real CPU runs used Python 3.13.18, Torch 2.5.1+cpu and float32 parameters.
+Initialization took 3.97 s; two ten-draw morphine calls took 72.13 s and 74.85 s.
+Each returned two readable candidate structures matching C17H19NO3.
+The checker confirmed reconstruction-pool retirement. Batch cases CH4/C2H6 and
+CH4 used the deployment's eight-draw budget and retained reply ordering.
+These are fixed-case compatibility results, not an accuracy or throughput study.
+
+CUDA image imports passed with Python 3.12.16, Torch 2.10.0+cu130 and
+RDKit 2025.09.6. No GPU inference ran locally: cuda_available was false and
+this host has no NVIDIA device. ProArt deployment and GPU model qualification
+are separate from the local results above.
