@@ -15,7 +15,12 @@ override export REPRO_PROXY_URL := $(value PROXY_URL)
 override export REPRO_WHEELHOUSE := $(value WHEELHOUSE)
 override export REPRO_PROFILE := $(value PROFILE)
 override export REPRO_DEPLOYMENT := $(value DEPLOYMENT)
-unexport DOCKER_CONTEXT PROXY_URL WHEELHOUSE PROFILE DEPLOYMENT
+ifeq ($(origin ASSUME_GPU),command line)
+override export REPRO_ASSUME_GPU := $(value ASSUME_GPU)
+else
+override export REPRO_ASSUME_GPU := 0
+endif
+unexport DOCKER_CONTEXT PROXY_URL WHEELHOUSE PROFILE DEPLOYMENT ASSUME_GPU
 
 .PHONY: help
 help: ## List workflows; inputs may prompt on a terminal and environment values never select them.
@@ -36,6 +41,10 @@ images/pull: ## Pull pinned Python bases and checkpoint downloader; requires DOC
 	"$${docker[@]}" compose --project-directory "$(REPOSITORY_ROOT)" --env-file /dev/null \
 		-f "$(REPOSITORY_ROOT)/compose/images.yaml" pull --ignore-buildable
 
+.PHONY: gpu/check
+gpu/check: ## Require a host NVIDIA GPU; ASSUME_GPU=1 explicitly skips the probe (default 0).
+	@$(operator_inputs); check_gpu "$${REPRO_ASSUME_GPU}"
+
 .PHONY: wheelhouse/acquire prepare lock acquire build
 wheelhouse/acquire: ## Verify or acquire independent Wheelhouse tooling; requires DOCKER_CONTEXT.
 	@$(operator_inputs); pool=$$(choose WHEELHOUSE); proxy=$$(choose PROXY_URL); select_docker; \
@@ -53,9 +62,14 @@ antlr/prepare: ## Build ANTLR offline and retain a private wheel, metadata and r
 prepare: ## Prepare exact declared wheel inputs before metadata-only locking; requires PROFILE.
 lock: ## Resolve a complete wheel-only profile lock from declared sources; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
 acquire: ## Acquire the profile's locked packages into WHEELHOUSE; requires PROFILE and DOCKER_CONTEXT.
-build: ## Build a selected profile offline; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
+build: ## Build offline; worker-cuda requires gpu/check unless ASSUME_GPU=1 (default 0).
 prepare lock acquire build:
-	@$(operator_inputs); profile=$$(choose PROFILE '$(PROFILES)'); pool=$$(choose WHEELHOUSE); proxy_args=(); \
+	@$(operator_inputs); profile=$$(choose PROFILE '$(PROFILES)'); \
+	if [[ $@ == build && $$profile == worker-cuda ]]; then \
+	    env -u MAKEFLAGS -u MFLAGS -u GNUMAKEFLAGS -u MAKEOVERRIDES -u MAKEFILES -u MAKELEVEL \
+	        make --no-print-directory -f "$(REPOSITORY_ROOT)/Makefile" gpu/check "ASSUME_GPU=$${REPRO_ASSUME_GPU}"; \
+	fi; \
+	pool=$$(choose WHEELHOUSE); proxy_args=(); \
 	if [[ $@ != build ]]; then proxy_args=(--proxy "$$(choose PROXY_URL)"); fi; select_docker; \
 	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" "$@" --profile "$$profile" --host "$$docker_host" --pool "$$pool" "$${proxy_args[@]}"
 

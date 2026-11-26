@@ -94,3 +94,32 @@ select_docker() {
     docker=(docker --host "$endpoint")
     docker_host=$endpoint
 }
+
+# CUDA builds are a host-placement policy; this does not qualify GPU execution.
+check_gpu() {
+    local assume_gpu=$1 devices
+    case $assume_gpu in
+        1)
+            printf '%s\n' 'ASSUME_GPU=1: skipping the host NVIDIA GPU probe.' >&2
+            return 0
+            ;;
+        0) ;;
+        *)
+            printf 'ASSUME_GPU must be 0 or 1; received %q.\n' "$assume_gpu" >&2
+            return 2
+            ;;
+    esac
+    if ! command -v nvidia-smi >/dev/null 2>&1; then
+        printf '%s\n' 'Cannot confirm a host NVIDIA GPU: nvidia-smi is unavailable. Use a GPU host or ASSUME_GPU=1 for an intentional cross-build.' >&2
+        return 2
+    fi
+    if devices=$(nvidia-smi --query-gpu=uuid,name --format=csv,noheader); then :; else
+        printf '%s\n' 'Cannot confirm a host NVIDIA GPU: nvidia-smi failed. Use a GPU host or ASSUME_GPU=1 for an intentional cross-build.' >&2
+        return 2
+    fi
+    if [[ -z ${devices//[[:space:]]/} ]]; then
+        printf '%s\n' 'Cannot confirm a host NVIDIA GPU: nvidia-smi returned no devices. Use a GPU host or ASSUME_GPU=1 for an intentional cross-build.' >&2
+        return 2
+    fi
+    printf '%s\n' "$devices"
+}

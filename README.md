@@ -124,7 +124,15 @@ go to stdout, progress goes to stderr, and a failed check returns a nonzero exit
 status. Redirect output when a saved test log is useful. Test projects are
 removed on completion or failure.
 
-**GPU:** Build `worker-cuda` instead of `worker-cpu`; `images/pull` includes its
+**GPU:** `make gpu/check` requires the host driver to enumerate an NVIDIA GPU
+with `nvidia-smi`; it starts no containers. `make build PROFILE=worker-cuda`
+runs that same check before selecting build inputs or contacting Docker.
+`ASSUME_GPU` defaults to `0` and is accepted only on the Make command line.
+For an intentional CUDA cross-build, pass `ASSUME_GPU=1` to skip the probe;
+the command reports that override. This checks host GPU presence, not CUDA
+execution or model correctness.
+
+Build `worker-cuda` instead of `worker-cpu`; `images/pull` includes its
 Python base. `deployments/nmr-dapp32-com` selects one Ada GPU by UUID and uses
 `cuda:0` inside the worker. On another host, select its GPU explicitly. Run
 `make test/model DEPLOYMENT=nmr-dapp32-com DOCKER_CONTEXT="$CONTEXT"` to exercise

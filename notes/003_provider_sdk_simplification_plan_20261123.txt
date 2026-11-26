@@ -2075,3 +2075,19 @@ CUDA image imports passed with Python 3.12.16, Torch 2.10.0+cu130 and
 RDKit 2025.09.6. No GPU inference ran locally: cuda_available was false and
 this host has no NVIDIA device. ProArt deployment and GPU model qualification
 are separate from the local results above.
+
+Local CUDA cleanup and build preflight — 2026-11-26
+--------------------------------------------------
+
+The unintended local SDK 0.7.9 CUDA image and its exact build-history record
+were removed after qualification. Its five owned cache records reclaimed
+8.299 GB; shared Python bases, scientific wheels and checkpoints were retained.
+
+make gpu/check now requires nvidia-smi to enumerate an NVIDIA GPU on the host.
+The worker-cuda build reuses that lane before pool selection or Docker access.
+ASSUME_GPU defaults to 0, ignores environment values and accepts an explicit
+command-line ASSUME_GPU=1 for an intentional cross-build. The override is logged.
+All 42 operator tests pass, including real-Make GPU gate, explicit override,
+missing/failed/empty probes, literal values, CPU builds and dry-run coverage.
+Actual gpu/check and worker-cuda build commands rejected this CPU-only host
+before prompting for inputs or starting build work.

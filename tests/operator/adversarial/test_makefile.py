@@ -1,6 +1,7 @@
 """Adversarial Make inputs and authority rejection behavior."""
 
 import os
+import shutil
 from unittest.mock import patch
 
 from operator_fixtures import OperatorFixture, ROOT
@@ -76,3 +77,64 @@ class MakefileAdversarialTests(OperatorFixture):
         self.assertEqual(arguments[5:7], ['--host', 'unix:///tmp/fake-docker.sock'])
         self.assertEqual(arguments[-2:], ['--pool', pool])
         self.assertFalse((self.directory / 'SHOULD_NOT_RUN').exists())
+
+    def test_failed_gpu_probe_blocks_cuda_before_pool_prompt_or_docker(self):
+        self.write_executable('nvidia-smi', '#!/bin/bash\nprintf "%s\\n" "fixture driver failure" >&2\nexit 9\n')
+        result = self.run_make('build', 'PROFILE=worker-cuda')
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('fixture driver failure', result.stderr)
+        self.assertIn('Cannot confirm a host NVIDIA GPU', result.stderr)
+        self.assertIn('ASSUME_GPU=1', result.stderr)
+        self.assertNotIn('terminal is required', result.stderr)
+        self.assertEqual(self.calls(), [])
+        self.assertFalse(self.python_log.exists())
+
+    def test_successful_gpu_probe_with_empty_inventory_is_rejected(self):
+        self.write_executable('nvidia-smi', '#!/bin/bash\nprintf " \\n"\n')
+        result = self.run_make('gpu/check')
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('returned no devices', result.stderr)
+        self.assertEqual(self.calls(), [])
+        self.assertFalse(self.python_log.exists())
+
+    def test_missing_probe_and_ambient_assumption_cannot_bypass_cuda_gate(self):
+        for executable in ('make', 'dirname', 'env'):
+            (self.bin / executable).symlink_to(shutil.which(executable))
+
+        result = self.run_make(
+            'build', 'PROFILE=worker-cuda',
+            PATH=str(self.bin), ASSUME_GPU='1', REPRO_ASSUME_GPU='1',
+        )
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('nvidia-smi is unavailable', result.stderr)
+        self.assertEqual(self.calls(), [])
+        self.assertFalse(self.python_log.exists())
+
+    def test_invalid_assumptions_are_literal_and_fail_before_hardware_access(self):
+        marker = self.directory / 'unexpected'
+        payload = '$(shell touch ' + str(marker) + ')'
+        self.write_executable('nvidia-smi', '#!/bin/bash\nprintf "%s\\n" "unexpected probe" >&2\nexit 99\n')
+
+        for value in ('', '2', 'yes', payload):
+            for target in ('gpu/check', 'build'):
+                with self.subTest(value=value, target=target):
+                    result = self.run_make(target, 'PROFILE=worker-cuda', 'ASSUME_GPU=' + value)
+
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn('ASSUME_GPU must be 0 or 1', result.stderr)
+                    self.assertNotIn('unexpected probe', result.stderr)
+                    self.assertEqual(self.calls(), [])
+                    self.assertFalse(self.python_log.exists())
+                    self.assertFalse(marker.exists())
+
+    def test_cuda_build_dry_run_never_executes_the_reused_lane(self):
+        self.write_executable('nvidia-smi', '#!/bin/bash\nprintf "%s\\n" "unexpected probe" >&2\nexit 99\n')
+        result = self.run_make('-n', 'build', 'PROFILE=worker-cuda', 'WHEELHOUSE=/pool', 'DOCKER_CONTEXT=science')
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('unexpected probe', result.stderr)
+        self.assertEqual(self.calls(), [])
+        self.assertFalse(self.python_log.exists())

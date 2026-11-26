@@ -184,3 +184,41 @@ class MakefileNormativeTests(OperatorFixture):
         self.assertEqual(compose[0][-1], 'verify')
         self.assertIn(str(ROOT / 'model/weights.yaml'), compose[0])
         self.assertEqual(compose[0][compose[0].index('--pull') + 1], 'never')
+
+    def test_gpu_check_reports_host_inventory_without_docker(self):
+        self.write_executable('nvidia-smi', '#!/bin/bash\nprintf "%s\\n" "GPU-fixture, NVIDIA fixture"\n')
+        result = self.run_make('gpu/check')
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('GPU-fixture', result.stdout)
+        self.assertEqual(self.calls(), [])
+        self.assertFalse(self.python_log.exists())
+
+    def test_cuda_build_checks_gpu_before_engine_or_build_dispatch(self):
+        self.write_executable(
+            'nvidia-smi',
+            '#!/bin/bash\n'
+            '[[ ! -e "$TEST_DOCKER_LOG" && ! -e "$PYTHON_LOG" ]] || exit 9\n'
+            'printf "%s\\n" "GPU-fixture, NVIDIA fixture"\n',
+        )
+        result = self.run_make('build', 'PROFILE=worker-cuda', 'WHEELHOUSE=/pool', 'DOCKER_CONTEXT=science')
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('GPU-fixture', result.stdout)
+        self.assertEqual(self.python_arguments()[2:5], ['build', '--profile', 'worker-cuda'])
+
+    def test_assume_gpu_is_an_explicit_cuda_build_override(self):
+        self.write_executable('nvidia-smi', '#!/bin/bash\nexit 99\n')
+        result = self.run_make('build', 'PROFILE=worker-cuda', 'WHEELHOUSE=/pool', 'DOCKER_CONTEXT=science', 'ASSUME_GPU=1')
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('ASSUME_GPU=1: skipping', result.stderr)
+        self.assertEqual(self.python_arguments()[2:5], ['build', '--profile', 'worker-cuda'])
+
+    def test_cpu_build_does_not_require_or_probe_a_gpu(self):
+        self.write_executable('nvidia-smi', '#!/bin/bash\nexit 99\n')
+        result = self.run_make('build', 'PROFILE=worker-cpu', 'WHEELHOUSE=/pool', 'DOCKER_CONTEXT=science')
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('GPU', result.stdout + result.stderr)
+        self.assertEqual(self.python_arguments()[2:5], ['build', '--profile', 'worker-cpu'])
