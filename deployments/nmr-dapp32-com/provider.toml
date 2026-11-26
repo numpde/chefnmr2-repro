@@ -16,8 +16,18 @@ startup_seconds = 30
 retirement_seconds = 30
 
 [model]
-checkpoint_dirs = ["/checkpoints/chefnmr2-epoch*"]
+# Three randomly selected released checkpoints reduce resident model memory.
+# Selection does not imply an accuracy ranking; explicit paths keep the
+# ensemble fixed across restarts and additions to the checkpoint volume.
+checkpoint_dirs = [
+    "/checkpoints/chefnmr2-epoch1149",
+    "/checkpoints/chefnmr2-epoch1299",
+    "/checkpoints/chefnmr2-epoch1349",
+]
 device = "cuda:0"
+# Floating-point parameters and buffers for every selected checkpoint.
+# This does not rewrite checkpoint files or change CUDA BF16 autocast.
+parameter_dtype = "bfloat16"
 recon_workers = 2
 
 # Collect at most four jobs for one sequential worker call, waiting up to 50 ms.

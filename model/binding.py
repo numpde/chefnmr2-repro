@@ -73,12 +73,19 @@ def verified_weights(path, companions=()):
 
 
 class Inference(sdk.Contribution):
-    def __init__(self, *, checkpoint_dirs: list[str], device: str, recon_workers: int) -> None:
+    def __init__(self, *, checkpoint_dirs: list[str], device: str, parameter_dtype: str, recon_workers: int) -> None:
         super().__init__()
 
         if recon_workers < 1:
             raise ValueError(f"Native inference requires an owned reconstruction pool; {recon_workers=}")
 
+        if parameter_dtype not in ("float32", "bfloat16"):
+            raise ValueError(
+                f"Cannot initialize ChefNMR2: parameter_dtype={parameter_dtype!r}; "
+                "choose float32 or bfloat16 for floating-point parameters and buffers."
+            )
+
+        self.parameter_dtype = parameter_dtype
         self.checkpoint_dirs = checkpoint_dirs
         self.device = device
         self.recon_workers = recon_workers
@@ -96,10 +103,16 @@ class Inference(sdk.Contribution):
 
                 checkpoints.append((directory.name, streams[weights], streams[config]))
 
-            log.info(f"Loading {len(checkpoints)=} on {self.device=} with {self.recon_workers=}")
+            log.info(f"Loading {len(checkpoints)=} on {self.device=} with {self.parameter_dtype=} and {self.recon_workers=}")
+            import torch
             from chefnmr2.infer import ChefNMR2
 
-            self.model = ChefNMR2(checkpoints, device=self.device, recon_workers=self.recon_workers)
+            self.model = ChefNMR2(
+                checkpoints,
+                device=self.device,
+                parameter_dtype=getattr(torch, self.parameter_dtype),
+                recon_workers=self.recon_workers,
+            )
 
         log.info("Model ready")
 

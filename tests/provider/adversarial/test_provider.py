@@ -209,7 +209,7 @@ class ProviderAdversarialTests(ProviderCase):
             except ValueError as error:
                 raise RuntimeError("could not reconstruct CH4 with [123.456, 234.567]") from error
 
-        worker = Inference(checkpoint_dirs=[], device="cpu", recon_workers=1)
+        worker = Inference(checkpoint_dirs=[], device="cpu", parameter_dtype="float32", recon_workers=1)
         worker.model = SimpleNamespace(elucidate=failed_model)
         batch = ElucidationBatch([ElucidationRequest(formula="CH4", peaks=Peaks(c=[123.456, 234.567]), n_samples=8, seed=0)])
         codec = JsonDataclassCodec(format="test.failure_batch.v1", value_type=ElucidationBatchResult)
@@ -320,7 +320,7 @@ class ProviderAdversarialTests(ProviderCase):
         last = deepcopy(self.scientific_result)
         first.params = {"seed": 11}
         last.params = {"seed": 22}
-        worker = Inference(checkpoint_dirs=[], device="cpu", recon_workers=1)
+        worker = Inference(checkpoint_dirs=[], device="cpu", parameter_dtype="float32", recon_workers=1)
         worker.model = SimpleNamespace(elucidate=Mock(side_effect=[asdict(first), ValueError("bad formula"), asdict(last)]))
         request_codec = JsonDataclassCodec(format="test.batch_input.v1", value_type=ElucidationBatch)
         reply_codec = JsonDataclassCodec(format="test.batch_reply.v1", value_type=ElucidationBatchResult)

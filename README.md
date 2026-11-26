@@ -98,6 +98,13 @@ The localhost deployment selects `worker-cpu`; `nmr-dapp32-com` selects
 `worker-cuda`. Runtime definitions clear the inherited build settings and
 never pull images, so the selected images must already exist on the engine.
 
+Each deployment's `provider.toml` owns its `[model]` checkpoint selection and
+`parameter_dtype`. Production pins three randomly selected checkpoints (epochs
+1149, 1299 and 1349), without an accuracy ranking, and uses `bfloat16`; localhost
+uses epoch949 and `float32`. The dtype applies to floating-point parameters and
+buffers in every selected model, before moving them to the configured device.
+Checkpoint files remain unchanged, and CUDA sampling retains BF16 autocast.
+
 **Test the images.** Manual runs need no API services or credentials. They use
 an isolated Compose project, share checkpoints read-only, and retire the model
 session when stdin closes. One input line produces one JSON batch reply.

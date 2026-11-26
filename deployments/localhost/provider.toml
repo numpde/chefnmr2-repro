@@ -18,6 +18,9 @@ retirement_seconds = 30
 [model]
 checkpoint_dirs = ["/checkpoints/chefnmr2-epoch949"]
 device = "cpu"
+# Floating-point parameters and buffers for every selected checkpoint.
+# This does not rewrite checkpoint files or change CUDA BF16 autocast.
+parameter_dtype = "float32"
 recon_workers = 2
 
 # Collect at most four jobs for one sequential worker call, waiting up to 50 ms.

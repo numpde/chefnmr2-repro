@@ -110,6 +110,15 @@ def main():
     try:
         actual_devices = {next(member['chef'].model.parameters()).device.type for member in model.members}
 
+        actual_dtypes = {
+            tensor.dtype
+            for member in model.members
+            for tensor in (*member['chef'].model.parameters(), *member['chef'].model.buffers())
+            if tensor.is_floating_point()
+        }
+        expected_dtype = getattr(torch, settings['parameter_dtype'])
+
+        assert actual_dtypes == {expected_dtype}, f'{actual_dtypes=} should contain only {expected_dtype=}'
         assert actual_devices == {expected_device}, f'{actual_devices=} should contain only {expected_device=}'
         assert model.recon_pool is not None, 'Inference requires the owned reconstruction pool'
 
@@ -127,6 +136,7 @@ def main():
         'torch': torch.__version__,
         'sdk': importlib.metadata.version('provider-core'),
         'device': settings['device'],
+        'parameter_dtype': settings['parameter_dtype'],
         'checkpoints': checkpoint_evidence,
         'case': args.case.name,
         'initialization_seconds': initialized_seconds,
