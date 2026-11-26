@@ -1,0 +1,11 @@
+[project]
+name = "chefnmr2-antlr-build"
+version = "1"
+requires-python = "==3.13.18"
+dependencies = ["setuptools==78.1.0"]
+
+[tool.wheelhouse]
+index = "https://pypi.org/simple"
+
+[tool.wheelhouse.sources]
+setuptools = {wheel = "https://files.pythonhosted.org/packages/54/21/f43f0a1fa8b06b32812e0975981f4677d28e0f3271601dc88ac5a5b83220/setuptools-78.1.0-py3-none-any.whl", sha256 = "3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8"}

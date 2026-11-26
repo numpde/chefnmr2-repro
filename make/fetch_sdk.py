@@ -24,7 +24,7 @@ def release_url(version):
     return f'https://github.com/numpde/nmr-provider-tools/releases/download/v{version}/'
 
 
-def fetch(pool, release, name, checksum):
+def fetch(pool, release, name, checksum, *, url=None):
     destination = pool / name
 
     if destination.exists():
@@ -43,7 +43,7 @@ def fetch(pool, release, name, checksum):
         try:
             log.info('Downloading %s', name)
 
-            with urlopen(release + name, timeout=120) as response:
+            with urlopen(release + name if url is None else url, timeout=120) as response:
                 total = 0
 
                 while block := response.read(65536):

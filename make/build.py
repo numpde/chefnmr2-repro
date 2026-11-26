@@ -100,6 +100,42 @@ class Build:
 
         log.info('SDK %s verified and ready', self.sdk)
 
+    def wheelhouse_artifacts(self, acquire=False):
+        pin = json.loads((ROOT / 'builds/wheelhouse-release.json').read_text())
+        tool = self.pool / pin['name']
+
+        if acquire:
+            image = self.bake('worker-cpu')['args']['PYTHON_BASE']
+
+            self.require_image(image)
+
+            self.run(
+                self.acquisition_command(
+                    image,
+                    [
+                        (self.pool, '/pool'),
+                        (ROOT / 'builds/wheelhouse-release.json', '/wheelhouse-release.json'),
+                        (ROOT / 'make/fetch_sdk.py', '/fetch_sdk.py'),
+                        (ROOT / 'make/fetch_wheelhouse.py', '/fetch_wheelhouse.py'),
+                    ],
+                    [
+                        '-B',  # Keep bytecode out of captured source mounts.
+                        '/fetch_wheelhouse.py',  # Acquire the independently pinned tool.
+                        '/pool',  # Retain verified bytes in the shared pool.
+                        '/wheelhouse-release.json',  # Read the exact tool URL and digest.
+                    ],
+                    writable_pool=True,
+                )
+            )
+
+        if not tool.is_file():
+            raise FileNotFoundError(f'Cannot prepare ANTLR: independent Wheelhouse {tool=!s} is missing; run make antlr/acquire')
+
+        if digest(tool) != pin['sha256']:
+            raise ValueError(f'Cannot prepare ANTLR: independent Wheelhouse {tool=!s} has a different SHA-256 from builds/wheelhouse-release.json')
+
+        return (tool, pin['sha256'])
+
     def container_options(self, mounts, writable_pool=False, scratch=None):
         command = ['--read-only', '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '64', '--cpus', '2', '--memory', '4g', '--tmpfs', '/tmp:rw,nosuid,nodev,size=3g', '-e', 'HOME=/tmp', '-e', 'PROVIDER_CORE_IN_CONTAINER=1']
 
@@ -343,7 +379,7 @@ class Build:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('action', choices=('sdk/acquire', 'lock', 'acquire', 'build'))
+    parser.add_argument('action', choices=('sdk/acquire', 'antlr/acquire', 'antlr/prepare', 'lock', 'acquire', 'build'))
     parser.add_argument('--profile', default='')
     parser.add_argument('--host', required=True, help='Resolved local Unix socket for the selected Docker context')
     parser.add_argument('--pool', required=True)
@@ -355,6 +391,18 @@ def main():
 
     if args.action == 'sdk/acquire':
         build.sdk_artifacts(acquire=True)
+    elif args.action == 'antlr/acquire':
+        from prepare_antlr import acquire
+
+        (tool, checksum) = build.wheelhouse_artifacts(acquire=True)
+
+        acquire(build, tool, checksum)
+    elif args.action == 'antlr/prepare':
+        from prepare_antlr import prepare
+
+        (tool, checksum) = build.wheelhouse_artifacts()
+
+        prepare(build, tool, checksum)
     elif args.action == 'lock':
         build.lock(args.profile)
     elif args.action == 'acquire':

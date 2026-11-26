@@ -5,7 +5,7 @@ override REPOSITORY_ROOT := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 include $(REPOSITORY_ROOT)/project.mk
 override HOST_PYTHON := python3 -B
 override DEPLOYMENTS := $(notdir $(patsubst %/,%,$(wildcard $(REPOSITORY_ROOT)/deployments/*/)))
-override PROFILES := $(notdir $(patsubst %/,%,$(wildcard $(REPOSITORY_ROOT)/builds/*/)))
+override PROFILES := provider worker-cpu worker-cuda weights-sanitize
 
 # Capture literal command-line inputs before Make or the shell can interpret them.
 # Omitted inputs are selected at the terminal by the function below.
@@ -40,6 +40,15 @@ images/pull: ## Pull pinned Python bases and checkpoint downloader; requires DOC
 sdk/acquire: ## Verify or acquire pinned SDK tooling in WHEELHOUSE; requires DOCKER_CONTEXT.
 	@$(operator_inputs); pool=$$(choose WHEELHOUSE); proxy=$$(choose PROXY_URL); select_docker; \
 	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" sdk/acquire --host "$$docker_host" --pool "$$pool" --proxy "$$proxy"
+
+.PHONY: antlr/acquire antlr/prepare
+antlr/acquire: ## Acquire pinned Wheelhouse, ANTLR source and locked build dependencies.
+	@$(operator_inputs); pool=$$(choose WHEELHOUSE); proxy=$$(choose PROXY_URL); select_docker; \
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" antlr/acquire --host "$$docker_host" --pool "$$pool" --proxy "$$proxy"
+
+antlr/prepare: ## Build ANTLR offline and retain a private wheel, metadata and receipt.
+	@$(operator_inputs); pool=$$(choose WHEELHOUSE); select_docker; \
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" antlr/prepare --host "$$docker_host" --pool "$$pool"
 
 lock: ## Resolve a profile lock from cached packages; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
 acquire: ## Acquire the profile's locked packages into WHEELHOUSE; requires PROFILE and DOCKER_CONTEXT.

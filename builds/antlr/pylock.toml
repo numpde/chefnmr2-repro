@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8": "4444a6b549a8ebb02e1739f4375af7756c841f96f0c31077a183273c7462bd10"
+  },
+  "resolution": {
+    "created-by": "uv",
+    "lock-version": "1.0",
+    "packages": [
+      {
+        "index": "https://files.pythonhosted.org/packages/54/21/f43f0a1fa8b06b32812e0975981f4677d28e0f3271601dc88ac5a5b83220/setuptools-78.1.0-py3-none-any.whl",
+        "name": "setuptools",
+        "version": "78.1.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8"
+            },
+            "name": "setuptools-78.1.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/54/21/f43f0a1fa8b06b32812e0975981f4677d28e0f3271601dc88ac5a5b83220/setuptools-78.1.0-py3-none-any.whl"
+          }
+        ]
+      }
+    ],
+    "requires-python": ">=3.13.18"
+  },
+  "target": {
+    "abi": "cpython-313-x86_64-linux-gnu",
+    "implementation_name": "cpython",
+    "implementation_version": "3.13.18",
+    "os_name": "posix",
+    "platform_machine": "x86_64",
+    "platform_python_implementation": "CPython",
+    "platform_system": "Linux",
+    "python_full_version": "3.13.18",
+    "python_version": "3.13",
+    "sys_platform": "linux"
+  },
+  "wheelhouse-lock": 1
+}
