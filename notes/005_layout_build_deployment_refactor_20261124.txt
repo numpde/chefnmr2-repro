@@ -793,3 +793,50 @@ Selected localhost qualification artifacts:
 images.env selects the qualified pair for subsequent promotion. Existing live
 services were not replaced. No ProArt transfer or GPU execution occurred; GPU
 qualification and MolDeTr's absent runtime roles are not claimed complete.
+
+
+Three-checkpoint BF16 production rollout, 2026-11-26
+-------------------------------------------------
+
+Source: chefnmr2-repro 26485146ef9d3b1b5926fa9e55cd7b660afc9100 and
+fork-of-chefnmr2 517ea3ac1165056aa6f645e95a0729796b64c8df. Both were pushed,
+then pulled on ProArt with the matching submodule. The change was independently
+audited before publication and again after integration with newer main commits.
+
+The deployment TOML [model] owns the explicit randomly selected epochs 1149,
+1299 and 1349 and parameter_dtype=bfloat16. No accuracy ranking is claimed.
+Every selected model's floating-point parameters and buffers are cast on CPU
+before loading and moving to CUDA. Stored checkpoints and BF16 CUDA autocast
+remain unchanged. Localhost retains epoch949 and float32 parameters.
+
+Validation used the science Docker engine. Local worker-cpu and provider builds,
+make test/unit, make check and make test/operator passed on the integrated code.
+ProArt built worker-cuda and provider offline using WHEELHOUSE=/data/cache/wheelhouse;
+make check passed there. No checkpoint or wheel transfers were needed.
+
+On ProArt, make test/model DEPLOYMENT=nmr-dapp32-com DOCKER_CONTEXT=science passed:
+- CUDA initialization: 7.386 s; observed parameter dtype: bfloat16.
+- Cold/warm morphine: 1.415/1.272 s, with 12 draws each (10 requested, rounded
+  to four per member). Scientific candidate checks passed.
+- Peak CUDA allocated/reserved bytes: 1,784,508,416 / 1,805,647,872.
+- Two SDK batches, three entries: ordered results validated; reconstruction
+  pool and the isolated Compose project's containers and volume retired.
+The complete scientific result/log remains on ProArt at
+  tmp/qualification/20261126T130842Z-three-member-bf16.log
+It was not copied to this checkout.
+
+make up DEPLOYMENT=nmr-dapp32-com DOCKER_CONTEXT=science confirmed old provider
+retirement and recreated the provider, worker and interpreter proxy. The running
+provider's actual config contains the three selected paths and bfloat16; the
+worker status reports phase=working. Runtime image identities:
+  worker sha256:018ca6d9fb4b855efc0ac22315c42b1a6081c1cdfa7f743c867cbb67264d3bec
+  provider sha256:8da891399027382b45ae26bfcb0d785096e9bf97199878b5c18c77a4a894b991
+Ada memory observed before/after replacement: 11,710 / 1,784 MiB (whole-device
+readings, not a controlled accuracy or performance comparison). This rollout
+qualifies CUDA inference and SDK batching, not checkpoint subset accuracy or a
+new end-to-end API job.
+
+Housekeeping: local and ProArt build scratch directories are empty; no isolated
+qualification containers/volumes remain. Shared wheelhouses, all source
+checkpoints, credentials, production volumes, prior images for recovery, and
+pre-existing qualification/rollback records were preserved. No broad prune ran.
