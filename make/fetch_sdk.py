@@ -31,13 +31,13 @@ def fetch(pool, release, name, checksum, *, url=None):
         log.info('Checking cached %s', name)
 
         if hashlib.sha256(destination.read_bytes()).hexdigest() != checksum:
-            raise ValueError(f"Cached SDK artifact has a different SHA-256: {name}")
+            raise ValueError(f"Cannot use cached artifact: {name=} has a different SHA-256")
 
         log.info('Verified cached %s', name)
 
         return
 
-    with tempfile.NamedTemporaryFile(dir=pool, prefix='.sdk-', delete=False) as output:
+    with tempfile.NamedTemporaryFile(dir=pool, prefix='.artifact-', delete=False) as output:
         temporary = Path(output.name)
 
         try:
@@ -50,14 +50,14 @@ def fetch(pool, release, name, checksum, *, url=None):
                     total += len(block)
 
                     if total > (8 * 1024 * 1024):
-                        raise ValueError(f"SDK support artifact exceeds 8 MiB: {name}")
+                        raise ValueError(f"Cannot acquire artifact: {name=} exceeds 8 MiB")
 
                     output.write(block)
 
             output.close()
 
             if hashlib.sha256(temporary.read_bytes()).hexdigest() != checksum:
-                raise ValueError(f"Downloaded SDK artifact has a different SHA-256: {name}")
+                raise ValueError(f"Cannot publish downloaded artifact: {name=} has a different SHA-256")
 
             temporary.chmod(0o644)
             temporary.replace(destination)
@@ -67,6 +67,14 @@ def fetch(pool, release, name, checksum, *, url=None):
 
 
 def main():
+    if sys.argv[1:2] == ['--artifact']:
+        (_, declaration, directory) = sys.argv[1:]
+        artifact = json.loads(Path(declaration).read_text())
+
+        fetch(Path(directory), '', artifact['name'], artifact['sha256'], url=artifact['url'])
+
+        return
+
     (version, manifest_hash, directory) = sys.argv[1:]
     pool = Path(directory)
     release = release_url(version)

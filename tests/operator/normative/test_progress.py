@@ -2,6 +2,7 @@
 
 import hashlib
 import io
+import json
 from pathlib import Path
 import selectors
 import subprocess
@@ -10,7 +11,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from fetch_sdk import fetch
+from fetch_sdk import fetch, main as fetch_main
 
 
 class ProgressTests(unittest.TestCase):
@@ -72,3 +73,30 @@ sys.stdout.write(build.sdk_tool('unused-image', Path('/unused-stage'), 'select')
 
             self.assertNotIn('Downloaded and verified', '\n'.join(messages.output))
             self.assertFalse((pool / 'bad.pyz').exists())
+
+    def test_pinned_fetch_cli_keeps_url_and_cache_name_independent(self):
+        payload = b'pinned tool fixture'
+
+        with tempfile.TemporaryDirectory() as directory:
+            pool = Path(directory)
+            declaration = pool / 'pin.json'
+            pin = {
+                'name': 'wheelhouse-0.2.0.pyz',
+                'url': 'https://example.invalid/v0.2.0/wheelhouse.pyz',
+                'sha256': hashlib.sha256(payload).hexdigest(),
+            }
+
+            declaration.write_text(json.dumps(pin))
+
+            arguments = [
+                'fetch_sdk.py',  # Invoke the existing fetch owner.
+                '--artifact',  # Read one exact independent artifact declaration.
+                str(declaration),  # Keep the URL and cache name in their owning pin.
+                str(pool),  # Restrict artifact publication to this disposable pool.
+            ]
+
+            with patch('fetch_sdk.sys.argv', arguments), patch('fetch_sdk.urlopen', return_value=io.BytesIO(payload)) as request:
+                fetch_main()
+
+            request.assert_called_once_with(pin['url'], timeout=120)
+            self.assertEqual((pool / pin['name']).read_bytes(), payload)

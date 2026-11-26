@@ -116,13 +116,13 @@ class Build:
                         (self.pool, '/pool'),
                         (ROOT / 'builds/wheelhouse-release.json', '/wheelhouse-release.json'),
                         (ROOT / 'make/fetch_sdk.py', '/fetch_sdk.py'),
-                        (ROOT / 'make/fetch_wheelhouse.py', '/fetch_wheelhouse.py'),
                     ],
                     [
                         '-B',  # Keep bytecode out of captured source mounts.
-                        '/fetch_wheelhouse.py',  # Acquire the independently pinned tool.
-                        '/pool',  # Retain verified bytes in the shared pool.
+                        '/fetch_sdk.py',  # Use the existing artifact fetch owner.
+                        '--artifact',  # Select an exact independent artifact declaration.
                         '/wheelhouse-release.json',  # Read the exact tool URL and digest.
+                        '/pool',  # Retain verified bytes in the shared pool.
                     ],
                     writable_pool=True,
                 )

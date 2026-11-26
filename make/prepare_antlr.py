@@ -1,11 +1,12 @@
 """Prepare ANTLR once offline and retain a private wheel, metadata and inputs."""
 
+import errno
+import hashlib
 import json
 import logging
 from pathlib import Path
 import shutil
 import subprocess
-import tempfile
 
 from build import ROOT, digest
 from work import temporary_run_directory
@@ -33,13 +34,13 @@ def acquire(build, tool, tool_sha256):
                 (build.pool, '/pool'),
                 (ROOT / 'builds/antlr/source.json', '/source.json'),
                 (ROOT / 'make/fetch_sdk.py', '/fetch_sdk.py'),
-                (ROOT / 'make/fetch_antlr.py', '/fetch_antlr.py'),
             ],
             [
                 '-B',  # Keep bytecode out of the captured source mounts.
-                '/fetch_antlr.py',  # Run Chef's exact source acquisition recipe.
+                '/fetch_sdk.py',  # Use the existing artifact fetch owner.
+                '--artifact',  # Select the committed exact source declaration.
+                '/source.json',  # Read the source archive URL, name and digest.
                 '/pool',  # Publish verified archive bytes in the shared pool.
-                '/source.json',  # Read the committed archive identity.
             ],
             writable_pool=True,
         )
@@ -65,6 +66,32 @@ def acquire(build, tool, tool_sha256):
                 writable_pool=True,
             )
         )
+
+
+def verify_retained(destination, identity, build_inputs):
+    """Reuse only a complete result whose recorded inputs and retained bytes agree."""
+    receipt = json.loads((destination / 'build.json').read_text())
+
+    if (receipt.get('build_identity') != identity) or (receipt.get('build_inputs') != build_inputs):
+        raise ValueError(f'Cannot reuse prepared ANTLR: {destination=!s} records different build inputs')
+
+    for record in (receipt['wheel'], receipt['metadata']):
+        name = record['filename']
+
+        if Path(name).name != name:
+            raise ValueError(f'Cannot reuse prepared ANTLR: {name=} is not a retained artifact filename')
+
+        if digest(destination / name) != record['sha256']:
+            raise ValueError(f'Cannot reuse prepared ANTLR: retained {name=} has a different SHA-256')
+
+    for (name, checksum) in receipt['inputs'].items():
+        if Path(name).name != name:
+            raise ValueError(f'Cannot reuse prepared ANTLR: {name=} is not a retained input filename')
+
+        if digest(destination / 'inputs' / name) != checksum:
+            raise ValueError(f'Cannot reuse prepared ANTLR: retained input {name=} has a different SHA-256')
+
+    return receipt
 
 
 def prepare(build, tool, tool_sha256):
@@ -94,6 +121,25 @@ def prepare(build, tool, tool_sha256):
             captured(path, inputs / path.name, digest(path))
 
         captured(tool, inputs / 'wheelhouse.pyz', tool_sha256)
+
+        build_inputs = {
+            'source_sha256': source['sha256'],
+            'source_declaration_sha256': digest(inputs / 'source.json'),
+            'backend_lock_sha256': digest(inputs / 'pylock.toml'),
+            'backend_project_sha256': digest(inputs / 'pyproject.toml'),
+            'recipe_sha256': digest(inputs / 'prepare.py'),
+            'wheelhouse_sha256': tool_sha256,
+            'image': image,
+        }
+
+        identity = hashlib.sha256(json.dumps(build_inputs, sort_keys=True).encode()).hexdigest()
+        destination = parent / ('4.9.3-' + identity)
+
+        if destination.exists():
+            verify_retained(destination, identity, build_inputs)
+            log.info('Reusing verified prepared ANTLR: %s', destination)
+
+            return destination
 
         scratch = stage / 'scratch'
 
@@ -168,13 +214,24 @@ def prepare(build, tool, tool_sha256):
         output = scratch / 'prepared'
         receipt = json.loads((output / 'build.json').read_text())
 
-        receipt.update(image=image, source=source, wheelhouse_sha256=digest(inputs / 'wheelhouse.pyz'))
+        receipt.update(
+            image=image,
+            source=source,
+            wheelhouse_sha256=tool_sha256,
+            build_identity=identity,
+            build_inputs=build_inputs,
+        )
 
-        receipt['inputs'] = {
-            path.name: digest(path)
-            for path in inputs.iterdir()
-            if path.is_file() and (path.name != 'wheelhouse.pyz')
-        }
+        retained_names = (
+            'source.json',
+            'pyproject.toml',
+            'pylock.toml',
+            'prepare.py',
+            source['name'],
+            'build-install.txt',
+        )
+
+        receipt['inputs'] = {name: digest(inputs / name) for name in retained_names}
 
         (output / 'build.json').write_text(json.dumps(receipt, indent=2) + '\n')
 
@@ -182,21 +239,21 @@ def prepare(build, tool, tool_sha256):
 
         retained.mkdir()
 
-        for name in (
-            'source.json',
-            'pyproject.toml',
-            'pylock.toml',
-            'prepare.py',
-            source['name'],
-            'build-install.txt',
-        ):
+        for name in retained_names:
             shutil.copyfile(inputs / name, retained / name)
 
-        # Keep successful outputs private; publication and pool admission are separate operations.
-        destination = Path(tempfile.mkdtemp(dir=parent, prefix='candidate-'))
+        # Publish a complete build identity once; never replace existing prepared bytes.
+        try:
+            output.rename(destination)
+        except OSError as error:
+            if error.errno not in (errno.EEXIST, errno.ENOTEMPTY):
+                raise
 
-        destination.rmdir()
-        output.rename(destination)
+            existing = verify_retained(destination, identity, build_inputs)
+
+            if existing['wheel']['sha256'] != receipt['wheel']['sha256']:
+                raise ValueError(f'Cannot retain prepared ANTLR: {destination=!s} already contains different wheel bytes for these build inputs') from error
+
         log.info('Prepared ANTLR wheel, metadata and receipt: %s', destination)
 
         return destination
