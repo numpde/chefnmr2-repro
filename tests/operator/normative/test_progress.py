@@ -11,7 +11,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 
-from fetch_sdk import fetch, main as fetch_main
+from fetch_artifact import fetch, main as fetch_main
 
 
 class ProgressTests(unittest.TestCase):
@@ -23,11 +23,10 @@ import sys
 from build import Build
 build = Build.__new__(Build)
 build.pool = Path('/unused')
-build.tool = Path('tool.pyz')
 build.environment = os.environ.copy()
-build.container = lambda *args: [sys.executable, '-u', '-c',
+build.container = lambda *args, **kwargs: [sys.executable, '-u', '-c',
     'import json, sys; print("tool working", file=sys.stderr); sys.stdin.readline(); print(json.dumps(dict(ready=True)))']
-sys.stdout.write(build.sdk_tool('unused-image', Path('/unused-stage'), 'select'))
+sys.stdout.write(build.wheelhouse_tool('unused-image', Path('/unused-stage'), 'check'))
 '''
 
         with subprocess.Popen(
@@ -49,25 +48,25 @@ sys.stdout.write(build.sdk_tool('unused-image', Path('/unused-stage'), 'select')
             self.assertEqual(process.returncode, 0, stderr)
             self.assertEqual(stdout, '{"ready": true}\n')
 
-    def test_sdk_reports_verified_downloads_and_cached_files_only(self):
+    def test_artifact_reports_verified_downloads_and_cached_files_only(self):
         payload = b'example SDK artifact'
         checksum = hashlib.sha256(payload).hexdigest()
 
         with tempfile.TemporaryDirectory() as directory:
             pool = Path(directory)
 
-            with patch('fetch_sdk.urlopen', return_value=io.BytesIO(payload)), self.assertLogs('fetch_sdk') as messages:
-                fetch(pool, 'https://example.invalid/', 'tool.pyz', checksum)
+            with patch('fetch_artifact.urlopen', return_value=io.BytesIO(payload)), self.assertLogs('fetch_artifact') as messages:
+                fetch(pool, 'https://example.invalid/tool.pyz', 'tool.pyz', checksum)
 
             self.assertIn('Downloading tool.pyz', '\n'.join(messages.output))
             self.assertIn('Downloaded and verified tool.pyz', '\n'.join(messages.output))
 
-            with patch('fetch_sdk.urlopen', side_effect=AssertionError('Cached files need no download')), self.assertLogs('fetch_sdk') as messages:
-                fetch(pool, 'https://example.invalid/', 'tool.pyz', checksum)
+            with patch('fetch_artifact.urlopen', side_effect=AssertionError('Cached files need no download')), self.assertLogs('fetch_artifact') as messages:
+                fetch(pool, 'https://example.invalid/tool.pyz', 'tool.pyz', checksum)
 
             self.assertIn('Verified cached tool.pyz', '\n'.join(messages.output))
 
-            with patch('fetch_sdk.urlopen', return_value=io.BytesIO(payload)), self.assertLogs('fetch_sdk') as messages:
+            with patch('fetch_artifact.urlopen', return_value=io.BytesIO(payload)), self.assertLogs('fetch_artifact') as messages:
                 with self.assertRaises(ValueError):
                     fetch(pool, 'https://example.invalid/', 'bad.pyz', '0' * 64)
 
@@ -89,13 +88,12 @@ sys.stdout.write(build.sdk_tool('unused-image', Path('/unused-stage'), 'select')
             declaration.write_text(json.dumps(pin))
 
             arguments = [
-                'fetch_sdk.py',  # Invoke the existing fetch owner.
-                '--artifact',  # Read one exact independent artifact declaration.
+                'fetch_artifact.py',  # Invoke the existing fetch owner.
                 str(declaration),  # Keep the URL and cache name in their owning pin.
                 str(pool),  # Restrict artifact publication to this disposable pool.
             ]
 
-            with patch('fetch_sdk.sys.argv', arguments), patch('fetch_sdk.urlopen', return_value=io.BytesIO(payload)) as request:
+            with patch('fetch_artifact.sys.argv', arguments), patch('fetch_artifact.urlopen', return_value=io.BytesIO(payload)) as request:
                 fetch_main()
 
             request.assert_called_once_with(pin['url'], timeout=120)

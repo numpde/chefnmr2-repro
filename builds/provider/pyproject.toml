@@ -1,0 +1,16 @@
+[project]
+name = "chefnmr2-provider"
+version = "1"
+requires-python = "==3.13.18"
+dependencies = [
+    # Preserve the prior SDK closure during this tool migration.
+    "anyio==4.15.1",
+    "pycparser==3.11",
+    "provider-core[api]==0.7.7",
+]
+
+[tool.wheelhouse]
+index = "https://pypi.org/simple"
+
+[tool.wheelhouse.sources]
+provider-core = {wheel = "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.7/provider_core-0.7.7-py3-none-any.whl", sha256 = "e0aaec06ee3c0378adce92c6c477db6da82562832d276b250f83edc78622f99c"}

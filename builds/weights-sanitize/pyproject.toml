@@ -1,0 +1,23 @@
+[project]
+name = "chefnmr2-weights-sanitize"
+version = "1"
+requires-python = "==3.12.16"
+dependencies = [
+    "torch==2.12.0+cpu",
+    "numpy==2.4.1",
+    "setuptools==79.0.1",
+    "filelock==3.29.0",
+    "fsspec==2026.4.0",
+    "jinja2==3.1.6",
+    "markupsafe==3.0.3",
+    "mpmath==1.3.0",
+    "networkx==3.6.1",
+    "sympy==1.14.0",
+    "typing-extensions==4.16.0",
+]
+
+[tool.wheelhouse]
+index = "https://pypi.org/simple"
+
+[tool.wheelhouse.sources]
+torch = {wheel = "https://download.pytorch.org/whl/cpu/torch-2.12.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl", sha256 = "5e3dc83725581fa38b7b2e45c58692e30b2a3cde19191af54b675ffcac3840a6"}

@@ -1,20 +1,18 @@
-"""Resolve with uv, select with the SDK tool, and assemble images offline."""
+"""Resolve complete role wheel locks and assemble their checked inputs offline."""
 
 import argparse
 from contextlib import contextmanager
+import errno
 import hashlib
 import json
 import logging
 import os
 from pathlib import Path
-import re
 import shutil
 import subprocess
 import sys
 import tempfile
 import tomllib
-import urllib.parse
-from fetch_sdk import artifact_names, release_url
 from work import temporary_run_directory
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -46,11 +44,6 @@ class Build:
 
         (self.host, self.proxy) = (host, proxy)
         self.docker = ['docker', '--host', host]
-        self.sdk = re.search(r'^provider-core==([^\s]+)$', (ROOT / 'builds/sdk.constraints.txt').read_text(), re.M).group(1)
-        self.manifest_hash = re.search(r'^# release-manifest-sha256 = ([0-9a-f]{64})$', (ROOT / 'builds/sdk.constraints.txt').read_text(), re.M).group(1)
-        self.release = release_url(self.sdk)
-        self.tool = self.pool / f'wheelhouse-tool-{self.sdk}.pyz'
-        self.hashes = self.pool / f'provider_core-{self.sdk}-sha256.json'
 
     def run(self, arguments, **kwargs):
         try:
@@ -69,37 +62,6 @@ class Build:
     def require_image(self, image):
         self.run(self.docker + ['image', 'inspect', image], stdout=subprocess.DEVNULL)
 
-    def sdk_artifacts(self, acquire=False):
-        log.info('Checking SDK %s artifacts in %s', self.sdk, self.pool)
-
-        if acquire:
-            image = self.bake('provider')['args']['PYTHON_BASE']
-
-            self.require_image(image)
-            log.info('Acquiring missing SDK artifacts')
-
-            self.run(
-                self.acquisition_command(
-                    image,
-                    [(self.pool, '/pool'), (ROOT / 'make/fetch_sdk.py', '/fetch_sdk.py')],
-                    ['-B', '/fetch_sdk.py', self.sdk, self.manifest_hash, '/pool'],
-                    writable_pool=True
-                )
-            )
-
-        if digest(self.hashes) != self.manifest_hash:
-            raise ValueError('Cannot use the SDK checksum manifest: SHA-256 differs from builds/sdk.constraints.txt')
-
-        hashes = json.loads(self.hashes.read_text())
-
-        for name in artifact_names(self.sdk):
-            path = self.pool / name
-
-            if digest(path) != hashes[name]:
-                raise ValueError(f'Cannot use {path.name}: its SHA-256 differs from the selected SDK release')
-
-        log.info('SDK %s verified and ready', self.sdk)
-
     def wheelhouse_artifacts(self, acquire=False):
         pin = json.loads((ROOT / 'builds/wheelhouse-release.json').read_text())
         tool = self.pool / pin['name']
@@ -115,12 +77,11 @@ class Build:
                     [
                         (self.pool, '/pool'),
                         (ROOT / 'builds/wheelhouse-release.json', '/wheelhouse-release.json'),
-                        (ROOT / 'make/fetch_sdk.py', '/fetch_sdk.py'),
+                        (ROOT / 'make/fetch_artifact.py', '/fetch_artifact.py'),
                     ],
                     [
                         '-B',  # Keep bytecode out of captured source mounts.
-                        '/fetch_sdk.py',  # Use the existing artifact fetch owner.
-                        '--artifact',  # Select an exact independent artifact declaration.
+                        '/fetch_artifact.py',  # Use the shared exact artifact fetch owner.
                         '/wheelhouse-release.json',  # Read the exact tool URL and digest.
                         '/pool',  # Retain verified bytes in the shared pool.
                     ],
@@ -129,10 +90,10 @@ class Build:
             )
 
         if not tool.is_file():
-            raise FileNotFoundError(f'Cannot prepare ANTLR: independent Wheelhouse {tool=!s} is missing; run make antlr/acquire')
+            raise FileNotFoundError(f'Cannot use independent Wheelhouse: {tool=!s} is missing; run make wheelhouse/acquire')
 
         if digest(tool) != pin['sha256']:
-            raise ValueError(f'Cannot prepare ANTLR: independent Wheelhouse {tool=!s} has a different SHA-256 from builds/wheelhouse-release.json')
+            raise ValueError(f'Cannot use independent Wheelhouse: {tool=!s} has a different SHA-256 from builds/wheelhouse-release.json')
 
         return (tool, pin['sha256'])
 
@@ -181,14 +142,23 @@ class Build:
             *arguments
         ]
 
-    def sdk_tool(self, image, stage, *arguments, online=False):
+    def wheelhouse_tool(self, image, stage, *arguments, online=False, scratch=None):
+        """Run the captured tool for the selected target while streaming progress to stderr."""
         mounts = [(self.pool, '/pool'), (stage, '/stage')]
-        application = ['-B', '/pool/' + self.tool.name, *arguments]
+
+        application = [
+            '-B',  # Keep bytecode out of captured source mounts.
+            '/stage/wheelhouse.pyz',  # Run the captured independently pinned tool.
+            *arguments,  # Pass the caller's complete lock operation unchanged.
+        ]
 
         if online:
-            command = self.acquisition_command(image, mounts, application, writable_pool=arguments[0] == 'acquire')
+            if scratch is not None:
+                mounts.append((scratch, '/scratch'))
+
+            command = self.acquisition_command(image, mounts, application, writable_pool=(arguments[0] == 'acquire'))
         else:
-            command = self.container(image, mounts) + application
+            command = self.container(image, mounts, scratch=scratch) + application
 
         return self.run(command, stdout=subprocess.PIPE, text=True).stdout
 
@@ -203,173 +173,233 @@ class Build:
 
         return lock['tags'][0]
 
-    def input_identity(self, profile, target):
-        directory = ROOT / 'builds' / profile
-        inputs = {str(path.relative_to(ROOT)): digest(path) for path in (ROOT / 'builds/sdk.constraints.txt', directory / 'requirements.in')}
+    def captured_tool(self, stage):
+        """Capture the independent tool and verify the bytes that this operation will execute."""
+        (tool, checksum) = self.wheelhouse_artifacts()
+        destination = stage / 'wheelhouse.pyz'
 
-        for constraint in sorted(directory.glob('*.constraints.txt')):
-            inputs[str(constraint.relative_to(ROOT))] = digest(constraint)
+        shutil.copyfile(tool, destination)
 
-        release_lock = f'provider_core-{self.sdk}-install.lock'
-        inputs['sdk-release-lock'] = digest(self.pool / release_lock)
-        inputs['sdk-tool'] = digest(self.tool)
-        # The copied upstream package is a build input, not a dependency-resolution input.
-        resolution_args = {key: value for (key, value) in target['args'].items() if key != 'UPSTREAM_PACKAGE'}
-        inputs['target'] = {'args': resolution_args, 'platforms': target['platforms']}
-        inputs['uv'] = self.bake('lock')['contexts']['uv']
+        if digest(destination) != checksum:
+            raise ValueError(f'Cannot use captured Wheelhouse {destination=!s}: its SHA-256 differs from the independent tool pin')
 
-        return hashlib.sha256(json.dumps(inputs, sort_keys=True).encode()).hexdigest()
+    def prepare(self, profile):
+        """Acquire exact declared wheel inputs before metadata-only role locking."""
+        image = self.bake(profile)['args']['PYTHON_BASE']
+
+        self.require_image(image)
+
+        with temporary_run_directory(ROOT, 'prepare') as stage:
+            self.captured_tool(stage)
+            shutil.copyfile(ROOT / 'builds' / profile / 'pyproject.toml', stage / 'pyproject.toml')
+
+            project = tomllib.loads((stage / 'pyproject.toml').read_text())
+
+            for (package, source) in project['tool']['wheelhouse'].get('sources', {}).items():
+                if (not isinstance(source, dict)) or ('sha256' not in source):
+                    continue
+
+                self.wheelhouse_tool(
+                    image,
+                    stage,
+                    'acquire',  # Prepare the declared exact wheel without dependency resolution.
+                    '--project',  # Use the same captured source declaration as role locking.
+                    '/stage/pyproject.toml',  # Let Wheelhouse verify wheel identity and real metadata.
+                    '--package',  # Select one exact declaration before resolving the role.
+                    package,  # Do not infer URLs or rewrite package-specific origins.
+                    '--pool',  # Publish only verified immutable wheel bytes.
+                    '/pool',  # Retain already verified unchanged wheels across later updates.
+                    online=True,
+                )
 
     def lock(self, profile):
-        self.sdk_artifacts()
+        """Resolve one complete role and replace its generated lock only after success."""
         target = self.bake(profile)
         image = self.prepare_lock_image(target)
         directory = ROOT / 'builds' / profile
-        release_lock = f'provider_core-{self.sdk}-install.lock'
 
         with temporary_run_directory(ROOT, 'lock') as stage:
+            self.captured_tool(stage)
+            shutil.copyfile(directory / 'pyproject.toml', stage / 'pyproject.toml')
+
             scratch = stage / 'scratch'
 
             scratch.mkdir(mode=0o700)
-            command = self.container(image, [(ROOT / 'builds', '/input'), (self.pool, '/pool')], scratch=scratch)
-            command[command.index('--entrypoint') + 1] = 'uv'
-            command += ['pip', 'compile', f'/input/{profile}/requirements.in', '-c', '/input/sdk.constraints.txt', '-c', '/pool/' + release_lock, '--no-python-downloads', '--python-version', target['args']['PY_VERSION'], '--generate-hashes', '--no-header', '--no-annotate', '--find-links', '/pool']
+            log.info('Resolving complete %s wheel selection', profile)
 
-            for constraint in sorted(directory.glob('*.constraints.txt')):
-                command += ['-c', f'/input/{profile}/{constraint.name}']
+            self.wheelhouse_tool(
+                image,
+                stage,
+                'lock',  # Resolve this role's complete installation environment.
+                '--project',  # Read only the captured dependency declaration.
+                '/stage/pyproject.toml',  # Keep input identity stable during resolution.
+                '--lock',  # Let Wheelhouse atomically render its authoritative selection.
+                '/scratch/pylock.toml',  # Keep resolver output in writable private scratch.
+                '--pool',  # Prefer eligible already verified cached wheels.
+                '/pool',  # Keep the pool read-only during metadata-only resolution.
+                online=True,
+                scratch=scratch,
+            )
 
-            command += ['--offline', '--no-index']
+            resolved = json.loads((scratch / 'pylock.toml').read_text())
+            resolved['project-sha256'] = digest(stage / 'pyproject.toml')
 
-            log.info('Resolving %s dependencies from cached packages', profile)
-            resolved = self.run(command, stdout=subprocess.PIPE, text=True).stdout
-
-            # OmegaConf's sole source-only dependency is built in its own image
-            # stage. Add its original archive identity to the resolver's hashes.
-            if 'antlr4-python3-runtime==' in resolved:
-                version = re.search(r'^antlr4-python3-runtime==([^\s]+)', resolved, re.M).group(1)
-                archive = self.pool / f'antlr4-python3-runtime-{version}.tar.gz'
-
-                for wheel in self.pool.glob(f'antlr4_python3_runtime-{version}-*.whl'):
-                    resolved = resolved.replace(digest(wheel), digest(archive))
-
-            (stage / 'resolved.txt').write_text(resolved)
-            arguments = ['locate', '--lock', '/stage/resolved.txt', '--pool', '/pool', '--index-url', 'https://pypi.org/simple']
-
-            if 'provider-core==' in resolved:
-                sdk_hash = json.loads(self.hashes.read_text())[f'provider_core-{self.sdk}-py3-none-any.whl']
-                arguments += ['--source', self.release + f'provider_core-{self.sdk}-py3-none-any.whl#sha256={sdk_hash}']
-
-            if 'torch==' in resolved:
-                version = re.search(r'^torch==([^\s]+)', resolved, re.M).group(1)
-                wheel = next(self.pool.glob(f'torch-{version}-*.whl'))
-                url = target['args']['TORCH_INDEX'] + '/' + urllib.parse.quote(wheel.name)
-                arguments += ['--source', url + '#sha256=' + digest(wheel)]
-
-            if 'antlr4-python3-runtime==' in resolved:
-                arguments += ['--require-source', 'antlr4-python3-runtime']
-
-            log.info('Locating published artifact URLs for %s', profile)
-            projected = self.sdk_tool(image, stage, *arguments, online=True)
-
-            # The SDK's PEP 751 projection is the complete artifact lock.
-            # The .lock filename is copied to a pylock name when invoking the tool.
-            output = projected + '\n[tool.repro]\ninputs-sha256 = ' + json.dumps(self.input_identity(profile, target)) + '\nresolution = ' + json.dumps(resolved) + '\n'
-
-            with tempfile.NamedTemporaryFile(mode='w', dir=directory, prefix='.requirements-', delete=False) as generated:
+            with tempfile.NamedTemporaryFile(dir=directory, prefix='.pylock-', delete=False) as generated:
                 temporary_lock = Path(generated.name)
 
                 try:
-                    generated.write(output)
+                    generated.write((json.dumps(resolved, indent=2, sort_keys=True) + '\n').encode())
+
                     generated.flush()
                     os.fsync(generated.fileno())
                     temporary_lock.chmod(0o644)
-                    os.replace(temporary_lock, directory / 'requirements.lock')
+                    os.replace(temporary_lock, directory / 'pylock.toml')
                 finally:
                     temporary_lock.unlink(missing_ok=True)
 
-        log.info('Saved dependency lock: %s', directory / 'requirements.lock')
+        log.info('Saved complete dependency lock: %s', directory / 'pylock.toml')
 
     @contextmanager
     def selected(self, profile, acquire=False):
-        self.sdk_artifacts()
-        log.info('Checking %s build inputs and cached base image', profile)
-        target = self.bake(profile)
-        base = target['args']['PYTHON_BASE']
+        """Capture one complete role lock, optionally acquire it, then verify it offline."""
+        directory = ROOT / 'builds' / profile
+        lock = directory / 'pylock.toml'
 
-        self.require_image(base)
+        if not lock.is_file():
+            raise FileNotFoundError(f'Cannot use {profile=}: complete wheel {lock=!s} is missing; prepare the declared prerequisites and run make lock')
 
         with temporary_run_directory(ROOT, 'build') as stage:
-            shutil.copyfile(ROOT / 'builds' / profile / 'requirements.lock', stage / 'pylock.profile.toml')
-            document = tomllib.loads((stage / 'pylock.profile.toml').read_text())
+            shutil.copyfile(directory / 'pyproject.toml', stage / 'pyproject.toml')
+            shutil.copyfile(lock, stage / 'pylock.toml')
+            selected = json.loads((stage / 'pylock.toml').read_text())
 
-            if document['tool']['repro']['inputs-sha256'] != self.input_identity(profile, target):
-                raise ValueError(f'Cannot use the {profile} lock: build inputs changed; regenerate it with make lock')
+            if selected.get('project-sha256') != digest(stage / 'pyproject.toml'):
+                raise ValueError(f'Cannot use {profile=}: {lock=!s} was not resolved from the current pyproject.toml; run make lock for this profile')
 
-            (stage / 'resolution.lock').write_text(document['tool']['repro']['resolution'])
-            source_options = []
+            target = self.bake(profile)
+            base = target['args']['PYTHON_BASE']
 
-            for package in document['packages']:
-                if 'sdist' in package:
-                    if package['name'] != 'antlr4-python3-runtime':
-                        raise ValueError(f"Cannot select source package {package['name']!r}: only antlr has an explicit offline build")
-
-                    source_options += ['--require-sdist', package['name']]
+            self.require_image(base)
+            self.captured_tool(stage)
 
             if acquire:
-                log.info('Acquiring locked %s dependencies into %s', profile, self.pool)
-                self.sdk_tool(base, stage, 'acquire', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', '--pool', '/pool', *source_options, online=True)
+                log.info('Acquiring complete locked %s wheel selection', profile)
 
-            log.info('Selecting locked %s artifacts', profile)
-            selected = json.loads(self.sdk_tool(base, stage, 'select', '--lock', '/stage/pylock.profile.toml', '--source-lock', '/stage/resolution.lock', *source_options))['artifacts']
+                self.wheelhouse_tool(
+                    base,
+                    stage,
+                    'acquire',  # Follow the complete locked selection without resolution.
+                    '--lock',  # Read the single captured role lock.
+                    '/stage/pylock.toml',  # Keep input identity stable through acquisition.
+                    '--pool',  # Publish verified wheels to the selected shared pool.
+                    '/pool',  # Preserve existing conflicting bytes instead of replacing them.
+                    online=True,
+                )
 
-            log.info('Selected %d locked artifacts for %s', len(selected), profile)
-            yield (stage, selected)
+            log.info('Checking complete %s wheel selection offline', profile)
+
+            checked = json.loads(
+                self.wheelhouse_tool(
+                    base,
+                    stage,
+                    'check',  # Verify every locked wheel for the actual target interpreter.
+                    '--lock',  # Read the same captured role lock used for acquisition.
+                    '/stage/pylock.toml',  # Never select a post-resolution package subset.
+                    '--pool',  # Resolve only the selected cached wheel bytes.
+                    '/pool',  # Keep the warm pool read-only.
+                )
+            )
+
+            yield (stage, base, checked['artifact_entries'])
 
     def acquire(self, profile):
+        """Acquire the exact complete role selection without dependency resolution."""
+
         with self.selected(profile, acquire=True):
             pass
 
         log.info('Dependencies ready for %s', profile)
 
     def build(self, profile):
-        with self.selected(profile) as (stage, artifacts):
-            (install, sources, build) = ([], [], [])
+        """Build offline from the complete checked wheel selection and its hashed projection."""
+
+        with self.selected(profile) as (stage, base, artifacts):
+            wheels = stage / 'wheels'
+
+            wheels.mkdir()
 
             for artifact in artifacts:
-                (filename, checksum) = (artifact['filename'], artifact['sha256'])
-                requirement = f'/wheels/{filename} --hash=sha256:{checksum}\n'
+                source = Path(artifact['source_path'])
 
-                if filename.endswith('.whl'):
-                    install.append(requirement)
+                if source != (Path('/pool') / artifact['filename']):
+                    raise ValueError(f'Cannot assemble the Bake wheel context: {source=!s} is outside the selected pool mount')
 
-                    if artifact['package'] == 'setuptools':
-                        build.append(requirement)
-                elif artifact['package'] == 'antlr4-python3-runtime':
-                    sources.append(requirement)
-                else:
-                    raise ValueError(f'Cannot build {filename}: only the declared antlr source dependency has an offline wheel build')
+                destination = wheels / artifact['filename']
+                source = self.pool / artifact['filename']
 
-            for (name, lines) in (('install.txt', install), ('sources.txt', sources), ('build.txt', build)):
-                (stage / name).write_text(''.join(lines))
+                try:
+                    os.link(source, destination)
+                except OSError as error:
+                    if error.errno not in (errno.EXDEV, errno.EPERM, errno.EACCES, errno.EROFS):
+                        raise
+
+                    # Read-only pools and different filesystems still export only selected bytes.
+                    with source.open('rb') as reader, destination.open('xb') as writer:
+                        shutil.copyfileobj(reader, writer, length=65536)
+
+                if digest(destination) != artifact['sha256']:
+                    raise ValueError(f'Cannot assemble the Bake wheel context: captured {destination=!s} differs from the selected SHA-256')
+
+            destinations = {
+                'artifacts': [
+                    {
+                        'source_path': artifact['source_path'],
+                        'sha256': artifact['sha256'],
+                        'destination': '/wheels/' + artifact['filename'],
+                    }
+                    for artifact in artifacts
+                ],
+            }
+
+            (stage / 'destinations.json').write_text(json.dumps(destinations))
+
+            scratch = stage / 'scratch'
+
+            scratch.mkdir(mode=0o700)
+
+            self.wheelhouse_tool(
+                base,
+                stage,
+                'check',  # Verify the same full selection before publishing installation input.
+                '--lock',  # Read the single captured complete role lock.
+                '/stage/pylock.toml',  # Prevent dependency selection drift during this build.
+                '--pool',  # Verify the bytes supplied through Bake's wheel context.
+                '/pool',  # Keep pooled artifacts read-only.
+                '--requirements',  # Let Wheelhouse render pip's hashed installation input.
+                '/scratch/install.txt',  # Publish only after complete verification succeeds.
+                '--destination-map',  # Map every exact source identity and digest.
+                '/stage/destinations.json',  # Retain each wheel filename at its container path.
+                scratch=scratch,
+            )
 
             log.info('Building %s offline', profile)
 
             self.run(
                 self.docker + [
-                    'buildx',
-                    'bake',
-                    '-f',
-                    'compose/images.yaml',
-                    profile,
-                    '--allow',
-                    'fs.read=' + str(self.pool),
-                    '--allow',
-                    'fs.read=' + str(stage),
-                    '--set',
-                    profile + '.contexts.wheels=' + str(self.pool),
-                    '--set',
-                    profile + '.contexts.installation=' + str(stage),
-                    '--load'
+                    'buildx',  # Build using the selected local engine's builder.
+                    'bake',  # Preserve Chef's existing image composition owner.
+                    '-f',  # Read the repository's declared image build graph.
+                    'compose/images.yaml',  # Keep runtime source contexts unchanged.
+                    profile,  # Build one complete installation role.
+                    '--allow',  # Grant read access to the selected wheel context.
+                    'fs.read=' + str(wheels),  # Export only this role's complete selected wheel set.
+                    '--allow',  # Grant read access to this operation's installation output.
+                    'fs.read=' + str(scratch),  # Keep disposable installation input outside the pool.
+                    '--set',  # Supply the verified wheel pool as a named build context.
+                    profile + '.contexts.wheels=' + str(wheels),  # Let pip reverify captured bytes at use.
+                    '--set',  # Supply the atomically rendered hashed installation input.
+                    profile + '.contexts.installation=' + str(scratch),  # Exclude host paths from pip input.
+                    '--load',  # Publish a local image only after the build succeeds.
                 ]
             )
 
@@ -379,7 +409,7 @@ class Build:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
 
-    parser.add_argument('action', choices=('sdk/acquire', 'antlr/acquire', 'antlr/prepare', 'lock', 'acquire', 'build'))
+    parser.add_argument('action', choices=('wheelhouse/acquire', 'antlr/acquire', 'antlr/prepare', 'prepare', 'lock', 'acquire', 'build'))
     parser.add_argument('--profile', default='')
     parser.add_argument('--host', required=True, help='Resolved local Unix socket for the selected Docker context')
     parser.add_argument('--pool', required=True)
@@ -389,8 +419,8 @@ def main():
     log.info('Starting %s%s', args.action, f' for {args.profile}' if args.profile else '')
     build = Build(args.host, args.pool, args.proxy)
 
-    if args.action == 'sdk/acquire':
-        build.sdk_artifacts(acquire=True)
+    if args.action == 'wheelhouse/acquire':
+        build.wheelhouse_artifacts(acquire=True)
     elif args.action == 'antlr/acquire':
         from prepare_antlr import acquire
 
@@ -403,6 +433,8 @@ def main():
         (tool, checksum) = build.wheelhouse_artifacts()
 
         prepare(build, tool, checksum)
+    elif args.action == 'prepare':
+        build.prepare(args.profile)
     elif args.action == 'lock':
         build.lock(args.profile)
     elif args.action == 'acquire':

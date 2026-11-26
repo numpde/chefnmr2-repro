@@ -13,9 +13,9 @@ proxy, and prose interpretation uses a separate proxy restricted to
 ## From a clean checkout
 
 Use a Linux host with Git, GNU Make, Bash, Python 3.11+, and Docker with Compose
-and Buildx. Run as the non-root checkout owner and select a Docker context with
-a local Unix socket. Images target `linux/amd64`. The pinned submodule requires
-GitHub SSH access. No SDK checkout or host SDK installation is needed.
+and Buildx. Run as the non-root checkout owner and select a rootless Docker
+context with a local Unix socket. Images target `linux/amd64`. The pinned
+submodule requires GitHub SSH access. No SDK checkout or host SDK installation is needed.
 
 Run the following blocks in the same Bash session. Replace `local` with your
 Docker context; reuse an existing wheelhouse outside the checkout if available.
@@ -43,15 +43,15 @@ from `tmp/inputs/`; type a number or a new value. This is local, disposable hist
 not a default. Proxy URLs with userinfo, queries or fragments are not saved.
 
 **Build the CPU images.** First pull the pinned external images, then acquire
-SDK tooling and locked dependencies. Builds run offline; each subshell stops on
-failure.
+independent Wheelhouse tooling and locked wheel dependencies. Builds run
+offline; each subshell stops on failure.
 
 ```bash
 (
   set -euo pipefail
   make images/pull DOCKER_CONTEXT="$CONTEXT"
 
-  make sdk/acquire DOCKER_CONTEXT="$CONTEXT" \
+  make wheelhouse/acquire DOCKER_CONTEXT="$CONTEXT" \
       WHEELHOUSE="$WHEELHOUSE" PROXY_URL="$PROXY_URL"
   for profile in provider worker-cpu weights-sanitize; do
     make acquire PROFILE="$profile" DOCKER_CONTEXT="$CONTEXT" \
@@ -213,28 +213,47 @@ cleanup allowances. Unconfirmed retirement is reported, not treated as success.
 
 | Location | Contents and lifetime |
 | --- | --- |
-| `$WHEELHOUSE` | Persistent wheels, source archives and SDK tooling; reusable across checkouts and profiles |
-| `tmp/{build,lock}/run-*/` | Installation lists and resolver scratch; removed on scope exit, including exceptions; abrupt termination can leave residue |
-| Docker/BuildKit storage | Imported wheelhouse context and cached layers; managed by Docker's cache lifecycle |
+| `$WHEELHOUSE` | Persistent wheels, source archives and independently pinned Wheelhouse; reusable across checkouts and profiles |
+| `tmp/{build,lock,prepare,antlr}/run-*/` | Captured declarations, selected wheels and resolver scratch; removed on scope exit, including exceptions; abrupt termination can leave residue |
+| Docker/BuildKit storage | Selected wheel contexts and cached layers; managed by Docker's cache lifecycle |
 | Final images | Installed packages; dependency archives are mounted during installation, not copied into the final image |
 | `chefnmr2-weights_checkpoints` volume | Persistent checkpoints and preparation receipts |
 
-Bake reads the wheelhouse directly, with no host wheel-staging copy or intermediate
-wheel image. Build steps mount it read-only and install selected files with
-`--no-index --no-deps --require-hashes`. BuildKit can copy/cache the **whole pool**;
-this is not a zero-copy host mount. The base image bundles pip's wheel, and the
-[acquisition bootstrap](make/bootstrap/README.md) includes dependency source and a
-pinned pip wheel. ANTLR is built into a wheel in an intermediate Docker stage;
-its hash is retained at `/opt/inference/source-wheel-sha256.txt`.
+Bake receives only the role's complete selected wheel set. Host staging uses
+hard links where available and otherwise copies selected files. Build steps
+mount these inputs read-only and install with
+`--no-index --no-deps --require-hashes`; BuildKit may cache those selected bytes.
+The shared pool is never sent as a build context. The base image bundles pip,
+and the [acquisition bootstrap](make/bootstrap/README.md) includes dependency
+source and a pinned pip wheel. ANTLR is prepared separately and installed from
+its published wheel.
+
+Locking, image builds and ANTLR preparation require a local rootless Docker
+engine so writable operation scratch retains the checkout owner's identity.
 
 `make/work.py` removes build and resolver scratch on scope exit. Model tests and
 manual runs remove their isolated Compose projects when they finish.
 
-For dependency changes, edit `builds/<profile>/requirements.in` or its constraints,
-then run `make lock` with explicit `PROFILE`, `WHEELHOUSE`, `DOCKER_CONTEXT` and
-`PROXY_URL`. Resolution uses cached packages plus index metadata and requires a
-rootless engine and the pinned uv image from Bake. `builds/sdk.constraints.txt`
-selects the SDK release. Normal builds use the resulting checked-in lock.
+For dependency changes, edit `builds/<profile>/pyproject.toml`, then run
+`make lock` with explicit `PROFILE`, `WHEELHOUSE`, `DOCKER_CONTEXT` and `PROXY_URL`.
+`make prepare` with the same inputs acquires exact declared SDK, Torch and
+prepared dependency wheels before locking when their bytes are missing locally.
+Preparation verifies real wheel metadata without resolving dependencies.
+Wheelhouse resolves one complete wheel-only lock under the role's pinned Python
+interpreter. The SDK wheel is pinned independently in each SDK role; its release
+installation locks do not constrain consumer resolution. Acquisition and builds
+reject a lock whose recorded declaration digest differs from the current `pyproject.toml`; regenerate it with `make lock`. Normal builds
+verify `builds/<profile>/pylock.toml` offline, ask Wheelhouse to render hashed wheel
+paths, and install that complete selection without dependency resolution.
+
+Chef owns the shared prepared ANTLR wheel. `make antlr/acquire` obtains the pinned
+source and complete locked backend; `make antlr/prepare` builds offline and
+retains a private wheel, its extracted metadata and an input/output receipt under
+`tmp/prepared/antlr/`. Runtime image builds consume the separately published
+prepared wheel and do not execute its source backend. The immutable dependency
+release is [`dependencies-antlr4-4.9.3-1`](https://github.com/numpde/chefnmr2-repro/releases/tag/dependencies-antlr4-4.9.3-1).
+Private candidate locks used to qualify preparation are disposable; runtime locks
+record the public release URL and digest.
 
 Prompts and offering text live in `containers/provider/prompts/` and
 `containers/provider/about/`; rebuild the provider after editing them.

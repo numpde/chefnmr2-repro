@@ -36,10 +36,10 @@ images/pull: ## Pull pinned Python bases and checkpoint downloader; requires DOC
 	"$${docker[@]}" compose --project-directory "$(REPOSITORY_ROOT)" --env-file /dev/null \
 		-f "$(REPOSITORY_ROOT)/compose/images.yaml" pull --ignore-buildable
 
-.PHONY: sdk/acquire lock acquire build
-sdk/acquire: ## Verify or acquire pinned SDK tooling in WHEELHOUSE; requires DOCKER_CONTEXT.
+.PHONY: wheelhouse/acquire prepare lock acquire build
+wheelhouse/acquire: ## Verify or acquire independent Wheelhouse tooling; requires DOCKER_CONTEXT.
 	@$(operator_inputs); pool=$$(choose WHEELHOUSE); proxy=$$(choose PROXY_URL); select_docker; \
-	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" sdk/acquire --host "$$docker_host" --pool "$$pool" --proxy "$$proxy"
+	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" wheelhouse/acquire --host "$$docker_host" --pool "$$pool" --proxy "$$proxy"
 
 .PHONY: antlr/acquire antlr/prepare
 antlr/acquire: ## Acquire pinned Wheelhouse, ANTLR source and locked build dependencies.
@@ -50,10 +50,11 @@ antlr/prepare: ## Build ANTLR offline and retain a private wheel, metadata and r
 	@$(operator_inputs); pool=$$(choose WHEELHOUSE); select_docker; \
 	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" antlr/prepare --host "$$docker_host" --pool "$$pool"
 
-lock: ## Resolve a profile lock from cached packages; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
+prepare: ## Prepare exact declared wheel inputs before metadata-only locking; requires PROFILE.
+lock: ## Resolve a complete wheel-only profile lock from declared sources; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
 acquire: ## Acquire the profile's locked packages into WHEELHOUSE; requires PROFILE and DOCKER_CONTEXT.
 build: ## Build a selected profile offline; requires PROFILE, WHEELHOUSE and DOCKER_CONTEXT.
-lock acquire build:
+prepare lock acquire build:
 	@$(operator_inputs); profile=$$(choose PROFILE '$(PROFILES)'); pool=$$(choose WHEELHOUSE); proxy_args=(); \
 	if [[ $@ != build ]]; then proxy_args=(--proxy "$$(choose PROXY_URL)"); fi; select_docker; \
 	$(HOST_PYTHON) "$(REPOSITORY_ROOT)/make/build.py" "$@" --profile "$$profile" --host "$$docker_host" --pool "$$pool" "$${proxy_args[@]}"

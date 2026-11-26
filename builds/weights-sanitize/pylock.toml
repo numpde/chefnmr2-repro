@@ -1,0 +1,190 @@
+{
+  "metadata": {
+    "11ef7bb35dab8a394fde6e608221d5cf3e8499401c249bebaeaad760a1a8dec2": "8f49c4404b507182ac953dfd4551641df0bf36ccf67e08ac8a68cce323bf1d4c",
+    "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8": "b05084ca1d50879865178d9fff9fabeab61bdfb1f361bfbde95421ffc8f9be46",
+    "5e3dc83725581fa38b7b2e45c58692e30b2a3cde19191af54b675ffcac3840a6": "4dea4f71028daacd7f5b67b9992c243a2cefabbadb8566316a8c2e5af0c86228",
+    "7ad270f438cbdd402c364980317fb6b117d9ec5e226fff5b4148dd9aa9fc6e02": "8fd49aa7e99fb0ca3190188f85d658924074972d5a4098c3d58ecc105caecc5a",
+    "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67": "68c5548fb67c4132a13898d9b31ec50c6bea2abdd915d921f214355c3a6499c8",
+    "96f5f6344709aa1572bbf631c640e4ebeeb519e08da902c39a001882f30ac258": "21335d1940ca00830e17594e81e9ed7b393211b1e03eda3c411a3507bf59f4b7",
+    "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c": "44b66ea444b9c0d19ae94815d356bf047ae6b680c19268b5c265687cd6a81406",
+    "d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762": "aca5d94a97d1f70f301d033addb635f6e66be8973a00aba4127637eed2ef316a",
+    "d6dd0be5b5b189d31db7cda48b91d7e0a9795f31430b7f271219ab30f1d3ac9d": "12b4cc61a7fa288cf7667ee3f213786d9619db57fb33ff6f934afbcb5c12ec81",
+    "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5": "b756c2fbfd5be05ac5bdb0ebca61f55618f30f633ed92d88a5687429313a7595",
+    "e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51": "d3152caeb1486d143b30b1d41fffaaddb7ea95fdc9547ae1135ce697b1a420b5"
+  },
+  "project-sha256": "a3de13b994a490cc0de03bbeed7472792e22b7d6d24f9582f0fd1e1cffce42bd",
+  "resolution": {
+    "created-by": "uv",
+    "lock-version": "1.0",
+    "packages": [
+      {
+        "index": "https://pypi.org/simple",
+        "name": "filelock",
+        "version": "3.29.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "96f5f6344709aa1572bbf631c640e4ebeeb519e08da902c39a001882f30ac258"
+            },
+            "name": "filelock-3.29.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/81/47/dd9a212ef6e343a6857485ffe25bba537304f1913bdbed446a23f7f592e1/filelock-3.29.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "fsspec",
+        "version": "2026.4.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "11ef7bb35dab8a394fde6e608221d5cf3e8499401c249bebaeaad760a1a8dec2"
+            },
+            "name": "fsspec-2026.4.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/d5/0c/043d5e551459da400957a1395e0febbf771446ff34291afcbe3d8be2a279/fsspec-2026.4.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "jinja2",
+        "version": "3.1.6",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"
+            },
+            "name": "jinja2-3.1.6-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "markupsafe",
+        "version": "3.0.3",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "d6dd0be5b5b189d31db7cda48b91d7e0a9795f31430b7f271219ab30f1d3ac9d"
+            },
+            "name": "markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/3c/2e/8d0c2ab90a8c1d9a24f0399058ab8519a3279d1bd4289511d74e909f060e/markupsafe-3.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "mpmath",
+        "version": "1.3.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c"
+            },
+            "name": "mpmath-1.3.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "networkx",
+        "version": "3.6.1",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "d47fbf302e7d9cbbb9e2555a0d267983d2aa476bac30e90dfbe5669bd57f3762"
+            },
+            "name": "networkx-3.6.1-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/9e/c9/b2622292ea83fbb4ec318f5b9ab867d0a28ab43c5717bb85b0a5f6b3b0a4/networkx-3.6.1-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "numpy",
+        "version": "2.4.1",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "7ad270f438cbdd402c364980317fb6b117d9ec5e226fff5b4148dd9aa9fc6e02"
+            },
+            "name": "numpy-2.4.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/d9/7d/9c8a781c88933725445a859cac5d01b5871588a15969ee6aeb618ba99eee/numpy-2.4.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "setuptools",
+        "version": "79.0.1",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51"
+            },
+            "name": "setuptools-79.0.1-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/0d/6d/b4752b044bf94cb802d88a888dc7d288baaf77d7910b7dedda74b5ceea0c/setuptools-79.0.1-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "sympy",
+        "version": "1.14.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5"
+            },
+            "name": "sympy-1.14.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://download.pytorch.org/whl/cpu/torch-2.12.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl",
+        "name": "torch",
+        "version": "2.12.0+cpu",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "5e3dc83725581fa38b7b2e45c58692e30b2a3cde19191af54b675ffcac3840a6"
+            },
+            "name": "torch-2.12.0+cpu-cp312-cp312-manylinux_2_28_x86_64.whl",
+            "url": "https://download.pytorch.org/whl/cpu/torch-2.12.0%2Bcpu-cp312-cp312-manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "typing-extensions",
+        "version": "4.16.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+            },
+            "name": "typing_extensions-4.16.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl"
+          }
+        ]
+      }
+    ],
+    "requires-python": ">=3.12.16"
+  },
+  "target": {
+    "abi": "cpython-312-x86_64-linux-gnu",
+    "implementation_name": "cpython",
+    "implementation_version": "3.12.16",
+    "os_name": "posix",
+    "platform_machine": "x86_64",
+    "platform_python_implementation": "CPython",
+    "platform_system": "Linux",
+    "python_full_version": "3.12.16",
+    "python_version": "3.12",
+    "sys_platform": "linux"
+  },
+  "wheelhouse-lock": 1
+}

@@ -1,0 +1,808 @@
+{
+  "metadata": {
+    "08a3ecefae5a01c7f5117351c64f17c7c62efa5fffdbe24fc7d298da19cd0b44": "35ef649dd5370d74512351b45aa9ddc81715ae8c806326c2c5ec61d80dc97aca",
+    "0a759da5dea5c0ea10fd307de75cdeb59e7ea4fcb8add0924859b944babf1112": "88d296b4407f82253bf358667db12776dcb521170c7ff5b8eff38eb272ff729f",
+    "0d8163f43acde9a73c2a33605353a4f1bc4798745a8b1d73183b28e5b435ae28": "6002f29765e5bc1a3be4a1b92ed56b64968a0fecba73e7f81cd536d0c40f4fa3",
+    "13a74f429e23b921c1109976abefacc69835f2f433ebd323d3946e11d804e47b": "357d3afcf99126edd846988256b9b1a2b52b8693004cb9f117fa688890932d54",
+    "1503af579d8379c24bdd65528379bc57039b0455be9f5f9686cf8e473a1fce51": "0b224d8df48997cd2d336dbf9debc7a7afa000cc242e1555c5c90ac654cccb7f",
+    "188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90": "66e81ac2e41775b5ebddcfbb9f4ae77158e4c5739fd52d231e14f2fffda9c8de",
+    "1aee33a5da6e1db083fe2b90082def8915f30f3248d5896bcec36a579d941bfc": "0a7d6e8b87aa972f3f2bc454f12fee898e8ef5d1a09d92b418acd38e8582076d",
+    "25e30a8a7323935d4ad0340b95a0b69926eee755767e8e0b1cf8dd85b197d3fd": "72e9b5bb91a38047d99145a1a802ad947ff555431e3bf33751cb31a5fa91f6e2",
+    "290f0a2ee94c9f3687a02502f3b9299a9f9fe826e6d0287ee18482e78d495b80": "825ae32b105cfd50f7b375b9132e551f24dc32896c67c425349f6565d3b3fe46",
+    "2b3c89c88d01ee0e477cb7f82ef60a11a4bcd57b6b87c33f789350b59759360b": "d7b8582e9cf38072a8bb9960822e89f41a64bc7f68995eec783304c828e9734e",
+    "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55": "fe2d4fda6199128978779e0cf27f3c045c531863fcdd987eacc74f3a18d41c21",
+    "3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8": "4444a6b549a8ebb02e1739f4375af7756c841f96f0c31077a183273c7462bd10",
+    "3f4a557945a7b0f95efeb1f432267affe5d45ac8ddde2aed1b97ebb62382c089": "55e884d295b9bc70f9e71631e0703253e3b9dca6e6568b8778704a3f40105c83",
+    "3f7b347782ab7e4cf4c798496ae3a82787d9f21ec12676a9c564355eeef8daa8": "c3eb8984172bedc8e056655e1419351f4497374a91b7b709dbc4a1340f50e1e9",
+    "42d63be3af4f9b951b199b0a9d23365d37ab14687e6d77b74940432c8515c4ca": "dba7fdfe24e302f46bae562f55d66cc367c0618abae9894a1ebec93dc8f0e511",
+    "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8": "b05084ca1d50879865178d9fff9fabeab61bdfb1f361bfbde95421ffc8f9be46",
+    "4936d1d6780fbe68db454f5e72a42ff64d1fd6397df9f363ae786930fd5c1cd4": "4777c4d7b040cdead515e13febe9da861052e4690bdfc2c67664b13aaf605be5",
+    "4eb01c08e859bf924d222250d2e8f8b8ff6d3db4721288cf35d14252a4d933c8": "ae42b56aa16feaa9994af204b6c82ac546fed7d67cf584cc10d1f2b7119b5eac",
+    "51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80": "e3a74c846648bb55f4f907284b745e2003b87b96d9c9d17a8a50cf37804541c9",
+    "54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193": "0bd65db043688a44f4a29608c1cba521c932f7ff76f238bbd869441e15012653",
+    "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101": "043aecb571af7189e8a6c528f5d8e32545f1b2cdfaaf761d51e6d5b67ea3ca81",
+    "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86": "28f326098ac09fcba79b8f180f96087c841fe2456215cb7b872a9c7d5cd19d64",
+    "63f9c761e58d9a35646bb9ab253a802a51a60423bab5495d9710d148f9dbe5a7": "36f189014856612c838429bae2d393c8789395fc832697c7891abbbb3e4f6e31",
+    "6be95b735c428ba27badf39e92078133d3a505f872d0a31467ba577d73c57676": "7a6493aa887af138f80d16ee5f31e490aeb7a7734eac33c304becbd6cdc71d72",
+    "6c44f692dce8fd5ffd3e3df134b6cdb9c2f72d99cf40b62c32dde45eea9ddad3": "f519e642db9f4983f5e24d131a52972210b3222800a07e099d40926d18d183d8",
+    "74caf5e34b66d9f3a429af689c1c7128daba1d8208df60e81106b115c00d6fca": "5c9071db9b057bec89cd6d7f76f61e5f28a5e8d3717ff6c85420cf8015ee0321",
+    "7b4df175cdb08ba400f45cae3bdcae7ba8365db4d165fc65fd04b050ab63b46b": "ab2dcbf0e3e70cc75dca1d894f8953e7de8b651dc2dc28f08f350bfa5787badb",
+    "7f82250d7782aa23b6cfe765ecc7db554bd3c2870c43f3d1821f1d18aebf0548": "30699e3ca76f6f41f5252e7a0fce2c2d303c465b86c1b022e03a2799bd15098b",
+    "82148ec5bddac30b51a5b3c1945075f896fa022cb93f8e4a01e9f6ee95292c5f": "d4e345f82cb783877d73261f00303577cdf20d13229176c2d03a0a5603cb3ab5",
+    "8513a7a1d31fe8a4b4a8d6285af8f7f9ecc863f47a8e4fe0fd28ca5c6d770835": "bf325e5155318385a2fcc4680742da710bbadf13a3d1c0979a98b3487980f261",
+    "858f0cbcc78d726fea9499eb3464faa98392fa093845a3262209bd226b7844d6": "b0d90eccbeb7479463e1093d577979226c22ccf5de748692a1e4a1ca7e43c269",
+    "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67": "68c5548fb67c4132a13898d9b31ec50c6bea2abdd915d921f214355c3a6499c8",
+    "8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f": "68f5a262767510638e9b1933b1493f2baadc9616fe1e696f62aedd59c8c0a37c",
+    "8e124f974786f831d6043728e38296969d3579db8896fe004682f5758e613581": "66767d76388ece15d49d50dafb655891ef5d868715e7128e7f7d737a70b353c4",
+    "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c": "44b66ea444b9c0d19ae94815d356bf047ae6b680c19268b5c265687cd6a81406",
+    "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c": "dbd8c14c1e4ca1e0c9824a6dbc7cbbf78884f38eb52d91148cd3025f671e4b85",
+    "ad9b6d2ead2435f11cbb6868809d2adeeee302e9bb94bcf0539c7a40d80e8575": "27505676fa8577b448021d935306228d06c6236b2bf5247c148425e5130ad4c8",
+    "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc": "03c3b415ed38d09faedc49360e930769b40c58f68585e6de00e2e4916a858d34",
+    "bc210535442b39e1bf2805e0c7a17dfd6a4ace760c84c7f7d16245d23a6b1c39": "7306933907768b0098784e56dfd678242f52383ff3e35c10a4c150539393d6ec",
+    "c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf": "558bafb9093a8e790175d9ecff9688382981d744877dad86fd6770db0f4dc918",
+    "c81d98e27d9d9261909dcccab1ba5d6ea1c98b0bb9470e368604614fd1d36ddd": "bb1956097beb504f190f8ea20c859b5dfea567679a247ce252d7813dd73f361d",
+    "cf41d9e69019939aa15296fa66ea7d3fdb8d2c6383f729f4b1156c8b37808a06": "5659a955aa1bc509a7c06b939502271fe49acaf4f79adb58c0f73b3f0791a235",
+    "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad": "febb9b0f8f3e80d57c8199c304f35c4336e8581d1d18d7983c92766b82793b25",
+    "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5": "b756c2fbfd5be05ac5bdb0ebca61f55618f30f633ed92d88a5687429313a7595",
+    "e0aaec06ee3c0378adce92c6c477db6da82562832d276b250f83edc78622f99c": "e57bebfd670fe427634919caf25c72231ea3ebabe94e8f58c195f30ae850b8b4",
+    "e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0": "ffcf42a343af6ffc54ff9cc4c09cf9638cd73b131370f395abd11b630186c90c",
+    "e4553a30f34195f3fa1da02a6da3d6337d28f2003943aa0a3d247bbc25fefc42": "9fbf54b4aa156fef26145838fc99abb2024046e98a2776efbf4f5bc6bd242cb0",
+    "e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1": "e463e38f7fe7da36a11e6d3fecc5dfa5b97be8c8022620400750d79ae7d842bc",
+    "ebc9a647918df0d7298d67cfaf41579fd4c78ead9aba246f5ad9414d61b9ec4c": "452ce1f47029131674089a3c3f52bd7e171071f11bf68ef1a4f2cb464891ae62",
+    "ee8722c1f0145ab246bccb9e452153b5e0515fd094c3678df50b2a0888b8b171": "561b0e547a2da463a0a6e4f7715fb4965c578627faa5790be12db26e5c7c9b03",
+    "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0": "614985b278f601b8ef863f82783b991cc3ada4b89f592eb71c7c48c5f2ef2298"
+  },
+  "project-sha256": "53b66db3d48399cd20f7cad237e74c059bbe0e97e93f2f77164ae4986761f1ce",
+  "resolution": {
+    "created-by": "uv",
+    "lock-version": "1.0",
+    "packages": [
+      {
+        "index": "https://pypi.org/simple",
+        "name": "annotated-types",
+        "version": "0.8.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0"
+            },
+            "name": "annotated_types-0.8.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/99/91/8acff4f5e50511b911bbccb72b8628a49c68ce14148cd9f6431094859a90/annotated_types-0.8.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://github.com/numpde/chefnmr2-repro/releases/download/dependencies-antlr4-4.9.3-1/antlr4_python3_runtime-4.9.3-py3-none-any.whl",
+        "name": "antlr4-python3-runtime",
+        "version": "4.9.3",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "8513a7a1d31fe8a4b4a8d6285af8f7f9ecc863f47a8e4fe0fd28ca5c6d770835"
+            },
+            "name": "antlr4_python3_runtime-4.9.3-py3-none-any.whl",
+            "url": "https://github.com/numpde/chefnmr2-repro/releases/download/dependencies-antlr4-4.9.3-1/antlr4_python3_runtime-4.9.3-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "anyio",
+        "version": "4.15.1",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "6152fdbbf9a77fdec97731721bebf7c4c44f7c29b424b0065826173efc7ed101"
+            },
+            "name": "anyio-4.15.1-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/12/b8/4bd346e22b28902df4d651910f5242c28d84e4a5c2435ca5c3f797ed7e2e/anyio-4.15.1-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "certifi",
+        "version": "2026.10.23",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1"
+            },
+            "name": "certifi-2026.10.23-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/32/d1/a3652fe2c19134d0d15922177821d863cbd7e842d53a21bbe7e8e3a1b5ac/certifi-2026.10.23-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "platform_python_implementation != \"PyPy\"",
+        "name": "cffi",
+        "version": "2.1.1",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "c1453022f490d2459a11819d83ad1d586e9ff65a12ac3e705ffebd46d3685dcf"
+            },
+            "name": "cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/b1/db/dceb9dd5b231e1da801793f8acc9f3c52a7e1afe40bb1aae37e02b0faad5/cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "cryptography",
+        "version": "50.0.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "82148ec5bddac30b51a5b3c1945075f896fa022cb93f8e4a01e9f6ee95292c5f"
+            },
+            "name": "cryptography-50.0.0-cp311-abi3-manylinux_2_34_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/da/3a/f05e32c99d440c9bb891ea0e36c9091891e36be5a9a87ab2ee6ea20729f6/cryptography-50.0.0-cp311-abi3-manylinux_2_34_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "cuda-bindings",
+        "version": "13.0.3",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "cf41d9e69019939aa15296fa66ea7d3fdb8d2c6383f729f4b1156c8b37808a06"
+            },
+            "name": "cuda_bindings-13.0.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/21/ac/6b34452a3836c9fbabcd360689a353409d15f500dd9d9ced7f837549e383/cuda_bindings-13.0.3-cp312-cp312-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "cuda-pathfinder",
+        "version": "1.6.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "1503af579d8379c24bdd65528379bc57039b0455be9f5f9686cf8e473a1fce51"
+            },
+            "name": "cuda_pathfinder-1.6.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/fc/b4/d088047afe39827556df21118cac9ffd20cc3f968c99a7681494d1eb333c/cuda_pathfinder-1.6.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "einops",
+        "version": "0.8.2",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "54058201ac7087911181bfec4af6091bb59380360f069276601256a76af08193"
+            },
+            "name": "einops-0.8.2-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/2a/09/f8d8f8f31e4483c10a906437b4ce31bdf3d6d417b73fe33f1a8b59e34228/einops-0.8.2-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "filelock",
+        "version": "4.1.1",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "3f4a557945a7b0f95efeb1f432267affe5d45ac8ddde2aed1b97ebb62382c089"
+            },
+            "name": "filelock-4.1.1-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/d7/8b/f837f52905395ba4510fe61f753c24833fb0a9c76e21267bb9f828b664a9/filelock-4.1.1-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "fsspec",
+        "version": "2026.9.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "8dd6e646e99ea382bd85f97a45e6b526a442d79423a7dc673f1e2756d05fcb5f"
+            },
+            "name": "fsspec-2026.9.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/6c/c0/a98505f18594f1bce828bb159cec0fcf9860562f1a2c85913409fc8f3d9e/fsspec-2026.9.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "h11",
+        "version": "0.16.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "63cf8bbe7522de3bf65932fda1d9c2772064ffb3dae62d55932da54b31cb6c86"
+            },
+            "name": "h11-0.16.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/04/4b/29cac41a4d98d144bf5f6d33995617b185d14b22401f75ca86f384e87ff1/h11-0.16.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "http-sf",
+        "version": "1.2.1",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "63f9c761e58d9a35646bb9ab253a802a51a60423bab5495d9710d148f9dbe5a7"
+            },
+            "name": "http_sf-1.2.1-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/f7/2c/f2499209da3445fe0e630f2542eb3fb7fc4b4541b1c492677f120d611ed6/http_sf-1.2.1-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "httpcore",
+        "version": "1.0.9",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "2d400746a40668fc9dec9810239072b40b4484b640a8c38fd654a024c7a1bf55"
+            },
+            "name": "httpcore-1.0.9-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/7e/f5/f66802a942d491edb555dd61e3a9961140fd64c90bce1eafd741609d334d/httpcore-1.0.9-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "httpx",
+        "version": "0.28.1",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "d909fcccc110f8c7faf814ca82a9a4d816bc5a6dbfea25d6591d6985b8ba59ad"
+            },
+            "name": "httpx-0.28.1-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/2a/39/e50c7c3a983047577ee07d2a9e53faf5a69493943ec3f6a384bdc792deb2/httpx-0.28.1-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "idna",
+        "version": "3.20",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c"
+            },
+            "name": "idna-3.20-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "jinja2",
+        "version": "3.1.6",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "85ece4451f492d0c13c5dd7c13a64681a86afae63a5f347908daf103ce6d2f67"
+            },
+            "name": "jinja2-3.1.6-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/62/a1/3d680cbfd5f4b8f15abc1d571870c5fc3e594bb582bc3b64ea099db13e56/jinja2-3.1.6-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "markupsafe",
+        "version": "3.0.4",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "8e124f974786f831d6043728e38296969d3579db8896fe004682f5758e613581"
+            },
+            "name": "markupsafe-3.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/4f/a7/aeedb5140afa41fc74c225e9184ab96723a6e873b6ee1c9fede7283456d8/markupsafe-3.0.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "mpmath",
+        "version": "1.3.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "a0b2b9fe80bbcd81a6647ff13108738cfb482d481d826cc0e02f5b35e5c88d2c"
+            },
+            "name": "mpmath-1.3.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/43/e3/7d92a15f894aa0c9c4b49b8ee9ac9850d6e63b03c9c32c0367a13ae62209/mpmath-1.3.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "networkx",
+        "version": "3.7",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "e3fd2c13a7814cee3746340d8d7f8598a67f16a58bf47fb7f8793fab6efca1b0"
+            },
+            "name": "networkx-3.7-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/7e/cd/fe58041e9011f307c490e3e17dd48cc516448f7c698a3f2d9d9d65d7e6a8/networkx-3.7-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "numpy",
+        "version": "2.3.5",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "0d8163f43acde9a73c2a33605353a4f1bc4798745a8b1d73183b28e5b435ae28"
+            },
+            "name": "numpy-2.3.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/b6/23/2a1b231b8ff672b4c450dac27164a8b2ca7d9b7144f9c02d2396518352eb/numpy-2.3.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cublas",
+        "version": "13.1.0.3",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "ee8722c1f0145ab246bccb9e452153b5e0515fd094c3678df50b2a0888b8b171"
+            },
+            "name": "nvidia_cublas-13.1.0.3-py3-none-manylinux_2_27_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/e7/44/423ac00af4dd95a5aeb27207e2c0d9b7118702149bf4704c3ddb55bb7429/nvidia_cublas-13.1.0.3-py3-none-manylinux_2_27_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cuda-cupti",
+        "version": "13.0.85",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "4eb01c08e859bf924d222250d2e8f8b8ff6d3db4721288cf35d14252a4d933c8"
+            },
+            "name": "nvidia_cuda_cupti-13.0.85-py3-none-manylinux_2_25_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/33/6d/737d164b4837a9bbd202f5ae3078975f0525a55730fe871d8ed4e3b952b0/nvidia_cuda_cupti-13.0.85-py3-none-manylinux_2_25_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cuda-nvrtc",
+        "version": "13.0.88",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "ad9b6d2ead2435f11cbb6868809d2adeeee302e9bb94bcf0539c7a40d80e8575"
+            },
+            "name": "nvidia_cuda_nvrtc-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/c3/68/483a78f5e8f31b08fb1bb671559968c0ca3a065ac7acabfc7cee55214fd6/nvidia_cuda_nvrtc-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cuda-runtime",
+        "version": "13.0.96",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "7f82250d7782aa23b6cfe765ecc7db554bd3c2870c43f3d1821f1d18aebf0548"
+            },
+            "name": "nvidia_cuda_runtime-13.0.96-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/2e/24/d1558f3b68b1d26e706813b1d10aa1d785e4698c425af8db8edc3dced472/nvidia_cuda_runtime-13.0.96-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cudnn-cu13",
+        "version": "9.15.1.9",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "ebc9a647918df0d7298d67cfaf41579fd4c78ead9aba246f5ad9414d61b9ec4c"
+            },
+            "name": "nvidia_cudnn_cu13-9.15.1.9-py3-none-manylinux_2_27_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/0c/d0/90f98fc55c48a7d8f5ad0a03a6321acc1a7024bdd550d96b3547a04ea6b4/nvidia_cudnn_cu13-9.15.1.9-py3-none-manylinux_2_27_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cufft",
+        "version": "12.0.0.61",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "6c44f692dce8fd5ffd3e3df134b6cdb9c2f72d99cf40b62c32dde45eea9ddad3"
+            },
+            "name": "nvidia_cufft-12.0.0.61-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/a8/2f/7b57e29836ea8714f81e9898409196f47d772d5ddedddf1592eadb8ab743/nvidia_cufft-12.0.0.61-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cufile",
+        "version": "1.15.1.6",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "08a3ecefae5a01c7f5117351c64f17c7c62efa5fffdbe24fc7d298da19cd0b44"
+            },
+            "name": "nvidia_cufile-1.15.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/3f/70/4f193de89a48b71714e74602ee14d04e4019ad36a5a9f20c425776e72cd6/nvidia_cufile-1.15.1.6-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-curand",
+        "version": "10.4.0.35",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "1aee33a5da6e1db083fe2b90082def8915f30f3248d5896bcec36a579d941bfc"
+            },
+            "name": "nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/a5/9f/be0a41ca4a4917abf5cb9ae0daff1a6060cc5de950aec0396de9f3b52bc5/nvidia_curand-10.4.0.35-py3-none-manylinux_2_27_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cusolver",
+        "version": "12.0.4.66",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "0a759da5dea5c0ea10fd307de75cdeb59e7ea4fcb8add0924859b944babf1112"
+            },
+            "name": "nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/5f/67/cba3777620cdacb99102da4042883709c41c709f4b6323c10781a9c3aa34/nvidia_cusolver-12.0.4.66-py3-none-manylinux_2_27_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cusparse",
+        "version": "12.6.3.3",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "2b3c89c88d01ee0e477cb7f82ef60a11a4bcd57b6b87c33f789350b59759360b"
+            },
+            "name": "nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/fa/18/623c77619c31d62efd55302939756966f3ecc8d724a14dab2b75f1508850/nvidia_cusparse-12.6.3.3-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-cusparselt-cu13",
+        "version": "0.8.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "25e30a8a7323935d4ad0340b95a0b69926eee755767e8e0b1cf8dd85b197d3fd"
+            },
+            "name": "nvidia_cusparselt_cu13-0.8.0-py3-none-manylinux2014_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/fd/53/43b0d71f4e702fa9733f8b4571fdca50a8813f1e450b656c239beff12315/nvidia_cusparselt_cu13-0.8.0-py3-none-manylinux2014_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-nccl-cu13",
+        "version": "2.28.9",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "e4553a30f34195f3fa1da02a6da3d6337d28f2003943aa0a3d247bbc25fefc42"
+            },
+            "name": "nvidia_nccl_cu13-2.28.9-py3-none-manylinux_2_18_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/b0/b4/878fefaad5b2bcc6fcf8d474a25e3e3774bc5133e4b58adff4d0bca238bc/nvidia_nccl_cu13-2.28.9-py3-none-manylinux_2_18_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-nvjitlink",
+        "version": "13.0.88",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "13a74f429e23b921c1109976abefacc69835f2f433ebd323d3946e11d804e47b"
+            },
+            "name": "nvidia_nvjitlink-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/56/7a/123e033aaff487c77107195fa5a2b8686795ca537935a24efae476c41f05/nvidia_nvjitlink-13.0.88-py3-none-manylinux2010_x86_64.manylinux_2_12_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-nvshmem-cu13",
+        "version": "3.4.5",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "290f0a2ee94c9f3687a02502f3b9299a9f9fe826e6d0287ee18482e78d495b80"
+            },
+            "name": "nvidia_nvshmem_cu13-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/3c/35/a9bf80a609e74e3b000fef598933235c908fcefcef9026042b8e6dfde2a9/nvidia_nvshmem_cu13-3.4.5-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "nvidia-nvtx",
+        "version": "13.0.85",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "4936d1d6780fbe68db454f5e72a42ff64d1fd6397df9f363ae786930fd5c1cd4"
+            },
+            "name": "nvidia_nvtx-13.0.85-py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/c2/f3/d86c845465a2723ad7e1e5c36dcd75ddb82898b3f53be47ebd429fb2fa5d/nvidia_nvtx-13.0.85-py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "omegaconf",
+        "version": "2.3.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "7b4df175cdb08ba400f45cae3bdcae7ba8365db4d165fc65fd04b050ab63b46b"
+            },
+            "name": "omegaconf-2.3.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/e3/94/1843518e420fa3ed6919835845df698c7e27e183cb997394e4a670973a65/omegaconf-2.3.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "pillow",
+        "version": "13.0.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "42d63be3af4f9b951b199b0a9d23365d37ab14687e6d77b74940432c8515c4ca"
+            },
+            "name": "pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/e6/99/fdf65cc539e266ab93546c261bdf98411fe165c6e4e13f9dbf597097192b/pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.7/provider_core-0.7.7-py3-none-any.whl",
+        "name": "provider-core",
+        "version": "0.7.7",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "e0aaec06ee3c0378adce92c6c477db6da82562832d276b250f83edc78622f99c"
+            },
+            "name": "provider_core-0.7.7-py3-none-any.whl",
+            "url": "https://github.com/numpde/nmr-provider-tools/releases/download/v0.7.7/provider_core-0.7.7-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "pycparser",
+        "version": "3.11",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "51d5a8ba2be0bbe440b99d2112604c95bbbc3c2748a64260186c541e1729cd80"
+            },
+            "name": "pycparser-3.11-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/90/11/0e6f11117525ff0eec40ebac3d313376f102df93ca44ad9e893ee85e4f89/pycparser-3.11-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "pydantic",
+        "version": "2.14.3",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "3f7b347782ab7e4cf4c798496ae3a82787d9f21ec12676a9c564355eeef8daa8"
+            },
+            "name": "pydantic-2.14.3-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/72/b8/b864503789ef5c58597d2a7b4adbee62c26440ab1e682581fc6838df8947/pydantic-2.14.3-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "pydantic-core",
+        "version": "2.50.4",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "c81d98e27d9d9261909dcccab1ba5d6ea1c98b0bb9470e368604614fd1d36ddd"
+            },
+            "name": "pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/91/23/e0c6e3cd09a0ac809953fea698c816b9f03bf0b35b6820c9553e4f5d85a8/pydantic_core-2.50.4-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "pyyaml",
+        "version": "6.0.3",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc"
+            },
+            "name": "pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/8b/9d/b3589d3877982d4f2329302ef98a8026e7f4443c765c46cfecc8858c6b4b/pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "rdkit",
+        "version": "2025.9.6",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "6be95b735c428ba27badf39e92078133d3a505f872d0a31467ba577d73c57676"
+            },
+            "name": "rdkit-2025.9.6-cp312-cp312-manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/43/8c/42dde9df1a665e3589eeeaea463b11ec89c9d0c0e82db22d8128e3e14490/rdkit-2025.9.6-cp312-cp312-manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "setuptools",
+        "version": "78.1.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "3e386e96793c8702ae83d17b853fb93d3e09ef82ec62722e61da5cd22376dcd8"
+            },
+            "name": "setuptools-78.1.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/54/21/f43f0a1fa8b06b32812e0975981f4677d28e0f3271601dc88ac5a5b83220/setuptools-78.1.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "sympy",
+        "version": "1.14.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "e091cc3e99d2141a0ba2847328f5479b05d94a6635cb96148ccb3f34671bd8f5"
+            },
+            "name": "sympy-1.14.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/a2/09/77d55d46fd61b4a135c444fc97158ef34a095e5681d0a6c10b75bf356191/sympy-1.14.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "tomli-w",
+        "version": "1.2.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "188306098d013b691fcadc011abd66727d3c414c571bb01b1a174ba8c983cf90"
+            },
+            "name": "tomli_w-1.2.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/c7/18/c86eb8e0202e32dd3df50d43d7ff9854f8e0603945ff398974c1d91ac1ef/tomli_w-1.2.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://download.pytorch.org/whl/cu130/torch-2.10.0%2Bcu130-cp312-cp312-manylinux_2_28_x86_64.whl",
+        "name": "torch",
+        "version": "2.10.0+cu130",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "858f0cbcc78d726fea9499eb3464faa98392fa093845a3262209bd226b7844d6"
+            },
+            "name": "torch-2.10.0+cu130-cp312-cp312-manylinux_2_28_x86_64.whl",
+            "url": "https://download.pytorch.org/whl/cu130/torch-2.10.0%2Bcu130-cp312-cp312-manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "marker": "sys_platform == \"linux\"",
+        "name": "triton",
+        "version": "3.6.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "74caf5e34b66d9f3a429af689c1c7128daba1d8208df60e81106b115c00d6fca"
+            },
+            "name": "triton-3.6.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+            "url": "https://files.pythonhosted.org/packages/ab/a8/cdf8b3e4c98132f965f88c2313a4b493266832ad47fb52f23d14d4f86bb5/triton-3.6.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "typing-extensions",
+        "version": "4.16.0",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8"
+            },
+            "name": "typing_extensions-4.16.0-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl"
+          }
+        ]
+      },
+      {
+        "index": "https://pypi.org/simple",
+        "name": "typing-inspection",
+        "version": "0.4.5",
+        "wheels": [
+          {
+            "hashes": {
+              "sha256": "bc210535442b39e1bf2805e0c7a17dfd6a4ace760c84c7f7d16245d23a6b1c39"
+            },
+            "name": "typing_inspection-0.4.5-py3-none-any.whl",
+            "url": "https://files.pythonhosted.org/packages/de/0c/ea2544850a7c135e15033a5c7a8e7211136184b7ae63e2239d557c2b3019/typing_inspection-0.4.5-py3-none-any.whl"
+          }
+        ]
+      }
+    ],
+    "requires-python": ">=3.12.16"
+  },
+  "target": {
+    "abi": "cpython-312-x86_64-linux-gnu",
+    "implementation_name": "cpython",
+    "implementation_version": "3.12.16",
+    "os_name": "posix",
+    "platform_machine": "x86_64",
+    "platform_python_implementation": "CPython",
+    "platform_system": "Linux",
+    "python_full_version": "3.12.16",
+    "python_version": "3.12",
+    "sys_platform": "linux"
+  },
+  "wheelhouse-lock": 1
+}

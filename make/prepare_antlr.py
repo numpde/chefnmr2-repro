@@ -33,12 +33,11 @@ def acquire(build, tool, tool_sha256):
             [
                 (build.pool, '/pool'),
                 (ROOT / 'builds/antlr/source.json', '/source.json'),
-                (ROOT / 'make/fetch_sdk.py', '/fetch_sdk.py'),
+                (ROOT / 'make/fetch_artifact.py', '/fetch_artifact.py'),
             ],
             [
                 '-B',  # Keep bytecode out of the captured source mounts.
-                '/fetch_sdk.py',  # Use the existing artifact fetch owner.
-                '--artifact',  # Select the committed exact source declaration.
+                '/fetch_artifact.py',  # Use the shared exact artifact fetch owner.
                 '/source.json',  # Read the source archive URL, name and digest.
                 '/pool',  # Publish verified archive bytes in the shared pool.
             ],

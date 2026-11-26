@@ -2,10 +2,8 @@
 # Compose pulls image-only services; Bake builds services with a build definition.
 x-python313: &python313
   PYTHON_BASE: &python313-image docker.io/library/python:3.13.18-slim-bookworm@sha256:a5a7017efc5969e00ae2b91c8eb0631049a569652aa4ffc4501769049ae45c72
-  PY_VERSION: "3.13.18"
 x-python312: &python312
   PYTHON_BASE: &python312-image docker.io/library/python:3.12.16-slim-bookworm@sha256:623674a14ef93d052bb9b0de4dbf5f28eb578a35263838941cc8aa43213c1487
-  PY_VERSION: "3.12.16"
 x-build: &build
   platforms: [linux/amd64]
   network: none
@@ -33,7 +31,6 @@ services:
       context: containers/worker
       args:
         <<: *python313
-        TORCH_INDEX: https://download.pytorch.org/whl/cpu
         UPSTREAM_PACKAGE: "${UPSTREAM_PACKAGE:?Set UPSTREAM_PACKAGE}"
       additional_contexts:
         model: ./model
@@ -45,7 +42,6 @@ services:
       context: containers/worker
       args:
         <<: *python312
-        TORCH_INDEX: https://download.pytorch.org/whl/cu130
         UPSTREAM_PACKAGE: "${UPSTREAM_PACKAGE:?Set UPSTREAM_PACKAGE}"
       additional_contexts:
         model: ./model
@@ -57,7 +53,6 @@ services:
       context: containers/weights-sanitize
       args:
         <<: *python312
-        TORCH_INDEX: https://download.pytorch.org/whl/cpu
   lock:
     image: "${IMAGE_NAMESPACE:?Set IMAGE_NAMESPACE}/lock:local"
     build:
